@@ -11,7 +11,7 @@ import numpy as np
 import textwrap
 
 # local application imports
-from pygsm.utilities import *
+from pygsm.utilities import nifty, manage_xyz, elements
 from pygsm.potential_energy_surfaces import Avg_PES, PES, Penalty_PES
 from pygsm.wrappers import Molecule
 from pygsm.optimizers import conjugate_gradient, lbfgs, beales_cg, eigenvector_follow
