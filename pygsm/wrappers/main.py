@@ -1,25 +1,24 @@
 # standard library imports
 import sys
 import os
-from os import path
 import importlib
 import matplotlib as mpl
-mpl.use('Agg')
 import matplotlib.pyplot as plt
 
-#third party
+# third party
 import argparse
 import numpy as np
 import textwrap
 
 # local application imports
-sys.path.append(path.dirname( path.dirname( path.abspath(__file__))))
-from utilities import *
-from potential_energy_surfaces import PES,Avg_PES,Penalty_PES
-from wrappers import Molecule
-from optimizers import *
-from growing_string_methods import *
-from coordinate_systems import Topology,PrimitiveInternalCoordinates,DelocalizedInternalCoordinates,Distance,Angle,Dihedral,OutOfPlane,TranslationX,TranslationY,TranslationZ,RotationA,RotationB,RotationC
+from pygsm.utilities import *
+from pygsm.potential_energy_surfaces import PES,Avg_PES,Penalty_PES
+from pygsm.wrappers import Molecule
+from pygsm.optimizers import *
+from pygsm.growing_string_methods import *
+from pygsm.coordinate_systems import Topology,PrimitiveInternalCoordinates,DelocalizedInternalCoordinates,Distance,Angle,Dihedral,OutOfPlane,TranslationX,TranslationY,TranslationZ,RotationA,RotationB,RotationC
+
+mpl.use('Agg')
 
 
 def parse_arguments(verbose=True):
@@ -154,16 +153,14 @@ def parse_arguments(verbose=True):
               'sigma'   :   args.sigma,
               }
 
+    if verbose:
+        nifty.printcool_dictionary(inpfileq,title='Parsed GSM Keys : Values')
+
     return inpfileq
 
 def main():
     # argument parsing and header
     inpfileq = parse_arguments(verbose=True)
-
-
-    if verbose:
-        nifty.printcool_dictionary(inpfileq,title='Parsed GSM Keys : Values')
-
 
     #LOT
     nifty.printcool("Build the {} level of theory (LOT) object".format(inpfileq['EST_Package']))
