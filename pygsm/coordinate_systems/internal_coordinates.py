@@ -13,9 +13,9 @@ from pkg_resources import parse_version
 
 # local application imports
 try:
-    from .slots import *
+    from . import slots
 except:
-    from slots import *
+    import slots
 from pygsm import utilities
 
 
