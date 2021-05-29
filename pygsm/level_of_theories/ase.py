@@ -6,17 +6,10 @@ Written by Tamas K. Stenczel in 2021
 """
 import importlib
 
-try:
-    from ase import Atoms
-    from ase.calculators.calculator import Calculator
-    from ase.data import atomic_numbers
-    from ase import units
-except ModuleNotFoundError:
-    Atoms = None
-    Calculator = None
-    atomic_numbers = None
-    units = None
-    print("ASE not installed, ASE-based calculators will not work")
+from ase import Atoms
+from ase.calculators.calculator import Calculator
+from ase.data import atomic_numbers
+from ase import units
 
 from .base_lot import Lot, LoTError
 
@@ -43,7 +36,9 @@ class ASELoT(Lot):
         return cls(lot.ase_calculator, lot.options.copy().set_values(options))
 
     @classmethod
-    def from_calculator_string(cls, calculator_import: str, calculator_kwargs: dict = dict(), **kwargs):
+    def from_calculator_string(
+        cls, calculator_import: str, calculator_kwargs: dict = dict(), **kwargs
+    ):
         # this imports the calculator
         module_name = ".".join(calculator_import.split(".")[:-1])
         class_name = calculator_import.split(".")[-1]
@@ -52,14 +47,20 @@ class ASELoT(Lot):
         try:
             module = importlib.import_module(module_name)
         except ModuleNotFoundError:
-            raise LoTError("ASE-calculator's module is not found: {}".format(class_name))
+            raise LoTError(
+                "ASE-calculator's module is not found: {}".format(class_name)
+            )
 
         # class of the calculator
         if hasattr(module, class_name):
             calc_class = getattr(module, class_name)
             assert issubclass(calc_class, Calculator)
         else:
-            raise LoTError("ASE-calculator's class ({}) not found in module {}".format(class_name, module_name))
+            raise LoTError(
+                "ASE-calculator's class ({}) not found in module {}".format(
+                    class_name, module_name
+                )
+            )
 
         # make sure there is no calculator in the options
         _ = kwargs.pop("calculator", None)
@@ -67,25 +68,30 @@ class ASELoT(Lot):
         # construct from the constructor
         return cls.from_options(calc_class(**calculator_kwargs), **kwargs)
 
-    def run(self, geom, mult, ad_idx, runtype='gradient'):
+    def run(self, geom, mult, ad_idx, runtype="gradient"):
         # run ASE
         self.run_ase_atoms(xyz_to_ase(geom), mult, ad_idx, runtype)
 
-    def run_ase_atoms(self, atoms: Atoms, mult, ad_idx, runtype='gradient'):
+    def run_ase_atoms(self, atoms: Atoms, mult, ad_idx, runtype="gradient"):
         # set the calculator
-        atoms.set_calculator(self.ase_calculator)
+        atoms.calc = self.ase_calculator
 
         # perform gradient calculation if needed
         if runtype == "gradient":
-            self._Gradients[(mult, ad_idx)] = self.Gradient(- atoms.get_forces() / units.Ha * units.Bohr,
-                                                            'Hartree/Bohr')
+            self._Gradients[(mult, ad_idx)] = self.Gradient(
+                -atoms.get_forces() / units.Ha * units.Bohr, "Hartree/Bohr"
+            )
         elif runtype == "energy":
             pass
         else:
-            raise NotImplementedError(f"Run type {runtype} is not implemented in the ASE calculator interface")
+            raise NotImplementedError(
+                f"Run type {runtype} is not implemented in the ASE calculator interface"
+            )
 
         # energy is always calculated -> cached if force calculation was done
-        self._Energies[(mult, ad_idx)] = self.Energy(atoms.get_potential_energy() / units.Ha, 'Hartree')
+        self._Energies[(mult, ad_idx)] = self.Energy(
+            atoms.get_potential_energy() / units.Ha, "Hartree"
+        )
 
         # write E to scratch
         self.write_E_to_file()

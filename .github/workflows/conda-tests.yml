@@ -1,0 +1,38 @@
+name: Tests and coverage in Conda
+
+on: [ push ]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+
+      - name: Add conda to system path
+        run: |
+          # $CONDA is an environment variable pointing to the root of the miniconda directory
+          echo $CONDA/bin >> $GITHUB_PATH
+
+      - name: Install dependencies with Conda
+        run: |
+          # install dependencies
+          conda env update --file devtools/conda-envs/github_env.yaml --name base
+
+          # Build and install package
+          python setup.py develop --no-deps
+
+      - name: Test with pytest - coverage
+        run: |
+          pytest -v --cov=pygsm  pygsm/tests/
+
+      - uses: codecov/codecov-action@v1
+        with:
+          flags: unittests # optional
+          name: codecov-umbrella # optional
+          fail_ci_if_error: true # optional (default = false)
+          verbose: true # optional (default = false)
