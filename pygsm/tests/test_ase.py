@@ -1,8 +1,9 @@
 import numpy as np
 from ase.calculators.lj import LennardJones
-from pytest import approx
+from pytest import approx, raises
 
 from pygsm.level_of_theories.ase import ASELoT, geom_to_ase, xyz_to_ase
+from pygsm.level_of_theories.base_lot import LoTError
 
 xyz_4x4 = [
     ["H", 1.0, 2.0, 3.0],
@@ -37,3 +38,15 @@ def test_ase_lot_from_string():
 
     assert isinstance(lot.ase_calculator, LennardJones)
     assert lot.ase_calculator.parameters["epsilon"] == approx(1.234)
+
+
+def test_ase_lot_error():
+    with raises(LoTError, match="ASE-calculator's module is not found.*"):
+        _ = ASELoT.from_calculator_string(
+            calculator_import="ase.calculators.foo.Dummy", geom=xyz_4x4,
+        )
+
+    with raises(LoTError, match="ASE-calculator's class.*not found in module .*"):
+        _ = ASELoT.from_calculator_string(
+            calculator_import="ase.calculators.lj.Dummy", geom=xyz_4x4,
+        )
