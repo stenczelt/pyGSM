@@ -1,3 +1,5 @@
+name: Tests and coverage in Conda
+
 on: [ push ]
 
 jobs:
