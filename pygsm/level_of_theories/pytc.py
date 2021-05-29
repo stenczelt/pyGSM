@@ -11,7 +11,7 @@ import json
 
 # local application imports
 from .base_lot import Lot
-from utilities import *
+from pygsm.utilities import *
 from .rhf_lot import RHF_LOT
 from .casci_lot_svd import CASCI_LOT_SVD
 

@@ -16,7 +16,7 @@ try:
     from .slots import *
 except:
     from slots import *
-from utilities import *
+from pygsm.utilities import *
 
 
 ELEMENT_TABLE = elements.ElementData()
@@ -30,7 +30,7 @@ class InternalCoordinates(object):
         ''' InternalCoordinates default options.'''
 
         if hasattr(InternalCoordinates, '_default_options'): return InternalCoordinates._default_options.copy()
-        opt = options.Options() 
+        opt = options.Options()
 
         opt.add_option(
                 key="xyz",
@@ -328,7 +328,7 @@ class InternalCoordinates(object):
         #q0 = self.calculate(xyz)
         Ginv = self.GInverse(xyz)
         Bmat = self.wilsonB(xyz)
-      
+
         #with np.printoptions(threshold=np.inf):
         #    print(gradx.T)
 
@@ -346,7 +346,7 @@ class InternalCoordinates(object):
 
     def calcHess(self, xyz, gradx, hessx):
          """
-         Compute the internal coordinate Hessian. 
+         Compute the internal coordinate Hessian.
          Expects Cartesian coordinates to be provided in a.u.
          """
          xyz = xyz.flatten()
@@ -378,7 +378,7 @@ class InternalCoordinates(object):
         self.stored_dQ = dQ.copy()
         self.stored_newxyz = newxyz.copy()
 
-    
+
     #TODO this does not work!!! 8/29/2019
     def massweighted_newCartesian(self,xyz,dQ,mass,verbose=True):
         cached = self.readCache(xyz, dQ)

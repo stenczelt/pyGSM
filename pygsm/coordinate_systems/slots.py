@@ -7,7 +7,7 @@ from os import path
 # third party
 import numpy as np
 
-from utilities import nifty,math_utils
+from pygsm.utilities import nifty,math_utils
 
 try:
     from .rotate import get_expmap, get_expmap_der, is_linear, calc_rot_vec_diff

@@ -7,7 +7,7 @@ import numpy as np
 
 # local application imports
 from .pes import PES
-from utilities import *
+from pygsm.utilities import *
 
 class Avg_PES(PES):
     """ Avg potential energy surface calculators """

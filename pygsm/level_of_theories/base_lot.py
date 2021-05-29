@@ -1,11 +1,11 @@
 # standard library imports
 import os
 
-# third party 
+# third party
 import numpy as np
 
 # local application imports
-from utilities import manage_xyz,options,elements,nifty,units
+from pygsm.utilities import manage_xyz,options,elements,nifty,units
 try:
     from .file_options import File_Options
 except:
@@ -38,7 +38,7 @@ class Lot(object):
         """ Lot default options. """
 
         if hasattr(Lot, '_default_options'): return Lot._default_options.copy()
-        opt = options.Options() 
+        opt = options.Options()
 
         opt.add_option(
                 key='fnm',
@@ -193,7 +193,7 @@ class Lot(object):
         if len(self.states)<len_singlets+len_doublets+len_triplets+len_quartets+len_quintets:
             print('fixing states to be proper length')
             tmp = []
-            # TODO put in rest of fixed states 
+            # TODO put in rest of fixed states
             for i in range(len_singlets):
                 tmp.append((1,i))
             for i in range(len_triplets):
@@ -222,7 +222,7 @@ class Lot(object):
         self.node_id=self.options['node_id']
         self.lot_inp_file = self.options['lot_inp_file']
 
-        # Bools for running 
+        # Bools for running
         self.hasRanForCurrentCoords =False
         self.has_nelectrons =False
 
@@ -230,7 +230,7 @@ class Lot(object):
         if self.file_options is None:
             self.file_options = File_Options(self.lot_inp_file)
 
-        #package  specific implementation 
+        #package  specific implementation
         #TODO MOVE to specific package !!!
         # tc cloud
         self.options['job_data']['orbfile'] = self.options['job_data'].get('orbfile','')
@@ -248,7 +248,7 @@ class Lot(object):
     @property
     def Energies(self):
         '''
-        A list of tuples with multiplicity, state and energy 
+        A list of tuples with multiplicity, state and energy
         '''
         #assert type(self._E) is dict,"E must be dictionary"
         return self._Energies
@@ -261,7 +261,7 @@ class Lot(object):
     @property
     def Gradients(self):
         '''
-        A list of tuples with multiplicity, state and energy 
+        A list of tuples with multiplicity, state and energy
         '''
 
         #assert type(self._) is dict,"grada must be dictionary"
@@ -282,7 +282,7 @@ class Lot(object):
     def Couplings(self,value):
         self._Couplings = value
 
-    @property 
+    @property
     def file_options(self):
         return self.options['file_options']
 
@@ -348,7 +348,7 @@ class Lot(object):
             print(self.n_electrons)
             print(multiplicity)
             raise ValueError("Inconsistent charge/multiplicity.")
-            
+
     def get_nelec(self,geom,multiplicity):
         atoms = manage_xyz.get_atoms(geom)
         elements = [ELEMENT_TABLE.from_symbol(atom) for atom in atoms]
@@ -357,14 +357,14 @@ class Lot(object):
         if self.n_electrons < 0:
             raise ValueError("Molecule has fewer than 0 electrons!!!")
         self.check_multiplicity(multiplicity)
-        return 
+        return
 
     def get_energy(self,coords,multiplicity,state,runtype=None):
         if self.hasRanForCurrentCoords==False or (coords != self.currentCoords).any():
             self.currentCoords = coords.copy()
             geom = manage_xyz.np_to_xyz(self.geom,self.currentCoords)
             self.runall(geom,runtype)
-        
+
         Energy = self.Energies[(multiplicity,state)]
         if Energy.unit=="Hartree":
             return Energy.value*units.KCAL_MOL_PER_AU
@@ -435,31 +435,31 @@ class Lot(object):
     #    self.E=[]
     #    self.grada = []
     #    singlets=self.search_tuple(self.states,1)
-    #    len_singlets=len(singlets) 
+    #    len_singlets=len(singlets)
     #    if len_singlets is not 0:
     #        self.run(geom,1)
     #    triplets=self.search_tuple(self.states,3)
-    #    len_triplets=len(triplets) 
+    #    len_triplets=len(triplets)
     #    if len_triplets is not 0:
     #        self.run(geom,3)
     #    doublets=self.search_tuple(self.states,2)
-    #    len_doublets=len(doublets) 
+    #    len_doublets=len(doublets)
     #    if len_doublets is not 0:
     #        self.run(geom,2)
     #    quartets=self.search_tuple(self.states,4)
-    #    len_quartets=len(quartets) 
+    #    len_quartets=len(quartets)
     #    if len_quartets is not 0:
     #        self.run(geom,4)
     #    pentets=self.search_tuple(self.states,5)
-    #    len_pentets=len(pentets) 
+    #    len_pentets=len(pentets)
     #    if len_pentets is not 0:
     #        self.run(geom,5)
     #    hextets=self.search_tuple(self.states,6)
-    #    len_hextets=len(hextets) 
+    #    len_hextets=len(hextets)
     #    if len_hextets is not 0:
     #        self.run(geom,6)
     #    septets=self.search_tuple(self.states,7)
-    #    len_septets=len(septets) 
+    #    len_septets=len(septets)
     #    if len_septets is not 0:
     #        self.run(geom,7)
     #    self.hasRanForCurrentCoords=True

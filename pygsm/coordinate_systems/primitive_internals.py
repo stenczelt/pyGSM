@@ -25,7 +25,7 @@ except:
     from topology import Topology,MyG
     from slots import *
 
-from utilities import *
+from pygsm.utilities import *
 
 CacheWarning = False
 

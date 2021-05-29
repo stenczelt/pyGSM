@@ -1,12 +1,12 @@
 import sys
-import numpy as np 
-from utilities import *
+import numpy as np
+from pygsm.utilities import *
 
 #TODO remove unecessary arguments: nconstraints, xp, ,...
 
 def NoLineSearch(n, x, fx, g, d, step, xp, constraint_step, parameters,molecule,verbose=False):
 
-    x = x + d * step  + constraint_step  # 
+    x = x + d * step  + constraint_step  #
     xyz = molecule.coord_obj.newCartesian(molecule.xyz, x-xp,verbose=verbose)
 
     # use these so molecule xyz doesn't change
@@ -21,7 +21,7 @@ def NoLineSearch(n, x, fx, g, d, step, xp, constraint_step, parameters,molecule,
 
 
 
-# TODO might be wise to add to backtrack a condition that says if 
+# TODO might be wise to add to backtrack a condition that says if
 # the number of iterations was many and the energy increased
 # just return the initial point
 def backtrack(nconstraints, x, fx, g, d, step, xp,constraint_step, parameters,molecule, verbose=False):
@@ -48,7 +48,7 @@ def backtrack(nconstraints, x, fx, g, d, step, xp,constraint_step, parameters,mo
     	result['status'] = -2
     	return result
 
-    # The initial value of the objective function. 
+    # The initial value of the objective function.
     finit = fx
 
     dgtest = parameters['ftol'] * dginit
@@ -59,13 +59,13 @@ def backtrack(nconstraints, x, fx, g, d, step, xp,constraint_step, parameters,mo
     #    print(d.T)
 
     #print(step)
-    
+
     while True:
         x = xp
-        x = x + d * step  + constraint_step 
+        x = x + d * step  + constraint_step
         xyzp = molecule.xyz.copy()
         xyz = molecule.coord_obj.newCartesian(molecule.xyz, x-xp,verbose=verbose)
-        # Evaluate the function and gradient values. 
+        # Evaluate the function and gradient values.
         # use these so molecule xyz doesn't change
         fx = molecule.PES.get_energy(xyz)
 
@@ -110,7 +110,7 @@ def backtrack(nconstraints, x, fx, g, d, step, xp,constraint_step, parameters,mo
         if parameters['max_linesearch'] <= count:
             print(' [INFO] the iteration of linesearch is many')
             result = {'status':0, 'fx':fx, 'g':g, 'step':step, 'x':x,'molecule':molecule}
-            return result	
+            return result
 
         if step <= parameters['min_step'] and width<=1.:
             result = {'status':0, 'fx':fx, 'g':g, 'step':step, 'x':x,'molecule':molecule}
@@ -121,7 +121,7 @@ def backtrack(nconstraints, x, fx, g, d, step, xp,constraint_step, parameters,mo
             result = {'status':0, 'fx':fx, 'g':g, 'step':step, 'x':x,'molecule':molecule}
             return result
 
-        # update the step		
+        # update the step
         step = step * width
 
         # make sure step isn't too large
@@ -143,18 +143,18 @@ def double_golden_section(x,xyz1,xyz7,f1,f7,molecule):
     f4 = molecule.energy
 
     refE = f4
-   
+
     # stash coordinates for 4
     xyz = molecule.xyz.copy()
-    
+
     z = (1+np.sqrt(5))/2.
-    
+
     # form x2,x3,x5,x6
     x2 = x4 - (x4-x1)/z
     x3 = x1 + (x4-x1)/z
     x5 = x7 - (x7-x4)/z
     x6 = x4 + (x7-x4)/z
-    
+
     xyz2 = xyz4  - (xyz4 - xyz1)/z
     xyz3 = xyz1  + (xyz4 - xyz1)/z
     xyz5 = xyz7 - (xyz7 - xyz4)/z
@@ -163,9 +163,9 @@ def double_golden_section(x,xyz1,xyz7,f1,f7,molecule):
     xyzs = [xyz1,xyz2,xyz3,xyz4,xyz5,xyz6,xyz7]
     geoms = [manage_xyz.combine_atom_xyz(molecule.atom_symbols,xyz) for xyz in xyzs ]
     manage_xyz.write_xyzs('test.xyz',geoms,scale=1.)
-    
+
     sys.stdout.flush()
-    
+
     f2 = molecule.PES.get_energy(xyz2)
     f3 = molecule.PES.get_energy(xyz3)
     f5 = molecule.PES.get_energy(xyz5)
@@ -173,11 +173,11 @@ def double_golden_section(x,xyz1,xyz7,f1,f7,molecule):
     print(" Initial Double Golden Section %5.4f %5.4f %5.4f %5.4f %5.4f %5.4f %5.4f kcal/mol" % (f1-refE,f2-refE,f3-refE,f4-refE,f5-refE,f6-refE,f7-refE))
     l = [f1, f2, f3, f4, f5, f6, f7 ]
     sys.stdout.flush()
-    
+
     def ismax(l1,val):
         m = max(l1)
         return (True if m==val else False)
-    
+
     left=False
     right=False
     center=False
@@ -220,8 +220,8 @@ def double_golden_section(x,xyz1,xyz7,f1,f7,molecule):
     else:
         #something is wrong with TSnode
         raise RuntimeError
-    
-    
+
+
     # rearrange right to be in canonical order
     if right:
         print('right')
@@ -239,7 +239,7 @@ def double_golden_section(x,xyz1,xyz7,f1,f7,molecule):
         f3 = molecule.PES.get_energy(xyz3)
     print(" Rearranged Canonical Golden Section f1: %5.4f f2: %5.4f f3: %5.4f f4: %5.4f " % (f1-refE,f2-refE,f3-refE,f4-refE))
 
-    
+
     TOLF = 0.1 # kcal/mol
     TOLC = 1.e-3 #
     sys.stdout.flush()
@@ -270,7 +270,7 @@ def double_golden_section(x,xyz1,xyz7,f1,f7,molecule):
     xnew = molecule.coord_obj.calculate(xyznew)
     fnew = molecule.PES.get_energy(xyznew)
     print(" GS found structure this higher : %5.4f" % (fnew-refE))
-    
+
     step = xnew - x
     result = {'status':True,'fx':fnew,'step':step,'xyz':xyznew}
 
@@ -298,7 +298,7 @@ def golden_section(f,x1,x4,maximize=False,TOLC=0.1,TOLF=0.1):
     min_exists=False
     if f2<f1 and f2<f4 and f3<f1 and f3<f4:
         min_exists=True
-    
+
     if not min_exists:
         print(" no minimum exists")
         if f1<f4:
@@ -360,7 +360,7 @@ def golden_section(f,x1,x4,maximize=False,TOLC=0.1,TOLF=0.1):
 #    min_exists=False
 #    if f2>f1 and f2>f4 and f3>f1 and f3>f4:
 #        min_exists=True
-#    
+#
 #    if not min_exists:
 #        print(" no minimum exists")
 #        if f1<f4:
@@ -396,7 +396,7 @@ def golden_section(f,x1,x4,maximize=False,TOLC=0.1,TOLF=0.1):
 #    g = molecule.PES.get_gradient(xyznew)
 #    step = x - x1
 #    result = {'status':0,'fx':fx,'step':step,'x':xnew, 'g':g, 'xyznew':xyznew}
-#    
+#
 #    return result
 
 def secant_method(nconstraints, x, fx, gc, d, step, xp,constraint_step, parameters,molecule):
@@ -423,11 +423,11 @@ def steepest_ascent(nconstraints, x, fx, g, d, step, xp,constraint_step, paramet
         gc = g - np.dot(g.T,d)*d
         step = np.linalg.norm(gc)
 
-        # store 
+        # store
         xp = x.copy()
         gp = g.copy()
         fxp = fx
-       
+
         ls = backtrack(0, x, fx, gc, d, step, xp, gp,constraint_steps,parameters,molecule)
 
         # get values from linesearch

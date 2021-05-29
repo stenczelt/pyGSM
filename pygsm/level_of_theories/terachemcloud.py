@@ -11,7 +11,7 @@ import json
 
 # local application imports
 from .base_lot import Lot
-from utilities import *
+from pygsm.utilities import *
 
 class TeraChemCloud(Lot):
 

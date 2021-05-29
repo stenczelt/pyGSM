@@ -12,7 +12,7 @@ try:
     from .base_lot import Lot
 except:
     from base_lot import Lot
-from utilities import *
+from pygsm.utilities import *
 import subprocess
 
 class Molpro(Lot):

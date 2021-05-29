@@ -9,10 +9,10 @@ import numpy as np
 from collections import Counter
 
 # local application imports
-from utilities import *
-from wrappers import Molecule
+from pygsm.utilities import *
+from pygsm.wrappers import Molecule
 from .main_gsm import MainGSM
-from coordinate_systems import Distance,Angle,Dihedral,OutOfPlane,TranslationX,TranslationY,TranslationZ,RotationA,RotationB,RotationC
+from pygsm.coordinate_systems import Distance,Angle,Dihedral,OutOfPlane,TranslationX,TranslationY,TranslationZ,RotationA,RotationB,RotationC
 
 
 class SE_GSM(MainGSM):

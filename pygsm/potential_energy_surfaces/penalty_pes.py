@@ -7,7 +7,7 @@ import numpy as np
 
 # local application imports
 from .pes import PES
-from utilities import *
+from pygsm.utilities import *
 
 class Penalty_PES(PES):
     """ penalty potential energy surface calculators """

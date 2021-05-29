@@ -15,7 +15,7 @@ try:
     from .base_lot import Lot
 except:
     from base_lot import Lot
-from utilities import *
+from pygsm.utilities import *
 
 class xTB_lot(Lot):
     def __init__(self,options):

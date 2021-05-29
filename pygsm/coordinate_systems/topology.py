@@ -15,7 +15,7 @@ try:
 except ImportError:
     nifty.logger.warning("NetworkX cannot be imported (topology tools won't work).  Most functionality should still work though.")
 
-from utilities import *
+from pygsm.utilities import *
 
 #===========================#
 #|   Connectivity graph    |#

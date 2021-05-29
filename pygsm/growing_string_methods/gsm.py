@@ -12,13 +12,13 @@ from copy import copy
 from itertools import chain
 
 # local application imports
-from utilities import nifty,options,manage_xyz
-from utilities.manage_xyz import write_molden_geoms
-from wrappers import Molecule
-from coordinate_systems import DelocalizedInternalCoordinates
-from optimizers._linesearch import double_golden_section
-from coordinate_systems import Distance,Angle,Dihedral,OutOfPlane,TranslationX,TranslationY,TranslationZ,RotationA,RotationB,RotationC
-from coordinate_systems.rotate import get_quat,calc_fac_dfac
+from pygsm.utilities import nifty,options,manage_xyz
+from pygsm.utilities.manage_xyz import write_molden_geoms
+from pygsm.wrappers import Molecule
+from pygsm.coordinate_systems import DelocalizedInternalCoordinates
+from pygsm.optimizers._linesearch import double_golden_section
+from pygsm.coordinate_systems import Distance,Angle,Dihedral,OutOfPlane,TranslationX,TranslationY,TranslationZ,RotationA,RotationB,RotationC
+from pygsm.coordinate_systems.rotate import get_quat,calc_fac_dfac
 
 def worker(arg):
    obj, methname = arg[:2]
@@ -37,7 +37,7 @@ def worker(arg):
 
 class GSM(object):
 
-    from utilities import units
+    from pygsm.utilities import units
 
     @staticmethod
     def default_options():

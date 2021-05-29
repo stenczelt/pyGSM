@@ -15,7 +15,7 @@ try:
 except:
     from base_lot import Lot,copy_file
     from file_options import File_Options
-from utilities import *
+from pygsm.utilities import *
 
 '''
 Unfortunately TC calculates one gradient at time. THis makes it difficult to calculate multiple states since two calculations need to be done per state. 

@@ -21,7 +21,7 @@ try:
 except:
     from base_lot import Lot
 
-from utilities import *
+from pygsm.utilities import *
 
 
 class pDynamo(Lot):

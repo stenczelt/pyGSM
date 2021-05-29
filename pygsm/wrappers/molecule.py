@@ -16,13 +16,13 @@ from collections import Counter
 #import pybel as pb
 
 # local application imports
-from utilities import *
-import potential_energy_surfaces
-from potential_energy_surfaces import PES
-from potential_energy_surfaces import Avg_PES
-from potential_energy_surfaces import Penalty_PES
-from coordinate_systems import DelocalizedInternalCoordinates
-from coordinate_systems import CartesianCoordinates
+from pygsm.utilities import *
+import pygsm.potential_energy_surfaces
+from pygsm.potential_energy_surfaces import PES
+from pygsm.potential_energy_surfaces import Avg_PES
+from pygsm.potential_energy_surfaces import Penalty_PES
+from pygsm.coordinate_systems import DelocalizedInternalCoordinates
+from pygsm.coordinate_systems import CartesianCoordinates
 
 #logger = logging.getLogger(__name__)
 ELEMENT_TABLE = elements.ElementData()
@@ -636,7 +636,7 @@ class Molecule(object):
         self.PES.lot.node_id = value
 
 if __name__=='__main__':
-    from level_of_theories import Molpro
+    from pygsm.level_of_theories import Molpro
     filepath='../../data/ethylene.xyz'
     molpro = Molpro.from_options(states=[(1,0)],fnm=filepath,lot_inp_file='../../data/ethylene_molpro.com')
 

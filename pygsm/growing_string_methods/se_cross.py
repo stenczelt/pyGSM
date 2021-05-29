@@ -8,10 +8,10 @@ from os import path
 import numpy as np
 
 # local application imports
-from utilities import *
-from wrappers import Molecule
+from pygsm.utilities import *
+from pygsm.wrappers import Molecule
 from .se_gsm import SE_GSM
-from potential_energy_surfaces import Avg_PES,PES
+from pygsm.potential_energy_surfaces import Avg_PES,PES
 
 
 class SE_Cross(SE_GSM):

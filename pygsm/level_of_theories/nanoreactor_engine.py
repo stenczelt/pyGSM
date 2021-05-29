@@ -16,7 +16,7 @@ try:
 except:
     from base_lot import Lot
     from file_options import File_Options
-from utilities import *
+from pygsm.utilities import *
 
 '''
 '''

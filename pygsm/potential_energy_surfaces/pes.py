@@ -6,8 +6,8 @@ from os import path
 import numpy as np
 
 # local application imports
-from utilities import *
-from coordinate_systems import rotate
+from pygsm.utilities import *
+from pygsm.coordinate_systems import rotate
 
 ELEMENT_TABLE = elements.ElementData()
 

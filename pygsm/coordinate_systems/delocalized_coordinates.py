@@ -24,7 +24,7 @@ except:
     from topology import Topology
     from slots import *
 
-from utilities import *
+from pygsm.utilities import *
 
 
 class DelocalizedInternalCoordinates(InternalCoordinates):

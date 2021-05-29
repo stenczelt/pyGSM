@@ -8,8 +8,8 @@ from os import path
 import numpy as np
 
 # local application imports
-from utilities import *
-from wrappers import Molecule
+from pygsm.utilities import *
+from pygsm.wrappers import Molecule
 try:
     from .main_gsm import MainGSM
 except:

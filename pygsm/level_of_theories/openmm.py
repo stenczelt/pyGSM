@@ -17,8 +17,8 @@ try:
     from .base_lot import Lot
 except:
     from base_lot import Lot
-from utilities import *
-from coordinate_systems import Dihedral
+from pygsm.utilities import *
+from pygsm.coordinate_systems import Dihedral
 
 class OpenMM(Lot):
     def __init__(self,options):

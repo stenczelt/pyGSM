@@ -6,7 +6,7 @@ from os import path
 import numpy as np
 
 # local application imports
-from utilities import *
+from pygsm.utilities import *
 from ._linesearch import backtrack,NoLineSearch
 
 
