@@ -50,3 +50,35 @@ def test_ase_lot_error():
         _ = ASELoT.from_calculator_string(
             calculator_import="ase.calculators.lj.Dummy", geom=xyz_4x4,
         )
+
+
+def test_ase_lot_copy():
+    lot = ASELoT.from_calculator_string(
+        calculator_import="ase.calculators.lj.LennardJones",
+        geom=xyz_4x4,
+    )
+
+    copy_lot = ASELoT.copy(lot, dict())
+
+    # we are NOT making a new instance of the calculator
+    assert lot.ase_calculator == copy_lot.ase_calculator
+
+    # options matching
+    for key in set(lot.options.keys()).union(copy_lot.options.keys()):
+        assert lot.options[key] == copy_lot.options[key]
+
+
+def test_ase_lot_copy_update():
+    lot = ASELoT.from_calculator_string(
+        calculator_import="ase.calculators.lj.LennardJones",
+        geom=xyz_4x4,
+    )
+
+    copy_lot = ASELoT.copy(lot, dict(ID=1))
+
+    # options matching
+    for key in lot.options.keys():
+        if key == "ID":
+            assert copy_lot.options[key] == 1
+        else:
+            assert lot.options[key] == copy_lot.options[key]
