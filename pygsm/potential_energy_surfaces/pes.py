@@ -6,10 +6,10 @@ from os import path
 import numpy as np
 
 # local application imports
-from pygsm.utilities import *
+from pygsm import utilities
 from pygsm.coordinate_systems import rotate
 
-ELEMENT_TABLE = elements.ElementData()
+ELEMENT_TABLE = utilities.elements.ElementData()
 
 class PES(object):
     """ PES object """
@@ -18,7 +18,7 @@ class PES(object):
     def default_options():
 
         if hasattr(PES, '_default_options'): return PES._default_options.copy()
-        opt = options.Options()
+        opt = utilities.utilities.options.Options()
 
         opt.add_option(
                 key='lot',
@@ -164,8 +164,8 @@ class PES(object):
             for i in self.FORCE:
                 force=i[2]
                 diff = (xyz[i[0]]- xyz[i[1]])
-                d = np.linalg.norm(diff)*units.ANGSTROM_TO_AU  # AU
-                fdE +=  force*d*units.KCAL_MOL_PER_AU
+                d = np.linalg.norm(diff) * utilities.utilities.units.ANGSTROM_TO_AU  # AU
+                fdE += force * d * utilities.utilities.units.KCAL_MOL_PER_AU
                 #print(" Force energy: {} kcal/mol".format(fdE))
         kdE=0.
         if self.RESTRAINTS is not None:
@@ -229,8 +229,8 @@ class PES(object):
         bwd_coords = coords-fdstep
 
         # calculate grad fwd and bwd in a.u. (Bohr/Ha)
-        grad_fwd = self.get_gradient(fwd_coords)/units.ANGSTROM_TO_AU
-        grad_bwd = self.get_gradient(bwd_coords)/units.ANGSTROM_TO_AU
+        grad_fwd = self.get_gradient(fwd_coords) / utilities.utilities.units.ANGSTROM_TO_AU
+        grad_bwd = self.get_gradient(bwd_coords) / utilities.utilities.units.ANGSTROM_TO_AU
 
         return (grad_fwd-grad_bwd)/(FD_STEP_LENGTH*2)
 
@@ -301,12 +301,12 @@ class PES(object):
                 atoms=[i[0],i[1]]
                 force=i[2]
                 diff = (xyz[i[0]]- xyz[i[1]])
-                d = np.linalg.norm(diff)*units.ANGSTROM_TO_AU  # Bohr
+                d = np.linalg.norm(diff) * utilities.utilities.units.ANGSTROM_TO_AU  # Bohr
 
                 # Constant force
                 # grad=\nabla E + FORCE
                 t = (force/d/2.)  # Hartree/bohr
-                t*= units.ANGSTROM_TO_AU   # Ha/bohr * bohr/ang = Ha/ang
+                t*= utilities.utilities.units.ANGSTROM_TO_AU   # Ha/bohr * bohr/ang = Ha/ang
                 sign=1
                 for a in atoms:
                     grad[a] += sign*t*diff.T
@@ -321,7 +321,7 @@ class PES(object):
         return grad  #Ha/ang
 
     def check_input(self,geom):
-        atoms = manage_xyz.get_atoms(self.geom)
+        atoms = utilities.utilities.manage_xyz.get_atoms(self.geom)
         elements = [ELEMENT_TABLE.from_symbol(atom) for atom in atoms]
         atomic_num = [ele.atomic_num for ele in elements]
         self.checked_input =True
@@ -339,7 +339,7 @@ if __name__ == '__main__':
         import lightspeed as ls
 
     filepath='../../data/ethylene.xyz'
-    geom=manage_xyz.read_xyz(filepath,scale=1)
+    geom=utilities.manage_xyz.read_xyz(filepath, scale=1)
     if QCHEM:
         lot=QChem.from_options(states=[(1,0),(1,1)],charge=0,basis='6-31g(d)',functional='B3LYP',fnm=filepath)
     elif PYTC:
@@ -351,9 +351,9 @@ if __name__ == '__main__':
         basis='6-31gs'
 
         #### => PSIW Obj <= ######
-        nifty.printcool("Build resources")
+        utilities.nifty.printcool("Build resources")
         resources = ls.ResourceList.build()
-        nifty.printcool('{}'.format(resources))
+        utilities.nifty.printcool('{}'.format(resources))
 
         molecule = ls.Molecule.from_xyz_file(filepath)
         geom = psiw.geometry.Geometry.build(
@@ -361,7 +361,7 @@ if __name__ == '__main__':
             molecule=molecule,
             basisname=basis,
             )
-        nifty.printcool('{}'.format(geom))
+        utilities.nifty.printcool('{}'.format(geom))
 
         ref = psiw.RHF.from_options(
              geometry= geom,
@@ -393,12 +393,12 @@ if __name__ == '__main__':
             state_coincidence='full',
             )
 
-        nifty.printcool("Build the pyGSM Level of Theory object (LOT)")
+        utilities.nifty.printcool("Build the pyGSM Level of Theory object (LOT)")
         lot=PyTC.from_options(states=[(1,0),(1,1)],job_data={'psiw':psiw},do_coupling=False,fnm=filepath)
 
     pes = PES.from_options(lot=lot,ad_idx=0,multiplicity=1)
-    geom=manage_xyz.read_xyz(filepath,scale=1)
-    coords= manage_xyz.xyz_to_np(geom)
+    geom=utilities.manage_xyz.read_xyz(filepath, scale=1)
+    coords= utilities.manage_xyz.xyz_to_np(geom)
     print(pes.get_energy(coords))
     print(pes.get_gradient(coords))
 

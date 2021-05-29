@@ -1,12 +1,12 @@
 import numpy as np
 from .internal_coordinates import InternalCoordinates
 from .primitive_internals import PrimitiveInternalCoordinates
-from .slots import *
+from . import slots
 
 class CartesianCoordinates(InternalCoordinates):
     """
-    Cartesian coordinate system, written as a kind of internal coordinate class.  
-    This one does not support constraints, because that requires adding some 
+    Cartesian coordinate system, written as a kind of internal coordinate class.
+    This one does not support constraints, because that requires adding some
     primitive internal coordinates.
     """
     def __init__(self, options):
@@ -21,23 +21,23 @@ class CartesianCoordinates(InternalCoordinates):
         #self.Prims = PrimitiveInternalCoordinates(options.copy())
 
         for i in range(self.natoms):
-            self.Prims.add(CartesianX(i, w=1.0))
-            self.Prims.add(CartesianY(i, w=1.0))
-            self.Prims.add(CartesianZ(i, w=1.0))
+            self.Prims.add(slots.CartesianX(i, w=1.0))
+            self.Prims.add(slots.CartesianY(i, w=1.0))
+            self.Prims.add(slots.CartesianZ(i, w=1.0))
         #if 'constraints' in kwargs and kwargs['constraints'] is not None:
         #    raise RuntimeError('Do not use constraints with Cartesian coordinates')
 
-        self.Vecs = np.eye(3*self.natoms)
+        self.Vecs = slots.np.eye(3 * self.natoms)
 
     def guess_hessian(self, xyz):
-        return 0.5*np.eye(len(xyz.flatten()))
+        return 0.5 * slots.np.eye(len(xyz.flatten()))
 
     def calcGrad(self,xyz,gradx):
         return gradx
 
     def newCartesian(self,xyz,dq,verbose=True):
-        return xyz+np.reshape(dq,(-1,3))
-    
+        return xyz + slots.np.reshape(dq, (-1, 3))
+
     def calculate(self,coords):
         return coords
 
@@ -87,7 +87,7 @@ class CartesianCoordinates(InternalCoordinates):
 #    filepath="examples/tests/bent_benzene.xyz"
 #    lot=QChem.from_options(states=[(1,0)],charge=0,basis=basis,functional='HF',nproc=nproc)
 #    pes = PES.from_options(lot=lot,ad_idx=0,multiplicity=1)
-#    geom=manage_xyz.read_xyz(filepath,scale=1)   
+#    geom=manage_xyz.read_xyz(filepath,scale=1)
 #
 #
 #    if False:

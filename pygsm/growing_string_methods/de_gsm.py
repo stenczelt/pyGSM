@@ -8,7 +8,7 @@ from os import path
 import numpy as np
 
 # local application imports
-from pygsm.utilities import *
+from pygsm import utilities
 from pygsm.wrappers import Molecule
 try:
     from .main_gsm import MainGSM
@@ -48,7 +48,7 @@ class DE_GSM(MainGSM):
 
             # Grow String
             self.grow_string(max_iters=max_iters,max_opt_steps=opt_steps)
-            nifty.printcool("Done Growing the String!!!")
+            utilities.utilities.nifty.printcool("Done Growing the String!!!")
             self.done_growing = True
 
             #nifty.printcool("initial ic_reparam")
@@ -228,16 +228,16 @@ if __name__=='__main__':
     from coordinate_systems.delocalized_coordinates import DelocalizedInternalCoordinates,PrimitiveInternalCoordinates,Topology
     from optimizers import eigenvector_follow
 
-    geoms = manage_xyz.read_molden_geoms('../growing_string_methods/opt_converged_000.xyz')
+    geoms = utilities.manage_xyz.read_molden_geoms('../growing_string_methods/opt_converged_000.xyz')
     lot = Dummy.from_options(geom=geoms[0])
 
     pes = PES.from_options(lot=lot,ad_idx=0,multiplicity=1)
-    atom_symbols  = manage_xyz.get_atoms(geoms[0])
+    atom_symbols  = utilities.manage_xyz.get_atoms(geoms[0])
 
-    ELEMENT_TABLE = elements.ElementData()
+    ELEMENT_TABLE = utilities.elements.ElementData()
     atoms = [ELEMENT_TABLE.from_symbol(atom) for atom in atom_symbols]
-    xyz1 = manage_xyz.xyz_to_np(geoms[0])
-    xyz2 = manage_xyz.xyz_to_np(geoms[-1])
+    xyz1 = utilities.manage_xyz.xyz_to_np(geoms[0])
+    xyz2 = utilities.manage_xyz.xyz_to_np(geoms[-1])
 
     top1 = Topology.build_topology(
             xyz1,
@@ -245,7 +245,7 @@ if __name__=='__main__':
             )
 
     # find union bonds
-    xyz2 = manage_xyz.xyz_to_np(geoms[-1])
+    xyz2 = utilities.manage_xyz.xyz_to_np(geoms[-1])
     top2 = Topology.build_topology(
             xyz2,
             atoms,
@@ -339,4 +339,4 @@ if __name__=='__main__':
     print('reparameterizing')
     gsm.geodesic_reparam()
 
-    manage_xyz.write_xyzs('rep.xyz', gsm.geometries)
+    utilities.manage_xyz.write_xyzs('rep.xyz', gsm.geometries)

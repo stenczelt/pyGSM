@@ -16,7 +16,7 @@ try:
 except:
     from base_lot import Lot
     from file_options import File_Options
-from pygsm.utilities import *
+from pygsm import utilities
 
 class BAGEL(Lot):
 
@@ -318,9 +318,9 @@ class BAGEL(Lot):
 
 
 if __name__=="__main__":
-    geom=manage_xyz.read_xyz('../../data/ethylene.xyz') #,units.ANGSTROM_TO_AU)
+    geom=utilities.manage_xyz.read_xyz('../../data/ethylene.xyz') #,units.ANGSTROM_TO_AU)
     B = BAGEL.from_options(states=[(1,0),(1,1)],gradient_states=[(1,0),(1,1)],coupling_states=(0,1),geom=geom,lot_inp_file='bagel.txt',node_id=0)
-    coords  = manage_xyz.xyz_to_np(geom)
+    coords  = utilities.manage_xyz.xyz_to_np(geom)
     E0 = B.get_energy(coords,1,0)
     E1 = B.get_energy(coords,1,1)
     g0 = B.get_gradient(coords,1,0)

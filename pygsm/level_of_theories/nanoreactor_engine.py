@@ -16,7 +16,7 @@ try:
 except:
     from base_lot import Lot
     from file_options import File_Options
-from pygsm.utilities import *
+from pygsm import utilities
 
 '''
 '''
@@ -34,7 +34,7 @@ class nanoreactor_engine(Lot):
         self.Gradients={}
         self.Energies = {}
 
-        xyz = manage_xyz.xyz_to_np(geom)*units.ANGSTROM_TO_AU
+        xyz = utilities.utilities.manage_xyz.xyz_to_np(geom) * utilities.utilities.units.ANGSTROM_TO_AU
 
         # Call the engine
         try:
@@ -67,8 +67,8 @@ if __name__=="__main__":
 
 
     # read in a geometry
-    geom = manage_xyz.read_xyz('../../data/ethylene.xyz')
-    xyz = manage_xyz.xyz_to_np(geom)
+    geom = utilities.manage_xyz.read_xyz('../../data/ethylene.xyz')
+    xyz = utilities.manage_xyz.xyz_to_np(geom)
 
     # create the pygsm level of theory object
     test_lot = nanoreactor_engine(geom,job_data = {'engine',test_engine})

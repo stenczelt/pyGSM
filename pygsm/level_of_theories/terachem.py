@@ -15,7 +15,7 @@ try:
 except:
     from base_lot import Lot,copy_file
     from file_options import File_Options
-from pygsm.utilities import *
+from pygsm import utilities
 
 '''
 Unfortunately TC calculates one gradient at time. THis makes it difficult to calculate multiple states since two calculations need to be done per state. 
@@ -289,9 +289,9 @@ class TeraChem(Lot):
 
         # Write the temporary geometry files
         if "prmtop" in self.file_options.ActiveOptions:
-            manage_xyz.write_amber_xyz('scratch/{:03}/{}/tmp.inpcrd'.format(self.ID,self.node_id),geom)
+            utilities.utilities.manage_xyz.write_amber_xyz('scratch/{:03}/{}/tmp.inpcrd'.format(self.ID, self.node_id), geom)
         else:
-            manage_xyz.write_xyz('scratch/{:03}/{}/tmp.xyz'.format(self.ID,self.node_id),geom,scale=1.0)
+            utilities.utilities.manage_xyz.write_xyz('scratch/{:03}/{}/tmp.xyz'.format(self.ID, self.node_id), geom, scale=1.0)
 
         return
 
@@ -498,8 +498,8 @@ class TeraChem(Lot):
         else:
             # getting gradient of non-prmtop job
             gradfile='scratch/{:03}/{}/grad_{}_{}.xyz'.format(self.ID,self.node_id,state[0],state[1])
-            grad = manage_xyz.read_xyz(gradfile,scale=1.0)
-            grad = manage_xyz.xyz_to_np(grad)
+            grad = utilities.utilities.manage_xyz.read_xyz(gradfile, scale=1.0)
+            grad = utilities.utilities.manage_xyz.xyz_to_np(grad)
         self._Gradients[state] = self.Gradient(grad,"Hartree/Bohr")
 
     def parse_coup(self):
@@ -536,8 +536,8 @@ class TeraChem(Lot):
             coup[self.mm_indices] = tmpcoup[len(self.qmindices):]
         else:
             coupfile='scratch/{:03}/{}/coup_{}_{}.xyz'.format(self.ID,self.node_id,self.coupling_states[0],self.coupling_states[1])
-            coup = manage_xyz.read_xyz(coupfile,scale=1.0)
-            coup = manage_xyz.xyz_to_np(coup)
+            coup = utilities.utilities.manage_xyz.read_xyz(coupfile, scale=1.0)
+            coup = utilities.utilities.manage_xyz.xyz_to_np(coup)
         self.Couplings[self.coupling_states] = self.Coupling(coup,'Hartree/Bohr')
 
 
@@ -545,7 +545,7 @@ if __name__=="__main__":
 
     filepath="../../data/ethylene.xyz"
     #filepath='tmp.inpcrd'
-    geom=manage_xyz.read_xyz(filepath)
+    geom=utilities.manage_xyz.read_xyz(filepath)
     #TC = TeraChem.from_options(states=[(1,1)],fnm=filepath,lot_inp_file='tc_options.txt')
     #TC = TeraChem.from_options(states=[(1,0),(1,1)],fnm=filepath,lot_inp_file='tc_options.txt')
     TC = TeraChem.from_options(states=[(1,0),(1,1)],gradient_states=[(1,1)],geom=geom,lot_inp_file='tc_options.txt',node_id=0)
@@ -567,7 +567,7 @@ if __name__=="__main__":
     #print(id(TC2))
 
     #geom=manage_xyz.read_xyz(filepath)
-    xyz = manage_xyz.xyz_to_np(geom)
+    xyz = utilities.manage_xyz.xyz_to_np(geom)
     print("getting energy")
     print(TC.get_energy(xyz,1,0))
     print(TC.get_energy(xyz,1,1))

@@ -17,7 +17,7 @@ try:
     from .base_lot import Lot
 except:
     from base_lot import Lot
-from pygsm.utilities import *
+from pygsm import utilities
 from pygsm.coordinate_systems import Dihedral
 
 class OpenMM(Lot):
@@ -48,7 +48,7 @@ class OpenMM(Lot):
             for key in self.file_options.ActiveOptions:
                 setattr(self, key, self.file_options.ActiveOptions[key])
 
-            nifty.printcool(" Options for OpenMM")
+            utilities.utilities.nifty.printcool(" Options for OpenMM")
             for val in [self.prmtopfile,self.inpcrdfile]:
                 assert val!=None,"Missing prmtop or inpcrdfile"
 
@@ -102,7 +102,7 @@ class OpenMM(Lot):
     def add_restraints(self,system):
         # Bond Restraints
         if self.restrain_bondfile is not None:
-            nifty.printcool(" Adding bonding restraints!")
+            utilities.utilities.nifty.printcool(" Adding bonding restraints!")
             # Harmonic constraint
 
             flat_bottom_force = openmm.CustomBondForce(
@@ -124,7 +124,7 @@ class OpenMM(Lot):
 
         # Torsion restraint
         if self.restrain_torfile is not None:
-            nifty.printcool(" Adding torsional restraints!")
+            utilities.utilities.nifty.printcool(" Adding torsional restraints!")
 
             # Harmonic constraint
             tforce = openmm.CustomTorsionForce("0.5*k*min(dtheta, 2*pi-dtheta)^2; dtheta = abs(theta-theta0); pi = 3.1415926535")
@@ -132,7 +132,7 @@ class OpenMM(Lot):
             tforce.addPerTorsionParameter("theta0")
             system.addForce(tforce)
 
-            xyz = manage_xyz.xyz_to_np(self.geom)
+            xyz = utilities.utilities.manage_xyz.xyz_to_np(self.geom)
             with open(self.restrain_torfile,'r') as input_file:
                 for line in input_file:
                     columns = line.split()
@@ -147,7 +147,7 @@ class OpenMM(Lot):
 
         # Translation restraint
         if self.restrain_tranfile is not None:
-            nifty.printcool(" Adding translational restraints!")
+            utilities.utilities.nifty.printcool(" Adding translational restraints!")
             trforce = openmm.CustomExternalForce("k*periodicdistance(x, y, z, x0, y0, z0)^2")
             trforce.addPerParticleParameter("k")
             trforce.addPerParticleParameter("x0")
@@ -155,7 +155,7 @@ class OpenMM(Lot):
             trforce.addPerParticleParameter("z0")
             system.addForce(trforce)
 
-            xyz = manage_xyz.xyz_to_np(self.geom)
+            xyz = utilities.utilities.manage_xyz.xyz_to_np(self.geom)
             with open(self.restrain_tranfile,'r') as input_file:
                 for line in input_file:
                     columns = line.split()
@@ -176,7 +176,7 @@ class OpenMM(Lot):
 
     def run(self,geom,mult,ad_idx,runtype='gradient'):
 
-        coords  = manage_xyz.xyz_to_np(geom)
+        coords  = utilities.utilities.manage_xyz.xyz_to_np(geom)
 
         # Update coordinates of simulation (shallow-copied object)
         xyz_nm = 0.1 * coords  # coords are in angstrom
@@ -224,10 +224,10 @@ if __name__=="__main__":
         integrator,
         )
     mol=next(pb.readfile('pdb','../../data/solvated.pdb'))
-    coords = nifty.getAllCoords(mol)
-    atoms = nifty.getAtomicSymbols(mol)
+    coords = utilities.nifty.getAllCoords(mol)
+    atoms = utilities.nifty.getAtomicSymbols(mol)
     print(coords)
-    geom= manage_xyz.combine_atom_xyz(atoms,coords)
+    geom= utilities.manage_xyz.combine_atom_xyz(atoms, coords)
 
     lot = OpenMM.from_options(states=[(1,0)],job_data={'simulation':simulation},geom=geom)
 
@@ -235,5 +235,5 @@ if __name__=="__main__":
     print(E)
 
     G = lot.get_gradient(coords,1,0)
-    nifty.pmat2d(G)
+    utilities.nifty.pmat2d(G)
 

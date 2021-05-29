@@ -9,7 +9,7 @@ import numpy as np
 from collections import Counter
 
 # local application imports
-from pygsm.utilities import *
+from pygsm import utilities
 from pygsm.wrappers import Molecule
 from .main_gsm import MainGSM
 from pygsm.coordinate_systems import Distance,Angle,Dihedral,OutOfPlane,TranslationX,TranslationY,TranslationZ,RotationA,RotationB,RotationC
@@ -380,7 +380,7 @@ class SE_GSM(MainGSM):
                 print(" The highest energy node is the last")
                 print(" not continuing with TS optimization.")
                 self.tscontinue=False
-            nifty.printcool("Over the hill")
+            utilities.utilities.nifty.printcool("Over the hill")
             isDone=True
         elif fp==-1 and self.energies[self.nR-1]>200. and self.nodes[self.nR-1].gradrms>self.options['CONV_TOL']*5:
             print("growth_iters over: all uphill and high energy")

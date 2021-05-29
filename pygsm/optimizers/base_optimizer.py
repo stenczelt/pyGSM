@@ -6,7 +6,7 @@ from os import path
 import numpy as np
 
 # local application imports
-from pygsm.utilities import *
+from pygsm import utilities
 from ._linesearch import backtrack,NoLineSearch
 
 
@@ -53,7 +53,7 @@ class base_optimizer(object):
         """ default options. """
 
         if hasattr(base_optimizer, '_default_options'): return base_optimizer._default_options.copy()
-        opt = options.Options()
+        opt = utilities.utilities.options.Options()
 
 
         opt.add_option(
@@ -341,12 +341,12 @@ class base_optimizer(object):
             constraints = ictan
         elif opt_type=='MECI':
             print("MECI")
-            dgrad_U = block_matrix.dot(molecule.coord_basis,molecule.difference_gradient)
-            dvec_U = block_matrix.dot(molecule.coord_basis,molecule.derivative_coupling)
+            dgrad_U = utilities.block_matrix.dot(molecule.coord_basis, molecule.difference_gradient)
+            dvec_U = utilities.block_matrix.dot(molecule.coord_basis, molecule.derivative_coupling)
             constraints = np.hstack((dgrad_U,dvec_U))
         elif opt_type=="SEAM" or opt_type=="TS-SEAM":
-            dgrad_U = block_matrix.dot(molecule.coord_basis,molecule.difference_gradient)
-            dvec_U = block_matrix.dot(molecule.coord_basis,molecule.derivative_coupling)
+            dgrad_U = utilities.block_matrix.dot(molecule.coord_basis, molecule.difference_gradient)
+            dvec_U = utilities.block_matrix.dot(molecule.coord_basis, molecule.derivative_coupling)
             constraints = np.hstack((ictan,dgrad_U,dvec_U))
         else:
             raise NotImplementedError
@@ -407,7 +407,7 @@ class base_optimizer(object):
             print(" norm_dg is %1.4f" % norm_dg)
             print(" dE is %1.4f" % molecule.difference_energy)
 
-        dq = -molecule.difference_energy/units.KCAL_MOL_PER_AU/norm_dg
+        dq = -molecule.difference_energy / utilities.utilities.units.KCAL_MOL_PER_AU / norm_dg
         if dq < self.DMAX/5:
             dq = -self.DMAX/5
         if dq<-0.075:
@@ -560,7 +560,7 @@ class base_optimizer(object):
         norm = np.linalg.norm(ictan)
         C = ictan/norm
         Vecs = molecule.coord_basis
-        Cn = block_matrix.dot(block_matrix.dot(Vecs,block_matrix.transpose(Vecs)),C)
+        Cn = utilities.block_matrix.dot(utilities.block_matrix.dot(Vecs, utilities.block_matrix.transpose(Vecs)), C)
         norm = np.linalg.norm(Cn)
         Cn = Cn/norm
 
@@ -573,7 +573,7 @@ class base_optimizer(object):
         self.nneg = sum(1 for e in eigen if e<-0.01)
 
         #=> Overlap metric <= #
-        overlap = np.dot(block_matrix.dot(tmph,block_matrix.transpose(Vecs)),Cn)
+        overlap = np.dot(utilities.block_matrix.dot(tmph, utilities.block_matrix.transpose(Vecs)), Cn)
 
         print(" overlap", overlap[:4].T)
         print(" nneg", self.nneg)

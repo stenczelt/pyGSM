@@ -15,7 +15,7 @@ try:
 except ImportError:
     nifty.logger.warning("NetworkX cannot be imported (topology tools won't work).  Most functionality should still work though.")
 
-from pygsm.utilities import *
+from pygsm import utilities
 
 #===========================#
 #|   Connectivity graph    |#
@@ -154,7 +154,7 @@ class Topology():
 
         # can do an assert for xyz here CRA TODO
         if natoms > 100000:
-            nifty.logger.warning("Warning: Large number of atoms (%i), topology building may take a long time" % natoms)
+            utilities.utilities.nifty.logger.warning("Warning: Large number of atoms (%i), topology building may take a long time" % natoms)
 
         # Get hybrid indices
         hybrid_indices=hybrid_indices
@@ -184,7 +184,7 @@ class Topology():
                         hybrid_idx_start_stop.append((start,end))
 
         if not bondlistfile:
-            nifty.printcool(" building bonds")
+            utilities.utilities.nifty.printcool(" building bonds")
             print(prim_idx_start_stop)
             bonds = Topology.build_bonds(xyz,atoms,primitive_indices,prim_idx_start_stop)
             #print(" done")
@@ -312,7 +312,7 @@ class Topology():
             ymax = boxes[sn].b
             zmax = boxes[sn].c
             if any([i != 90.0 for i in [boxes[sn].alpha, boxes[sn].beta, boxes[sn].gamma]]):
-                nifty.logger.warning("Warning: Topology building will not work with broken molecules in nonorthogonal cells.")
+                utilities.utilities.nifty.logger.warning("Warning: Topology building will not work with broken molecules in nonorthogonal cells.")
                 toppbc = False
         else:
             xmin = mins[0]
@@ -404,7 +404,7 @@ class Topology():
             AtomIterator = []
             for i in gasn:
                 for j in gngh[i]:
-                    apairs = nifty.cartesian_product2([gasn[i], gasn[j]])
+                    apairs = utilities.utilities.nifty.cartesian_product2([gasn[i], gasn[j]])
                     if len(apairs) > 0: AtomIterator.append(apairs[apairs[:,0]>apairs[:,1]])
             AtomIterator = np.ascontiguousarray(np.vstack(AtomIterator))
         else:
@@ -629,13 +629,13 @@ if __name__ =='__main__' and __package__ is None:
     filepath1='multi1.xyz'
     filepath2='multi2.xyz'
 
-    geom1 = manage_xyz.read_xyz(filepath1)
-    geom2 = manage_xyz.read_xyz(filepath2)
-    atom_symbols  = manage_xyz.get_atoms(geom1)
-    xyz1 = manage_xyz.xyz_to_np(geom1)
-    xyz2 = manage_xyz.xyz_to_np(geom2)
+    geom1 = utilities.manage_xyz.read_xyz(filepath1)
+    geom2 = utilities.manage_xyz.read_xyz(filepath2)
+    atom_symbols  = utilities.manage_xyz.get_atoms(geom1)
+    xyz1 = utilities.manage_xyz.xyz_to_np(geom1)
+    xyz2 = utilities.manage_xyz.xyz_to_np(geom2)
 
-    ELEMENT_TABLE = elements.ElementData()
+    ELEMENT_TABLE = utilities.elements.ElementData()
     atoms = [ELEMENT_TABLE.from_symbol(atom) for atom in atom_symbols]
     #print(atoms)
 

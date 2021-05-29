@@ -17,14 +17,19 @@ try:
     from .internal_coordinates import InternalCoordinates
     from .primitive_internals import PrimitiveInternalCoordinates
     from .topology import Topology
-    from .slots import *
+    from . import slots
 except:
     from internal_coordinates import InternalCoordinates
     from primitive_internals import PrimitiveInternalCoordinates
     from topology import Topology
-    from slots import *
+    import slots
 
-from pygsm.utilities import *
+from pygsm import utilities
+
+# undefined references ???
+logger = None
+click = None
+
 
 
 class DelocalizedInternalCoordinates(InternalCoordinates):
@@ -222,7 +227,7 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
         xyz2 = self.newCartesian(xyz, dQ, verbose)
         constraintSmall = len(self.Prims.cPrims) > 0
         for ic, c in enumerate(self.Prims.cPrims):
-            w = c.w if type(c) in [RotationA, RotationB, RotationC] else 1.0
+            w = c.w if type(c) in [slots.RotationA, slots.RotationB, slots.RotationC] else 1.0
             current = c.value(xyz)/w
             reference = self.Prims.cVals[ic]/w
             diff = (current - reference)
@@ -241,7 +246,7 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
         #Vt = block_matrix.transpose(self.Vecs)
         #print(Vt.shape)
         #return block_matrix.dot(Vt,block_matrix.dot(Bp,self.Vecs))
-        return block_matrix.dot(block_matrix.transpose(self.Vecs),Bp)
+        return utilities.block_matrix.dot(utilities.block_matrix.transpose(self.Vecs), Bp)
 
     #def calcGrad(self, xyz, gradx):
     #    #q0 = self.calculate(xyz)
@@ -317,10 +322,10 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
                 Float array containing difference in primitive coordinates
         """
 
-        nifty.click()
+        utilities.utilities.nifty.click()
         #print(" Beginning to build G Matrix")
         G = self.Prims.GMatrix(xyz)  # in primitive coords
-        time_G = nifty.click()
+        time_G = utilities.utilities.nifty.click()
         #print(" Timings: Build G: %.3f " % (time_G))
 
         tmpvecs=[]
@@ -337,11 +342,11 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
             #print("LargeVals %i" % LargeVals)
             tmpvecs.append(Q[:,LargeIdx])
 
-        self.Vecs = block_matrix(tmpvecs)
+        self.Vecs = utilities.block_matrix(tmpvecs)
         #print(" shape of DLC")
         #print(self.Vecs.shape)
 
-        time_eig = nifty.click()
+        time_eig = utilities.utilities.nifty.click()
         print(" Timings: Build G: %.3f Eig: %.3f" % (time_G, time_eig))
 
         #self.Internals = ["DLC %i" % (i+1) for i in range(len(LargeIdx))]
@@ -350,7 +355,7 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
         # Vecs has number of rows equal to the number of primitives, and
         # number of columns equal to the number of delocalized internal coordinates.
         if self.haveConstraints():
-            assert cVec is None,"can't have vector constraint and cprim."
+            assert slots.cVec is None,"can't have vector constraint and cprim."
             cVec=self.form_cVec_from_cPrims()
 
         if C is not None:
@@ -358,25 +363,25 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
             #C = C.copy()
             if (C[:]==0.).all():
                 raise RuntimeError
-            Cn = math_utils.orthogonalize(C)
+            Cn = utilities.utilities.math_utils.orthogonalize(C)
 
             # transform C into basis of DLC
             # CRA 3/2019 NOT SURE WHY THIS IS DONE
             # couldn't Cn just be used?
 
-            cVecs = block_matrix.dot(block_matrix.dot(self.Vecs,block_matrix.transpose(self.Vecs)),Cn)
+            cVecs = utilities.block_matrix.dot(utilities.block_matrix.dot(self.Vecs, utilities.block_matrix.transpose(self.Vecs)), Cn)
 
             # normalize C_U
             try:
                 #print(cVecs.T)
-                cVecs = math_utils.orthogonalize(cVecs)
+                cVecs = utilities.utilities.math_utils.orthogonalize(cVecs)
             except:
                 print(cVecs)
                 print("error forming cVec")
                 exit(-1)
 
             #project constraints into vectors
-            self.Vecs = block_matrix.project_constraint(self.Vecs,cVecs)
+            self.Vecs = utilities.block_matrix.project_constraint(self.Vecs, cVecs)
             #print(" shape of DLC")
             #print(self.Vecs.shape)
         return self.Vecs
@@ -407,9 +412,9 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
         """
 
         print(" starting to build G prim")
-        nifty.click()
+        utilities.utilities.nifty.click()
         G = self.Prims.GMatrix(xyz)  # in primitive coords
-        time_G = nifty.click()
+        time_G = utilities.utilities.nifty.click()
         print(" Timings: Build G: %.3f " % (time_G))
 
         tmpvecs=[]
@@ -424,8 +429,8 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
                     LargeIdx.append(ival)
             #print("LargeVals %i" % LargeVals)
             tmpvecs.append(Q[:,LargeIdx])
-        self.Vecs = block_matrix(tmpvecs)
-        time_eig = nifty.click()
+        self.Vecs = utilities.block_matrix(tmpvecs)
+        time_eig = utilities.utilities.nifty.click()
         #print(" Timings: Build G: %.3f Eig: %.3f" % (time_G, time_eig))
 
         self.Internals = ["DLC %i" % (i+1) for i in range(len(LargeIdx))]
@@ -433,7 +438,7 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
         # Vecs has number of rows equal to the number of primitives, and
         # number of columns equal to the number of delocalized internal coordinates.
         if self.haveConstraints():
-            assert cVec is None,"can't have vector constraint and cprim."
+            assert slots.cVec is None,"can't have vector constraint and cprim."
             cVec=self.form_cVec_from_cPrims()
 
         #TODO use block diagonal
@@ -441,26 +446,26 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
             # orthogonalize
             if (C[:]==0.).all():
                 raise RuntimeError
-            G =  block_matrix.full_matrix(self.Prims.GMatrix(xyz))
-            Cn = math_utils.conjugate_orthogonalize(C,G)
+            G =  utilities.block_matrix.full_matrix(self.Prims.GMatrix(xyz))
+            Cn = utilities.utilities.math_utils.conjugate_orthogonalize(C, G)
 
             # transform C into basis of DLC
             # CRA 3/2019 NOT SURE WHY THIS IS DONE
             # couldn't Cn just be used?
-            cVecs = block_matrix.dot(block_matrix.dot(self.Vecs,block_matrix.transpose(self.Vecs)),Cn)
+            cVecs = utilities.block_matrix.dot(utilities.block_matrix.dot(self.Vecs, utilities.block_matrix.transpose(self.Vecs)), Cn)
 
             # normalize C_U
             try:
                 #print(cVecs.T)
                 #cVecs = math_utils.orthogonalize(cVecs)
-                cVecs = math_utils.conjugate_orthogonalize(cVecs,G)
+                cVecs = utilities.utilities.math_utils.conjugate_orthogonalize(cVecs, G)
             except:
                 print(cVecs)
                 print("error forming cVec")
                 exit(-1)
 
             #project constraints into vectors
-            self.Vecs = block_matrix.project_conjugate_constraint(self.Vecs,cVecs,G)
+            self.Vecs = utilities.block_matrix.project_conjugate_constraint(self.Vecs, cVecs, G)
 
         return
 
@@ -740,14 +745,14 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
         """ Calculate difference in internal coordinates, accounting for changes in 2*pi of angles. """
         PMDiff = self.Prims.calcDiff(coord1, coord2)
         #Answer = np.dot(PMDiff, self.Vecs)
-        Answer = block_matrix.dot(block_matrix.transpose(self.Vecs),PMDiff)
+        Answer = utilities.block_matrix.dot(utilities.block_matrix.transpose(self.Vecs), PMDiff)
         return np.array(Answer).flatten()
 
     def calculate(self, coords):
         """ Calculate the DLCs given the Cartesian coordinates. """
         PrimVals = self.Prims.calculate(coords)
         #Answer = np.dot(PrimVals, self.Vecs)
-        Answer = block_matrix.dot(block_matrix.transpose(self.Vecs),PrimVals)
+        Answer = utilities.block_matrix.dot(utilities.block_matrix.transpose(self.Vecs), PrimVals)
         # print np.dot(np.array(self.Vecs[0,:]).flatten(), np.array(Answer).flatten())
         # print PrimVals[0]
         # raw_input()
@@ -759,7 +764,7 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
         # internal coordinates. That means the "c's" in Equation 23 of Schlegel's review paper
         # are simply the rows of the Vecs matrix.
         #return self.Vecs.dot(vecq)
-        return block_matrix.dot(Vecs,vecq)
+        return utilities.block_matrix.dot(slots.Vecs, vecq)
 
     # overwritting the parent internalcoordinates GMatrix
     # which is an elegant way to use the derivatives
@@ -770,24 +775,24 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
         s3a=0
         sp=0
         Gp = self.Prims.GMatrix(xyz)
-        Vt = block_matrix.transpose(self.Vecs)
+        Vt = utilities.block_matrix.transpose(self.Vecs)
         for vt,G,v in zip(Vt.matlist,Gp.matlist,self.Vecs.matlist):
             tmpvecs.append( np.dot(np.dot(vt,G),v))
-        return block_matrix(tmpvecs)
+        return utilities.block_matrix(tmpvecs)
 
     def MW_GMatrix(self,xyz,mass):
         tmpvecs=[]
         s3a=0
         sp=0
         Bp = self.Prims.wilsonB(xyz)
-        Vt = block_matrix.transpose(self.Vecs)
+        Vt = utilities.block_matrix.transpose(self.Vecs)
 
         s3a = 0
         for vt,b,v in zip(Vt.matlist,Bp.matlist,self.Vecs.matlist):
             e3a = s3a + b.shape[1]
             tmpvecs.append( np.linalg.multi_dot([vt,b/mass[s3a:e3a],b.T,v]))
             s3a = e3a
-        return block_matrix(tmpvecs)
+        return utilities.block_matrix(tmpvecs)
 
     def derivatives(self, coords):
         """ Obtain the change of the DLCs with respect to the Cartesian coordinates. """
@@ -844,7 +849,7 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
         tmpGi = [ np.linalg.inv(g) for g in G.matlist ]
         #time_inv = nifty.click()
         # print "G-time: %.3f Inv-time: %.3f" % (time_G, time_inv)
-        return block_matrix(tmpGi)
+        return utilities.block_matrix(tmpGi)
 
     def GInverse(self, xyz):
         #return self.GInverse_diag(xyz)
@@ -870,7 +875,7 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
         tmpGi = [ np.linalg.inv(g) for g in G.matlist ]
         #time_inv = nifty.click()
         #print("G-time: %.3f Inv-time: %.3f" % (time_G, time_inv))
-        return block_matrix(tmpGi)
+        return utilities.block_matrix(tmpGi)
 
     def repr_diff(self, other):
         return self.Prims.repr_diff(other.Prims)
@@ -904,8 +909,8 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
         print(xvec.shape)
 
         # find what linear combination of DLC basis xvec and yvec is
-        proj_xvec = block_matrix.dot(block_matrix.transpose(self.Vecs),xvec)
-        proj_yvec = block_matrix.dot(block_matrix.transpose(self.Vecs),yvec)
+        proj_xvec = utilities.block_matrix.dot(utilities.block_matrix.transpose(self.Vecs), xvec)
+        proj_yvec = utilities.block_matrix.dot(utilities.block_matrix.transpose(self.Vecs), yvec)
 
         #proj_xvec = block_matrix.dot(self.Vecs,xvec)
         #proj_yvec = block_matrix.dot(self.Vecs,yvec)
@@ -938,18 +943,18 @@ if __name__ =='__main__' and __package__ is None:
     filepath2 = 'two_CO2_RX.xyz'
     filepath3 = 'two_CO2_RY.xyz'
     filepath4 = 'two_CO2_RZ.xyz'
-    geom1 = manage_xyz.read_xyz(filepath)
-    geom2 = manage_xyz.read_xyz(filepath2)
-    geom3 = manage_xyz.read_xyz(filepath3)
-    geom4 = manage_xyz.read_xyz(filepath4)
-    atom_symbols  = manage_xyz.get_atoms(geom1)
+    geom1 = utilities.manage_xyz.read_xyz(filepath)
+    geom2 = utilities.manage_xyz.read_xyz(filepath2)
+    geom3 = utilities.manage_xyz.read_xyz(filepath3)
+    geom4 = utilities.manage_xyz.read_xyz(filepath4)
+    atom_symbols  = utilities.manage_xyz.get_atoms(geom1)
 
-    xyz1 = manage_xyz.xyz_to_np(geom1)
-    xyz2 = manage_xyz.xyz_to_np(geom2)
-    xyz3 = manage_xyz.xyz_to_np(geom3)
-    xyz4 = manage_xyz.xyz_to_np(geom4)
+    xyz1 = utilities.manage_xyz.xyz_to_np(geom1)
+    xyz2 = utilities.manage_xyz.xyz_to_np(geom2)
+    xyz3 = utilities.manage_xyz.xyz_to_np(geom3)
+    xyz4 = utilities.manage_xyz.xyz_to_np(geom4)
 
-    ELEMENT_TABLE = elements.ElementData()
+    ELEMENT_TABLE = utilities.elements.ElementData()
     atoms = [ELEMENT_TABLE.from_symbol(atom) for atom in atom_symbols]
 
     G1 = Topology.build_topology(xyz1,atoms,hybrid_indices=None)

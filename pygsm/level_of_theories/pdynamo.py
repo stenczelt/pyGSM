@@ -21,7 +21,7 @@ try:
 except:
     from base_lot import Lot
 
-from pygsm.utilities import *
+from pygsm import utilities
 
 
 class pDynamo(Lot):
@@ -82,7 +82,7 @@ class pDynamo(Lot):
 
 
             self.file_options.force_active('scratch','scratch/{}'.format(self.node_id),'Setting scratch folder')
-            nifty.printcool(" Options for pdynamo")
+            utilities.utilities.nifty.printcool(" Options for pdynamo")
 
             for line in self.file_options.record():
                 print(line)
@@ -97,7 +97,7 @@ class pDynamo(Lot):
     def build_system(self):
 
         # save xyz file
-        manage_xyz.write_xyz('scratch/{}/tmp.xyz'.format(self.node_id),self.geom)
+        utilities.utilities.manage_xyz.write_xyz('scratch/{}/tmp.xyz'.format(self.node_id), self.geom)
 
         # ORCA
         if self.use_orca:
@@ -169,14 +169,14 @@ class pDynamo(Lot):
         self.E = []
         self.grada = []
         coordinates3 = Coordinates3.WithExtent ( len ( geom) )
-        xyz = manage_xyz.xyz_to_np(geom)
+        xyz = utilities.utilities.manage_xyz.xyz_to_np(geom)
         for ( i, ( x, y, z ) ) in enumerate ( xyz ):
             coordinates3[i,0] = x
             coordinates3[i,1] = y
             coordinates3[i,2] = z
         self.system.coordinates3 = coordinates3
         energy = self.system.Energy(doGradients = True)  #KJ
-        energy *= units.KJ_MOL_TO_AU * units.KCAL_MOL_PER_AU  #KCAL/MOL
+        energy *= utilities.utilities.units.KJ_MOL_TO_AU * utilities.utilities.units.KCAL_MOL_PER_AU  #KCAL/MOL
 
         self.E.append((multiplicity,energy))
         print(energy)
@@ -184,7 +184,7 @@ class pDynamo(Lot):
         gradient=[]
         for i in range(len(geom)):
             for j in range(3):
-                gradient.append(self.system.scratch.gradients3[i,j] * units.KJ_MOL_TO_AU /units.ANGSTROM_TO_AU)  #Ha/Bohr
+                gradient.append(self.system.scratch.gradients3[i,j] * utilities.utilities.units.KJ_MOL_TO_AU / utilities.utilities.units.ANGSTROM_TO_AU)  #Ha/Bohr
         gradient = np.asarray(gradient)
         #print(gradient)
         self.grada.append((multiplicity,gradient))
@@ -193,7 +193,7 @@ class pDynamo(Lot):
     def get_energy(self,coords,multiplicity,state):
         if self.hasRanForCurrentCoords==False or (coords != self.currentCoords).any():
             self.currentCoords = coords.copy()
-            geom = manage_xyz.np_to_xyz(self.geom,self.currentCoords)
+            geom = utilities.utilities.manage_xyz.np_to_xyz(self.geom, self.currentCoords)
             self.run(geom,multiplicity)
             self.hasRanForCurrentCoords=True
         #else:
@@ -204,7 +204,7 @@ class pDynamo(Lot):
     def get_gradient(self,coords,multiplicity,state):
         if self.hasRanForCurrentCoords==False or (coords != self.currentCoords).any():
             self.currentCoords = coords.copy()
-            geom = manage_xyz.np_to_xyz(self.geom,self.currentCoords)
+            geom = utilities.utilities.manage_xyz.np_to_xyz(self.geom, self.currentCoords)
             self.run(geom,multiplicity)
         tmp = self.search_tuple(self.grada,multiplicity)
         return np.asarray(tmp[state][1])  #Ha/Bohr
@@ -230,6 +230,6 @@ if __name__=="__main__":
 
     # DFTB
     filepath='../../data/ethylene.xyz'
-    geom = manage_xyz.read_xyz(filepath)
+    geom = utilities.manage_xyz.read_xyz(filepath)
     lot = pDynamo.from_options(states=[(1,0)],charge=0,nproc=16,fnm=filepath,lot_inp_file='pdynamo_options_dftb.txt')
     lot.run(geom)

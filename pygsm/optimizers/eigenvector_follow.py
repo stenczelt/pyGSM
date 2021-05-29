@@ -14,7 +14,7 @@ import numpy as np
 # local application imports
 from ._linesearch import backtrack,NoLineSearch,golden_section
 from .base_optimizer import base_optimizer
-from pygsm.utilities import *
+from pygsm import utilities
 
 class eigenvector_follow(base_optimizer):
 
@@ -174,9 +174,9 @@ class eigenvector_follow(base_optimizer):
             scaled_dq = dq*step
             dEtemp = np.dot(self.Hessian,scaled_dq)
             dEpre = np.dot(np.transpose(scaled_dq),gc) + 0.5*np.dot(np.transpose(dEtemp),scaled_dq)
-            dEpre *=units.KCAL_MOL_PER_AU
+            dEpre *=utilities.utilities.units.KCAL_MOL_PER_AU
             #print(constraint_steps.T)
-            constraint_energy = np.dot(gp.T,constraint_steps)*units.KCAL_MOL_PER_AU
+            constraint_energy = np.dot(gp.T,constraint_steps) * utilities.utilities.units.KCAL_MOL_PER_AU
             #print("constraint_energy: %1.4f" % constraint_energy)
             dEpre += constraint_energy
             #if abs(dEpre)<0.01:
@@ -200,18 +200,18 @@ class eigenvector_follow(base_optimizer):
             if ostep % xyzframerate==0:
                 geoms.append(molecule.geometry)
                 energies.append(molecule.energy-refE)
-                manage_xyz.write_xyzs_w_comments('{}/opt_{}.xyz'.format(path,molecule.node_id),geoms,energies,scale=1.)
+                utilities.utilities.manage_xyz.write_xyzs_w_comments('{}/opt_{}.xyz'.format(path, molecule.node_id), geoms, energies, scale=1.)
 
             # save variables for update Hessian!
             if not molecule.coord_obj.__class__.__name__=='CartesianCoordinates':
                 # only form g_prim for non-constrained
-                self.g_prim = block_matrix.dot(molecule.coord_basis,gc)
+                self.g_prim = utilities.block_matrix.dot(molecule.coord_basis, gc)
                 self.dx = x-xp
                 self.dg = g - gp
 
                 self.dx_prim_actual = molecule.coord_obj.Prims.calcDiff(xyz,xyzp)
                 self.dx_prim_actual = np.reshape(self.dx_prim_actual,(-1,1))
-                self.dx_prim = block_matrix.dot(molecule.coord_basis,scaled_dq)
+                self.dx_prim = utilities.block_matrix.dot(molecule.coord_basis, scaled_dq)
                 self.dg_prim = self.g_prim - gp_prim
 
             else:
@@ -260,7 +260,7 @@ class eigenvector_follow(base_optimizer):
                 if ostep % xyzframerate!=0:
                     geoms.append(molecule.geometry)
                     energies.append(molecule.energy-refE)
-                    manage_xyz.write_xyzs_w_comments('{}/opt_{}.xyz'.format(path,molecule.node_id),geoms,energies,scale=1.)
+                    utilities.utilities.manage_xyz.write_xyzs_w_comments('{}/opt_{}.xyz'.format(path, molecule.node_id), geoms, energies, scale=1.)
                 break
 
             #update DLC  --> this changes q, g, Hint
@@ -305,6 +305,6 @@ if __name__=='__main__':
     #geoms = ef.optimize(molecule=M,refE=M.energy,opt_steps=1)
     print(M.primitive_internal_coordinates)
 
-    manage_xyz.write_xyzs('opt.xyz',geoms,scale=1.)
+    utilities.manage_xyz.write_xyzs('opt.xyz', geoms, scale=1.)
 
 

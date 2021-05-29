@@ -14,7 +14,7 @@ import numpy as np
 # local application imports
 from ._linesearch import backtrack,NoLineSearch
 from .base_optimizer import base_optimizer
-from pygsm.utilities import *
+from pygsm import utilities
 
 class conjugate_gradient(base_optimizer):
 
@@ -146,8 +146,8 @@ class conjugate_gradient(base_optimizer):
 
             #gmax = np.max(g)/units.ANGSTROM_TO_AU/KCAL_MOL_PER_AU
             #print "current gradrms= %r au" % gradrms
-            gmax = np.max(g)/units.ANGSTROM_TO_AU
-            self.disp = np.max(x - xp)/units.ANGSTROM_TO_AU
+            gmax = np.max(g) / utilities.utilities.units.ANGSTROM_TO_AU
+            self.disp = np.max(x - xp) / utilities.utilities.units.ANGSTROM_TO_AU
             self.Ediff = fx -fxp / KCAL_MOL_PER_AU
             print(" maximum displacement component %1.2f (au)" % self.disp)
             print(" maximum gradient component %1.2f (au)" % gmax)

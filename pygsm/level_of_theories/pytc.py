@@ -11,7 +11,7 @@ import json
 
 # local application imports
 from .base_lot import Lot
-from pygsm.utilities import *
+from pygsm import utilities
 from .rhf_lot import RHF_LOT
 from .casci_lot_svd import CASCI_LOT_SVD
 
@@ -80,12 +80,12 @@ class PyTC(Lot):
         dft_functional=d.get('dft_functional','None')
         dft_grid_name = d.get('dft_grid_name','SG0')
 
-        nifty.printcool("Building Resources")
+        utilities.utilities.nifty.printcool("Building Resources")
         resources = ls.ResourceList.build()
-        nifty.printcool("{}".format(resources))
+        utilities.utilities.nifty.printcool("{}".format(resources))
 
         if not doQMMM:
-            nifty.printcool("Building Molecule and Geom")
+            utilities.utilities.nifty.printcool("Building Molecule and Geom")
             molecule = ls.Molecule.from_xyz_file(filepath)
             geom =est.Geometry.build(
                 resources=resources,
@@ -93,7 +93,7 @@ class PyTC(Lot):
                 basisname=basis,
                 )
         else:
-            nifty.printcool("Building QMMM Molecule and Geom")
+            utilities.utilities.nifty.printcool("Building QMMM Molecule and Geom")
             qmmm = est.QMMM.from_prmtop(
                 prmtopfile=prmtopfile,
                 inpcrdfile=inpcrdfile,
@@ -105,10 +105,10 @@ class PyTC(Lot):
                 qmmm=qmmm,
                 basisname=basis,
                 )
-        nifty.printcool("{}".format(geom))
+        utilities.utilities.nifty.printcool("{}".format(geom))
 
         if doFOMO:
-            nifty.printcool("Building FOMO RHF")
+            utilities.utilities.nifty.printcool("Building FOMO RHF")
             ref = est.RHF.from_options(
                     geometry=geom,
                     diis_max_vecs=diis_max_vecs,
@@ -123,7 +123,7 @@ class PyTC(Lot):
                     )
             ref.compute_energy()
         elif doDFT:
-            nifty.printcool("Building DFT LOT")
+            utilities.utilities.nifty.printcool("Building DFT LOT")
             ref = est.RHF.from_options(
                     geometry=geom,
                     diis_max_vecs=diis_max_vecs,
@@ -138,7 +138,7 @@ class PyTC(Lot):
             raise NotImplementedError
 
         if doCASCI:
-            nifty.printcool("Building CASCI LOT")
+            utilities.utilities.nifty.printcool("Building CASCI LOT")
             casci = est.CASCI.from_options(
                 reference=ref,
                 nocc=nocc,
@@ -169,15 +169,15 @@ class PyTC(Lot):
     def get_energy(self,coords,multiplicity,state):
         if self.hasRanForCurrentCoords==False or (coords != self.currentCoords).all():
             self.currentCoords = coords.copy()
-            geom = manage_xyz.np_to_xyz(self.geom,self.currentCoords)
+            geom = utilities.utilities.manage_xyz.np_to_xyz(self.geom, self.currentCoords)
             self.run(geom)
         tmp = self.search_tuple(self.E,multiplicity)
-        return tmp[state][1]*units.KCAL_MOL_PER_AU
+        return tmp[state][1] * utilities.utilities.units.KCAL_MOL_PER_AU
 
     def get_mm_energy(self,coords):
         if self.hasRanForCurrentCoords==False or (coords != self.currentCoords).all():
             self.currentCoords = coords.copy()
-            self.lot.update_qmmm(coords*units.ANGSTROM_TO_AU)
+            self.lot.update_qmmm(coords * utilities.utilities.units.ANGSTROM_TO_AU)
         if self.lot.__class__.__name__=="CASCI_LOT" or self.lot.__class__.__name__=="CASCI_LOT_SVD":
             return self.lot.casci.ref.geometry.qmmm.mm_energy
         else:
@@ -187,7 +187,7 @@ class PyTC(Lot):
         #TODO need diff variable for hasRan MM energy
         if self.hasRanForCurrentCoords==False or (coords != self.currentCoords).all():
             self.currentCoords = coords.copy()
-            self.lot.update_qmmm(coords*units.ANGSTROM_TO_AU)
+            self.lot.update_qmmm(coords * utilities.utilities.units.ANGSTROM_TO_AU)
         if self.lot.__class__.__name__=="CASCI_LOT" or self.lot.__class__.__name__=="CASCI_LOT_SVD":
             return self.lot.casci.ref.geometry.qmmm.mm_gradient
         else:
@@ -219,14 +219,14 @@ class PyTC(Lot):
         self.E=[]
         self.grada=[]
         #normal update
-        coords = manage_xyz.xyz_to_np(geom)
-        T = ls.Tensor.array(coords*units.ANGSTROM_TO_AU)
+        coords = utilities.utilities.manage_xyz.xyz_to_np(geom)
+        T = ls.Tensor.array(coords * utilities.utilities.units.ANGSTROM_TO_AU)
         print(" In run")
         print("Lot {} casci {} ref {}".format(id(self.lot),id(self.lot.casci),id(self.lot.casci.reference)))
 
         if not verbose:
             with open('lot_jobs.txt','a') as out:
-                with nifty.custom_redirection(out):
+                with utilities.utilities.nifty.custom_redirection(out):
                     self.run_code(T)
                 filename="{}.molden".format(self.node_id)
                 self.lot.casci.reference.save_molden_file(filename)
@@ -243,17 +243,17 @@ class PyTC(Lot):
     def get_gradient(self,coords,multiplicity,state):
         if self.hasRanForCurrentCoords==False or (coords != self.currentCoords).all():
             self.currentCoords = coords.copy()
-            geom = manage_xyz.np_to_xyz(self.geom,self.currentCoords)
+            geom = utilities.utilities.manage_xyz.np_to_xyz(self.geom, self.currentCoords)
             self.run(geom)
         tmp = self.search_tuple(self.grada,multiplicity)
-        return np.asarray(tmp[state][1])*units.ANGSTROM_TO_AU
+        return np.asarray(tmp[state][1]) * utilities.utilities.units.ANGSTROM_TO_AU
 
     def get_coupling(self,coords,multiplicity,state1,state2):
         if self.hasRanForCurrentCoords==False or (coords != self.currentCoords).all():
             self.currentCoords = coords.copy()
-            geom = manage_xyz.np_to_xyz(self.geom,self.currentCoords)
+            geom = utilities.utilities.manage_xyz.np_to_xyz(self.geom, self.currentCoords)
             self.run(geom)
-        return np.reshape(self.coup,(3*len(self.coup),1))*units.ANGSTROM_TO_AU
+        return np.reshape(self.coup,(3*len(self.coup),1)) * utilities.utilities.units.ANGSTROM_TO_AU
 
 
 if __name__=="__main__":
@@ -314,8 +314,8 @@ if __name__=="__main__":
     nifty.printcool("Build the pyGSM Level of Theory object (LOT)")
     lot=PyTC.from_options(states=[(1,0),(1,1)],job_data={'psiw':psiw},do_coupling=False,fnm=filepath)
 
-    geoms = manage_xyz.read_xyz(filepath,scale=1.)
-    coords= manage_xyz.xyz_to_np(geoms)
+    geoms = utilities.manage_xyz.read_xyz(filepath, scale=1.)
+    coords= utilities.manage_xyz.xyz_to_np(geoms)
     e=lot.get_energy(coords,1,0)
     print(e)
 

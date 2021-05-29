@@ -12,7 +12,7 @@ try:
     from .base_lot import Lot
 except:
     from base_lot import Lot
-from pygsm.utilities import *
+from pygsm import utilities
 import subprocess
 
 class Molpro(Lot):
@@ -203,8 +203,8 @@ class Molpro(Lot):
 if __name__=='__main__':
     filepath="../../data/ethylene.xyz"
     molpro = Molpro.from_options(states=[(1,0),(1,1)],fnm=filepath,lot_inp_file='../../data/ethylene_molpro.com',coupling_states=(0,1))
-    geom=manage_xyz.read_xyz(filepath)
-    xyz = manage_xyz.xyz_to_np(geom)
+    geom=utilities.manage_xyz.read_xyz(filepath)
+    xyz = utilities.manage_xyz.xyz_to_np(geom)
     print(molpro.get_energy(xyz,1,0))
     print(molpro.get_gradient(xyz,1,0))
     print(molpro.get_coupling(xyz,1,0,1))

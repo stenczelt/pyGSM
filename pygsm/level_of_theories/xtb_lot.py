@@ -15,15 +15,15 @@ try:
     from .base_lot import Lot
 except:
     from base_lot import Lot
-from pygsm.utilities import *
+from pygsm import utilities
 
 class xTB_lot(Lot):
     def __init__(self,options):
         super(xTB_lot,self).__init__(options)
 
         numbers = []
-        E = elements.ElementData()
-        for a in manage_xyz.get_atoms(self.geom):
+        E = utilities.utilities.elements.ElementData()
+        for a in utilities.utilities.manage_xyz.get_atoms(self.geom):
             elem = E.from_symbol(a)
             numbers.append(elem.atomic_num)
         self.numbers = np.asarray(numbers)
@@ -32,10 +32,10 @@ class xTB_lot(Lot):
 
         #print('running!')
         #sys.stdout.flush()
-        coords = manage_xyz.xyz_to_np(geom)
+        coords = utilities.utilities.manage_xyz.xyz_to_np(geom)
 
         # convert to bohr
-        positions = coords* units.ANGSTROM_TO_AU
+        positions = coords * utilities.utilities.units.ANGSTROM_TO_AU
         calc = Calculator(get_method("GFN2-xTB"), self.numbers, positions, charge=self.charge)
         calc.set_output('lot_jobs_{}.txt'.format(self.node_id))
         res = calc.singlepoint()  # energy printed is only the electronic part
@@ -58,11 +58,11 @@ class xTB_lot(Lot):
 if __name__=="__main__":
 
 
-    geom=manage_xyz.read_xyz('../../data/ethylene.xyz')
+    geom=utilities.manage_xyz.read_xyz('../../data/ethylene.xyz')
     #geoms=manage_xyz.read_xyzs('../../data/diels_alder.xyz')
     #geom = geoms[0]
     #geom=manage_xyz.read_xyz('xtbopt.xyz')
-    xyz = manage_xyz.xyz_to_np(geom)
+    xyz = utilities.manage_xyz.xyz_to_np(geom)
     #xyz *= units.ANGSTROM_TO_AU
 
     lot  = xTB_lot.from_options(states=[(1,0)],gradient_states=[(1,0)],geom=geom,node_id=0)

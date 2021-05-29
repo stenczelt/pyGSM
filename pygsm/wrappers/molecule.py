@@ -16,7 +16,7 @@ from collections import Counter
 #import pybel as pb
 
 # local application imports
-from pygsm.utilities import *
+from pygsm import utilities
 import pygsm.potential_energy_surfaces
 from pygsm.potential_energy_surfaces import PES
 from pygsm.potential_energy_surfaces import Avg_PES
@@ -25,7 +25,7 @@ from pygsm.coordinate_systems import DelocalizedInternalCoordinates
 from pygsm.coordinate_systems import CartesianCoordinates
 
 #logger = logging.getLogger(__name__)
-ELEMENT_TABLE = elements.ElementData()
+ELEMENT_TABLE = utilities.elements.ElementData()
 
 # TOC:
 # constructors
@@ -40,7 +40,7 @@ class Molecule(object):
     @staticmethod
     def default_options():
         if hasattr(Molecule, '_default_options'): return Molecule._default_options.copy()
-        opt = options.Options()
+        opt = utilities.options.Options()
 
         opt.add_option(
                 key='fnm',
@@ -170,11 +170,11 @@ class Molecule(object):
         PES = type(MoleculeA.PES).create_pes_from(PES=MoleculeA.PES,options={'node_id': new_node_id})
 
         if xyz is not None:
-            new_geom = manage_xyz.np_to_xyz(MoleculeA.geometry,xyz)
+            new_geom = utilities.manage_xyz.np_to_xyz(MoleculeA.geometry,xyz)
             coord_obj = type(MoleculeA.coord_obj)(MoleculeA.coord_obj.options.copy().set_values({"xyz":xyz}))
         elif fnm is not None:
-            new_geom = manage_xyz.read_xyz(fnm,scale=1.)
-            xyz = manage_xyz.xyz_to_np(new_geom)
+            new_geom = utilities.manage_xyz.read_xyz(fnm,scale=1.)
+            xyz = utilities.manage_xyz.xyz_to_np(new_geom)
             coord_obj = type(MoleculeA.coord_obj)(MoleculeA.coord_obj.options.copy().set_values({"xyz":xyz}))
         else:
             new_geom = MoleculeA.geometry
@@ -202,8 +202,8 @@ class Molecule(object):
         t0 = time()
         if self.Data['geom'] is not None:
             print(" getting cartesian coordinates from geom")
-            atoms=manage_xyz.get_atoms(self.Data['geom'])
-            xyz=manage_xyz.xyz_to_np(self.Data['geom'])
+            atoms=utilities.manage_xyz.get_atoms(self.Data['geom'])
+            xyz=utilities.manage_xyz.xyz_to_np(self.Data['geom'])
         elif self.Data['fnm'] is not None:
             print(" reading cartesian coordinates from file")
             if self.Data['ftype'] is None:
@@ -214,9 +214,9 @@ class Molecule(object):
             #mol=next(pb.readfile(self.Data['ftype'],self.Data['fnm']))
             #xyz = nifty.getAllCoords(mol)
             #atoms =  nifty.getAtomicSymbols(mol)
-            geom = manage_xyz.read_xyz(self.Data['fnm'],scale=1.)
-            xyz = manage_xyz.xyz_to_np(geom)
-            atoms = manage_xyz.get_atoms(geom)
+            geom = utilities.manage_xyz.read_xyz(self.Data['fnm'],scale=1.)
+            xyz = utilities.manage_xyz.xyz_to_np(geom)
+            atoms = utilities.manage_xyz.get_atoms(geom)
 
         else:
             raise RuntimeError
@@ -340,7 +340,7 @@ class Molecule(object):
 
     @property
     def atomic_mass(self):
-        return np.array([units.AMU_TO_AU * ele.mass_amu for ele in self.atoms])
+        return np.array([utilities.units.AMU_TO_AU * ele.mass_amu for ele in self.atoms])
 
     @property
     def mass_amu(self):
@@ -396,7 +396,7 @@ class Molecule(object):
 
     @property
     def geometry(self):
-        return manage_xyz.combine_atom_xyz(self.atom_symbols,self.xyz)
+        return utilities.manage_xyz.combine_atom_xyz(self.atom_symbols,self.xyz)
 
     @property
     def atom_symbols(self):
@@ -480,7 +480,7 @@ class Molecule(object):
 
     def form_Hessian_in_basis(self):
         #print " forming Hessian in current basis"
-        self.Hessian = block_matrix.dot( block_matrix.dot(block_matrix.transpose(self.coord_basis),self.Primitive_Hessian),self.coord_basis)
+        self.Hessian = utilities.block_matrix.dot( utilities.block_matrix.dot(utilities.block_matrix.transpose(self.coord_basis),self.Primitive_Hessian),self.coord_basis)
 
         #print(" Hessian")
         #print(self.Hessian)
@@ -575,7 +575,7 @@ class Molecule(object):
         return np.reshape(self.coord_obj.calculate(self.xyz),(-1,1))
 
     def mult_bm(self,left,right):
-        return block_matrix.dot(left,right)
+        return utilities.block_matrix.dot(left,right)
 
     @property
     def prim_CMatrix(self):

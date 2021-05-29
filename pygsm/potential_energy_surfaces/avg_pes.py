@@ -7,7 +7,7 @@ import numpy as np
 
 # local application imports
 from .pes import PES
-from pygsm.utilities import *
+from pygsm import utilities
 
 class Avg_PES(PES):
     """ Avg potential energy surface calculators """
@@ -86,7 +86,7 @@ class Avg_PES(PES):
         print(" dE is %5.4f" % self.dE)
 
         # non-adiabatic coupling is derivative coupling times dE
-        nac = dvec*self.dE/units.KCAL_MOL_PER_AU
+        nac = dvec * self.dE / utilities.utilities.units.KCAL_MOL_PER_AU
         beta = get_beta(dgrad,nac)
         print(" beta = %1.6f" % beta)
 
@@ -265,7 +265,7 @@ if __name__ == '__main__':
     import lightspeed as ls
 
     filepath='../../data/ethylene.xyz'
-    geom=manage_xyz.read_xyz(filepath,scale=1)
+    geom=utilities.manage_xyz.read_xyz(filepath, scale=1)
     ##### => Job Data <= #####
     states = [(1,0),(1,1)]
     charge=0
@@ -274,9 +274,9 @@ if __name__ == '__main__':
     basis='6-31gs'
 
     #### => PSIW Obj <= ######
-    nifty.printcool("Build resources")
+    utilities.nifty.printcool("Build resources")
     resources = ls.ResourceList.build()
-    nifty.printcool('{}'.format(resources))
+    utilities.nifty.printcool('{}'.format(resources))
 
     molecule = ls.Molecule.from_xyz_file(filepath)
     geom = psiw.geometry.Geometry.build(
@@ -284,7 +284,7 @@ if __name__ == '__main__':
         molecule=molecule,
         basisname=basis,
         )
-    nifty.printcool('{}'.format(geom))
+    utilities.nifty.printcool('{}'.format(geom))
 
     ref = psiw.RHF.from_options(
          geometry= geom,
@@ -316,14 +316,14 @@ if __name__ == '__main__':
         state_coincidence='full',
         )
 
-    nifty.printcool("Build the pyGSM Level of Theory object (LOT)")
+    utilities.nifty.printcool("Build the pyGSM Level of Theory object (LOT)")
     lot=PyTC.from_options(states=[(1,0),(1,1)],job_data={'psiw':psiw},do_coupling=False,fnm=filepath)
 
     pes1 = PES.from_options(lot=lot,ad_idx=0,multiplicity=1)
     pes2 = PES.from_options(lot=lot,ad_idx=1,multiplicity=1)
     pes = Avg_PES(PES1=pes1,PES2=pes2,lot=lot)
-    geom=manage_xyz.read_xyz(filepath,scale=1)
-    coords= manage_xyz.xyz_to_np(geom)
+    geom=utilities.manage_xyz.read_xyz(filepath, scale=1)
+    coords= utilities.manage_xyz.xyz_to_np(geom)
     print(pes.get_energy(coords))
     print(pes.get_gradient(coords))
 

@@ -8,7 +8,6 @@ import numpy as np
 
 # local application imports
 from .base_lot import Lot
-from pygsm.utilities import *
 import subprocess
 
 class QChem(Lot):

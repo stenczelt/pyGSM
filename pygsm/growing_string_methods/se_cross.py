@@ -8,7 +8,7 @@ from os import path
 import numpy as np
 
 # local application imports
-from pygsm.utilities import *
+from pygsm import utilities
 from pygsm.wrappers import Molecule
 from .se_gsm import SE_GSM
 from pygsm.potential_energy_surfaces import Avg_PES,PES
@@ -22,9 +22,9 @@ class SE_Cross(SE_GSM):
         """
         assert rtype in [0,1], "rtype not defined"
         if rtype==0:
-            nifty.printcool("Doing SE-MECI search")
+            utilities.utilities.nifty.printcool("Doing SE-MECI search")
         else:
-            nifty.printcool("Doing SE-MESX search")
+            utilities.utilities.nifty.printcool("Doing SE-MESX search")
 
         self.nodes[0].gradrms=0.
         self.nodes[0].V0 = self.nodes[0].energy

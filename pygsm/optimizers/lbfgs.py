@@ -15,7 +15,7 @@ from scipy.optimize.lbfgsb import LbfgsInvHessProduct
 # local application imports
 from ._linesearch import backtrack,NoLineSearch
 from .base_optimizer import base_optimizer
-from pygsm.utilities import *
+from pygsm import utilities
 
 class iterationData:
     """docstring for iterationData"""
@@ -77,7 +77,7 @@ class lbfgs(base_optimizer):
         for c in molecule.constraints.T:
             gc -= np.dot(gc.T,c[:,np.newaxis])*c[:,np.newaxis]
 
-        g_prim = block_matrix.dot(molecule.coord_basis,gc)
+        g_prim = utilities.block_matrix.dot(molecule.coord_basis, gc)
         molecule.gradrms = np.sqrt(np.dot(gc.T,gc)/num_coords)
 
         # primitive constraint step
@@ -137,7 +137,7 @@ class lbfgs(base_optimizer):
             self.k = self.k + 1
 
             # form in DLC basis (does nothing if cartesian)
-            d = block_matrix.dot(block_matrix.transpose(molecule.coord_basis),d_prim)
+            d = utilities.block_matrix.dot(utilities.block_matrix.transpose(molecule.coord_basis), d_prim)
 
             # normalize the direction
             actual_step = np.linalg.norm(d)
@@ -153,13 +153,13 @@ class lbfgs(base_optimizer):
             xp = x.copy()
             self.xyzp = xyz.copy()
             gp = g.copy()
-            self.gp_prim = block_matrix.dot(molecule.coord_basis,gc)
+            self.gp_prim = utilities.block_matrix.dot(molecule.coord_basis, gc)
             fxp = fx
             pgradrms = molecule.gradrms
 
             # => calculate constraint step <= #
             constraint_steps = self.get_constraint_steps(molecule,opt_type,g)
-            self.cstep_prim = block_matrix.dot(molecule.coord_basis,constraint_steps)
+            self.cstep_prim = utilities.block_matrix.dot(molecule.coord_basis, constraint_steps)
 
             # line search
             ls = self.Linesearch(nconstraints, x, fx, gc, d, step, xp,constraint_steps,self.linesearch_parameters,molecule,verbose)
@@ -175,8 +175,8 @@ class lbfgs(base_optimizer):
             dq = x-xp
 
             # TODO dEpre is missing second order effects or is it?
-            dEpre = np.dot(gc.T,dq)*units.KCAL_MOL_PER_AU
-            constraint_energy = np.dot(gp.T,constraint_steps)*units.KCAL_MOL_PER_AU
+            dEpre = np.dot(gc.T,dq) * utilities.utilities.units.KCAL_MOL_PER_AU
+            constraint_energy = np.dot(gp.T,constraint_steps) * utilities.utilities.units.KCAL_MOL_PER_AU
             if opt_type not in ['UNCONSTRAINED','ICTAN']:
                 print("constraint_energy: %1.4f" % constraint_energy)
             dEpre += constraint_energy
@@ -248,7 +248,7 @@ class lbfgs(base_optimizer):
             gc = g.copy()
             for c in molecule.constraints.T:
                 gc -= np.dot(gc.T,c[:,np.newaxis])*c[:,np.newaxis]
-            g_prim = block_matrix.dot(molecule.coord_basis,gc)
+            g_prim = utilities.block_matrix.dot(molecule.coord_basis, gc)
 
             dE = molecule.difference_energy
             if dE < 100.:
@@ -286,7 +286,7 @@ class lbfgs(base_optimizer):
             if ostep % xyzframerate==0:
                 geoms.append(molecule.geometry)
                 energies.append(molecule.energy-refE)
-                manage_xyz.write_xyzs_w_comments('{}/opt_{}.xyz'.format(path,molecule.node_id),geoms,energies,scale=1.)
+                utilities.utilities.manage_xyz.write_xyzs_w_comments('{}/opt_{}.xyz'.format(path, molecule.node_id), geoms, energies, scale=1.)
 
             if self.options['print_level']>0:
                 print(" Node: %d Opt step: %d E: %5.4f predE: %5.4f ratio: %1.3f gradrms: %1.5f ss: %1.3f DMAX: %1.3f" % (molecule.node_id,ostep+1,fx-refE,dEpre,ratio,molecule.gradrms,step,self.DMAX))
@@ -319,7 +319,7 @@ class lbfgs(base_optimizer):
                 if ostep % xyzframerate!=0:
                     geoms.append(molecule.geometry)
                     energies.append(molecule.energy-refE)
-                    manage_xyz.write_xyzs_w_comments('{}/opt_{}.xyz'.format(path,molecule.node_id),geoms,energies,scale=1.)
+                    utilities.utilities.manage_xyz.write_xyzs_w_comments('{}/opt_{}.xyz'.format(path, molecule.node_id), geoms, energies, scale=1.)
                 break
             #print " ########## DONE WITH TOTAL STEP #########"
 
@@ -334,7 +334,7 @@ class lbfgs(base_optimizer):
                     gc = g.copy()
                     for c in molecule.constraints.T:
                         gc -= np.dot(gc.T,c[:,np.newaxis])*c[:,np.newaxis]
-                    g_prim = block_matrix.dot(molecule.coord_basis,gc)
+                    g_prim = utilities.block_matrix.dot(molecule.coord_basis, gc)
             sys.stdout.flush()
 
         print(" opt-summary")

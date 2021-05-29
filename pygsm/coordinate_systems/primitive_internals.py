@@ -25,7 +25,7 @@ except:
     from topology import Topology,MyG
     from slots import *
 
-from pygsm.utilities import *
+from pygsm import utilities
 
 CacheWarning = False
 
@@ -322,7 +322,7 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
             #Blist.append(np.asarray(WilsonB))
             Blist.append(np.array( [ p.derivative(xyz[sa:ea,:],start_idx=sa).flatten() for p in self.Internals[sp:ep] ]))
 
-        ans = block_matrix(Blist)
+        ans = utilities.block_matrix(Blist)
         #print(block_matrix.full_matrix(ans))
         #print("total B shape ",ans.shape)
         #print(" num blocks ",ans.num_blocks)
@@ -332,7 +332,7 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
 
         self.stored_wilsonB[xhash] = ans
         if len(self.stored_wilsonB) > 1000 and not CacheWarning:
-            nifty.logger.warning("\x1b[91mWarning: more than 100 B-matrices stored, memory leaks likely\x1b[0m")
+            utilities.utilities.nifty.logger.warning("\x1b[91mWarning: more than 100 B-matrices stored, memory leaks likely\x1b[0m")
             CacheWarning = True
         return ans
 
@@ -352,7 +352,7 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
         #        block_list.append(np.dot(B,B.T))
         #return block_matrix(block_list)
 
-        return block_matrix.dot(Bmat,block_matrix.transpose(Bmat))
+        return utilities.block_matrix.dot(Bmat, utilities.block_matrix.transpose(Bmat))
 
 
     def GInverse_SVD(self, xyz):
@@ -373,12 +373,12 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
                     tmpVvecs.append(VT.T)
                     tmpUvecs.append(U.T)
                     tmpSvecs.append(np.diag(s))
-                V = block_matrix(tmpVvecs)
-                UT = block_matrix(tmpUvecs)
-                S = block_matrix(tmpSvecs)
+                V = utilities.block_matrix(tmpVvecs)
+                UT = utilities.block_matrix(tmpUvecs)
+                S = utilities.block_matrix(tmpSvecs)
                 #time_svd = nifty.click()
             except np.linalg.LinAlgError:
-                logger.warning("\x1b[1;91m SVD fails, perturbing coordinates and trying again\x1b[0m")
+                utilities.nifty.logger.warning("\x1b[1;91m SVD fails, perturbing coordinates and trying again\x1b[0m")
                 xyz = xyz + 1e-2*np.random.random(xyz.shape)
                 loops += 1
                 if loops == 10:
@@ -397,7 +397,7 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
                     LargeVals += 1
                     sinv[ival,ival] = 1./value
             tmpSinv.append(sinv)
-        Sinv = block_matrix(tmpSinv)
+        Sinv = utilities.block_matrix(tmpSinv)
 
         # print "%i atoms; %i/%i singular values are > 1e-6" % (xyz.shape[0], LargeVals, len(S))
         #Inv = multi_dot([V, Sinv, UT])
@@ -405,7 +405,7 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
         for v,sinv,ut in zip(V.matlist,Sinv.matlist,UT.matlist):
             tmpInv.append(np.dot(v,np.dot(sinv,ut)))
 
-        return block_matrix(tmpInv)
+        return utilities.block_matrix(tmpInv)
 
     def GInverse_EIG(self, xyz):
         xyz = xyz.reshape(-1,3)
@@ -417,7 +417,7 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
         for Gmat in G.matlist:
             matlist.append(np.linalg.inv(Gmat))
 
-        Gt = block_matrix(matlist)
+        Gt = utilities.block_matrix(matlist)
         #time_inv = nifty.click()
         #print("G-time: %.3f Inv-time: %.3f" % (time_G, time_inv))
 
@@ -488,14 +488,14 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
                 else:
                     i.inactive = 0
                 if i.inactive == 1:
-                    logger.info("Deleting:", i)
+                    utilities.nifty.logger.info("Deleting:", i)
                     self.Internals.remove(i)
                     Changed = True
             else:
                 i.inactive = 0
         for i in other.Internals:
             if i not in self.Internals:
-                logger.info("Adding:  ", i)
+                utilities.nifty.logger.info("Adding:  ", i)
                 self.Internals.append(i)
                 Changed = True
         return Changed
@@ -585,13 +585,13 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
     def printRotations(self, xyz):
         rotNorms = self.getRotatorNorms()
         if len(rotNorms) > 0:
-            logger.info("Rotator Norms: ", " ".join(["% .4f" % i for i in rotNorms]))
+            utilities.nifty.logger.info("Rotator Norms: ", " ".join(["% .4f" % i for i in rotNorms]))
         rotDots = self.getRotatorDots()
         if len(rotDots) > 0 and np.max(rotDots) > 1e-5:
-            logger.info("Rotator Dots : ", " ".join(["% .4f" % i for i in rotDots]))
+            utilities.nifty.logger.info("Rotator Dots : ", " ".join(["% .4f" % i for i in rotDots]))
         linAngs = [ic.value(xyz) for ic in self.Internals if type(ic) is LinearAngle]
         if len(linAngs) > 0:
-            logger.info("Linear Angles: ", " ".join(["% .4f" % i for i in linAngs]))
+            utilities.nifty.logger.info("Linear Angles: ", " ".join(["% .4f" % i for i in linAngs]))
 
     def derivatives(self, xyz):
         self.calculate(xyz)
@@ -1112,8 +1112,8 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
             #if np.abs(diff*factor) > thre:
             out_lines.append("%-30s  % 10.5f  % 10.5f  % 10.5f\n" % (str(c), current*factor, reference*factor, diff*factor))
         if len(out_lines) > 0:
-            logger.info(header)
-            logger.info('\n'.join(out_lines))
+            utilities.nifty.logger.info(header)
+            utilities.nifty.logger.info('\n'.join(out_lines))
             # if type(c) in [RotationA, RotationB, RotationC]:
             #     print c, c.value(xyz)
             #     logArray(c.x0)
@@ -1270,7 +1270,7 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
 
             c_list.append(SDer)
 
-        answer = block_tensor(c_list)
+        answer = utilities.block_tensor(c_list)
         # This array has dimensions:
         # 1) Number of internal coordinates
         # 2) Number of atoms
@@ -1480,13 +1480,13 @@ if __name__ =='__main__' and __package__ is None:
     #filepath='crystal.xyz'
     filepath1='multi1.xyz'
     filepath2='multi2.xyz'
-    geom1 = manage_xyz.read_xyz(filepath1)
-    geom2 = manage_xyz.read_xyz(filepath2)
-    atom_symbols  = manage_xyz.get_atoms(geom1)
-    xyz1 = manage_xyz.xyz_to_np(geom1)
-    xyz2 = manage_xyz.xyz_to_np(geom2)
+    geom1 = utilities.manage_xyz.read_xyz(filepath1)
+    geom2 = utilities.manage_xyz.read_xyz(filepath2)
+    atom_symbols  = utilities.manage_xyz.get_atoms(geom1)
+    xyz1 = utilities.manage_xyz.xyz_to_np(geom1)
+    xyz2 = utilities.manage_xyz.xyz_to_np(geom2)
 
-    ELEMENT_TABLE = elements.ElementData()
+    ELEMENT_TABLE = utilities.elements.ElementData()
     atoms = [ELEMENT_TABLE.from_symbol(atom) for atom in atom_symbols]
 
     test_prims=False
