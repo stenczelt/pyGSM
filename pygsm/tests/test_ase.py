@@ -4,12 +4,13 @@ from pytest import approx, raises
 
 from pygsm.level_of_theories.ase import ASELoT, geom_to_ase, xyz_to_ase
 from pygsm.level_of_theories.base_lot import LoTError
+from ase.units import Ha, Bohr
 
 xyz_4x4 = [
     ["H", 1.0, 2.0, 3.0],
-    ["He", 11.0, 12.0, 13.0],
-    ["Li", 21.0, 32.0, 43.0],
-    ["Be", 31.0, 32.0, 33.0],
+    ["He", 4.0, 5.0, 6.0],
+    ["Li", 7.0, 8.0, 9.0],
+    ["Be", 10.0, 11.0, 12.0],
 ]
 
 
@@ -54,8 +55,7 @@ def test_ase_lot_error():
 
 def test_ase_lot_copy():
     lot = ASELoT.from_calculator_string(
-        calculator_import="ase.calculators.lj.LennardJones",
-        geom=xyz_4x4,
+        calculator_import="ase.calculators.lj.LennardJones", geom=xyz_4x4,
     )
 
     copy_lot = ASELoT.copy(lot, dict())
@@ -70,8 +70,7 @@ def test_ase_lot_copy():
 
 def test_ase_lot_copy_update():
     lot = ASELoT.from_calculator_string(
-        calculator_import="ase.calculators.lj.LennardJones",
-        geom=xyz_4x4,
+        calculator_import="ase.calculators.lj.LennardJones", geom=xyz_4x4,
     )
 
     copy_lot = ASELoT.copy(lot, dict(ID=1))
@@ -82,3 +81,38 @@ def test_ase_lot_copy_update():
             assert copy_lot.options[key] == 1
         else:
             assert lot.options[key] == copy_lot.options[key]
+
+
+def test_ase_calculation():
+    kw = dict(r0=3, rc=10, sigma=3)
+    lot = ASELoT.from_calculator_string(
+        calculator_import="ase.calculators.lj.LennardJones",
+        geom=xyz_4x4,
+        calculator_kwargs=kw,
+    )
+
+    # ase ref
+    calc = LennardJones(**kw)
+    atoms = xyz_to_ase(xyz_4x4)
+    atoms.calc = calc
+
+    # not doing gradient if not asked for
+
+    # run the calculation
+    lot.run(xyz_4x4, 0, 0)
+
+    assert lot._Energies[(0, 0)][0] * Ha == atoms.get_potential_energy()
+    assert lot.Gradients[(0, 0)][0] * Ha / Bohr == approx(-atoms.get_forces())
+
+
+def test_ase_calculation_nograd():
+    # not doing gradient if not asked for
+    lot = ASELoT.from_calculator_string(
+        calculator_import="ase.calculators.lj.LennardJones", geom=xyz_4x4,
+    )
+
+    # run the calculation
+    lot.run(xyz_4x4, 0, 0, runtype="energy")
+
+    assert (0, 0) in lot._Energies.keys()
+    assert (0, 0) not in lot.Gradients.keys()
