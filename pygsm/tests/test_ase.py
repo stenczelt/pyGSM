@@ -1,7 +1,15 @@
 import numpy as np
+from ase.calculators.lj import LennardJones
 from pytest import approx
 
-from pygsm.level_of_theories.ase import geom_to_ase, xyz_to_ase
+from pygsm.level_of_theories.ase import ASELoT, geom_to_ase, xyz_to_ase
+
+xyz_4x4 = [
+    ["H", 1.0, 2.0, 3.0],
+    ["He", 11.0, 12.0, 13.0],
+    ["Li", 21.0, 32.0, 43.0],
+    ["Be", 31.0, 32.0, 33.0],
+]
 
 
 def test_geom_to_ase():
@@ -15,13 +23,17 @@ def test_geom_to_ase():
 
 
 def test_xyz_to_ase():
-    xyz_4x4 = [
-        ["H", 1., 2., 3.],
-        ["He", 11., 12., 13.],
-        ["Li", 21., 32., 43.],
-        ["Be", 31., 32., 33.],
-    ]
-
     atoms = xyz_to_ase(xyz_4x4)
     assert atoms.get_chemical_symbols() == ["H", "He", "Li", "Be"]
     assert atoms.get_positions() == approx(np.array([x[1:] for x in xyz_4x4]))
+
+
+def test_ase_lot_from_string():
+    lot = ASELoT.from_calculator_string(
+        calculator_import="ase.calculators.lj.LennardJones",
+        calculator_kwargs=dict(epsilon=1.234),
+        geom=xyz_4x4,
+    )
+
+    assert isinstance(lot.ase_calculator, LennardJones)
+    assert lot.ase_calculator.parameters["epsilon"] == approx(1.234)
