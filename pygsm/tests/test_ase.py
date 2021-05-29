@@ -52,6 +52,18 @@ def test_ase_lot_error():
             calculator_import="ase.calculators.lj.Dummy", geom=xyz_4x4,
         )
 
+    # run not implemented mode
+    lot = ASELoT.from_calculator_string(
+        calculator_import="ase.calculators.lj.LennardJones", geom=xyz_4x4,
+    )
+
+    with raises(
+        NotImplementedError,
+        match="Run type energgy is not implemented in the ASE calculator interface",
+    ):
+        # misspelled energy
+        lot.run(xyz_4x4, 0, 0, runtype="energgy")
+
 
 def test_ase_lot_copy():
     lot = ASELoT.from_calculator_string(
