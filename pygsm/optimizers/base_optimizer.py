@@ -6,15 +6,14 @@ from os import path
 import numpy as np
 
 # local application imports
-sys.path.append(path.dirname( path.dirname( path.abspath(__file__))))
 from utilities import *
 from ._linesearch import backtrack,NoLineSearch
 
 
 def sorted_eigh(mat, asc=False):
-    """ 
-    Return eigenvalues and eigenvectors of a symmetric matrix 
-    in descending order and associated eigenvectors. 
+    """
+    Return eigenvalues and eigenvectors of a symmetric matrix
+    in descending order and associated eigenvectors.
 
     This is just a convenience function to get eigenvectors
     in descending or ascending order as desired.
@@ -23,7 +22,7 @@ def sorted_eigh(mat, asc=False):
     if asc:
         idx = L.argsort()
     else:
-        idx = L.argsort()[::-1]   
+        idx = L.argsort()[::-1]
     L = L[idx]
     Q = Q[:,idx]
     return L, Q
@@ -45,7 +44,7 @@ def force_positive_definite(H):
 
 #TODO Add primitive constraint e.g. a list of internal coordinates to be left basically frozen throughout optimization
 class base_optimizer(object):
-    ''' some common functions that the children can use (ef, cg, hybrid ef/cg, etc). 
+    ''' some common functions that the children can use (ef, cg, hybrid ef/cg, etc).
     e.g. walk_up, dgrad_step, what else?
     '''
 
@@ -54,7 +53,7 @@ class base_optimizer(object):
         """ default options. """
 
         if hasattr(base_optimizer, '_default_options'): return base_optimizer._default_options.copy()
-        opt = options.Options() 
+        opt = options.Options()
 
 
         opt.add_option(
@@ -197,19 +196,19 @@ class base_optimizer(object):
         elif self.options['Linesearch']=="NoLineSearch":
             self.Linesearch=NoLineSearch
 
-        
+
         # additional convergence criterion (default parameters for Q-Chem)
         self.conv_disp =options['conv_disp']  #12e-4 #max atomic displacement
         self.conv_gmax = options['conv_gmax'] #3e-4 #max gradient
         self.conv_Ediff = options['conv_Ediff'] #1e-6 #E diff
-        self.conv_dE = options['conv_dE'] 
+        self.conv_dE = options['conv_dE']
         self.conv_grms = options['OPTTHRESH']
 
         # TS node properties
         self.nneg = 0  # number of negative eigenvalues
         self.DMIN = self.options['DMIN']
 
-        #MECI 
+        #MECI
         self.opt_cross = self.options['opt_cross']
         self.opt_climb = self.options['opt_climb']
 
@@ -227,7 +226,7 @@ class base_optimizer(object):
         self.linesearch_parameters = {
                 'epsilon':1e-5,
                 'ftol':options['ftol'], #1e-4,
-                'wolfe':0.9, 
+                'wolfe':0.9,
                 'max_linesearch':3,
                 'min_step':self.DMIN,
                 'max_step': options['abs_max_step'],
@@ -284,22 +283,22 @@ class base_optimizer(object):
 
     def check_inputs(self,molecule,opt_type,ictan):
         if opt_type in ['MECI','SEAM','TS-SEAM']:
-            assert molecule.PES.lot.do_coupling==True,"Turn do_coupling on."                   
-        #elif opt_type not in ['MECI','SEAM','TS-SEAM']: 
-        #    assert molecule.PES.lot.do_coupling==False,"Turn do_coupling off."                 
-        if opt_type in ["UCONSTRAINED"]:  
+            assert molecule.PES.lot.do_coupling==True,"Turn do_coupling on."
+        #elif opt_type not in ['MECI','SEAM','TS-SEAM']:
+        #    assert molecule.PES.lot.do_coupling==False,"Turn do_coupling off."
+        if opt_type in ["UCONSTRAINED"]:
             assert ictan==None
         if opt_type in ['ICTAN','CLIMB','TS', 'SEAM','TS-SEAM','BEALES_CG']  and ictan.any()==None:
             raise RuntimeError("Need ictan")
         #if opt_type in ['TS','TS-SEAM']:
-            #assert molecule.isTSnode,"only run climb and eigenvector follow on TSnode."  
+            #assert molecule.isTSnode,"only run climb and eigenvector follow on TSnode."
 
     #def converged(self,g,nconstraints):
     #    # check if finished
     #    gradrms = np.sqrt(np.dot(g[nconstraints:].T,g[nconstraints:])/n)
     #    #print "current gradrms= %r au" % gradrms
     #    #print "gnorm =",gnorm
-    #    
+    #
     #    gmax = np.max(g[nconstraints:])/ANGSTROM_TO_AU
     #    #print "maximum gradient component (au)", gmax
 
@@ -316,7 +315,7 @@ class base_optimizer(object):
 
     def set_lambda1(self,opt_type,eigen,maxoln=None):
         if opt_type == 'TS':
-            leig = eigen[1]  #! this is eigen[0] if update_ic_eigen() ### also diff values 
+            leig = eigen[1]  #! this is eigen[0] if update_ic_eigen() ### also diff values
             if maxoln!=0:
                 leig = eigen[0]
             if leig < 0. and maxoln==0:
@@ -330,7 +329,7 @@ class base_optimizer(object):
             else:
                 lambda1 = 0.005
         if abs(lambda1)<0.005: lambda1 = 0.005
-    
+
         return lambda1
 
     def get_constraint_vectors(self,molecule,opt_type,ictan=None):
@@ -357,13 +356,13 @@ class base_optimizer(object):
         nconstraints=self.get_nconstraints(opt_type)
         n=len(g)
         #TODO Raise Error for CartesianCoordinates
-    
+
         #TODO 4/24/2019 block matrix/distributed constraints
         constraint_steps = np.zeros((n,1))
 
         # 6/5 climb works with block matrix distributed constraints
         # => ictan climb
-        if opt_type=="CLIMB": 
+        if opt_type=="CLIMB":
             gts = np.dot(g.T,molecule.constraints[:,0])
             #stepsize=np.linalg.norm(constraint_steps)
             max_step = 0.05/self.SCALE_CLIMB
@@ -374,7 +373,7 @@ class base_optimizer(object):
             constraint_steps = gts*molecule.constraints[:,0]
             constraint_steps = constraint_steps[:,np.newaxis]
         # => MECI
-        elif opt_type=='MECI': 
+        elif opt_type=='MECI':
             dq = self.dgrad_step(molecule)
             constraint_steps[:,0] = dq*molecule.constraints[:,0]
 
@@ -384,7 +383,7 @@ class base_optimizer(object):
         # => seam climb
         elif opt_type=='TS-SEAM':
             gts = np.dot(g.T,molecule.constraints[:,0])
-    
+
             # climbing step
             max_step = 0.05/self.SCALE_CLIMB
             if gts > np.abs(max_step):
@@ -408,7 +407,7 @@ class base_optimizer(object):
             print(" norm_dg is %1.4f" % norm_dg)
             print(" dE is %1.4f" % molecule.difference_energy)
 
-        dq = -molecule.difference_energy/units.KCAL_MOL_PER_AU/norm_dg 
+        dq = -molecule.difference_energy/units.KCAL_MOL_PER_AU/norm_dg
         if dq < self.DMAX/5:
             dq = -self.DMAX/5
         if dq<-0.075:
@@ -488,7 +487,7 @@ class base_optimizer(object):
                 self.DMAX=self.DMAX*1.1 + 0.01
             if self.DMAX>0.25:
                 self.DMAX=0.25
-        
+
         if self.DMAX<self.DMIN:
             self.DMAX=self.DMIN
         #print(" DMAX %1.2f" % self.DMAX)
@@ -507,14 +506,14 @@ class base_optimizer(object):
             print("constraints")
             print(molecule.constraints.T)
 
-        P =np.eye(len(molecule.constraints),dtype=float) 
+        P =np.eye(len(molecule.constraints),dtype=float)
         for c in molecule.constraints.T:
             P -= np.outer(c[:,np.newaxis],c[:,np.newaxis].T)
         self.Hessian = np.dot(np.dot(P,molecule.Hessian),P)
 
         e,v_temp = np.linalg.eigh(self.Hessian)
         gqe = np.dot(v_temp.T,g)
-        lambda1 = self.set_lambda1('NOT-TS',e) 
+        lambda1 = self.set_lambda1('NOT-TS',e)
 
         if self.options['print_level']>1:
             print(" eigenvalues ",e)
@@ -530,7 +529,7 @@ class base_optimizer(object):
         dqe0 = -gqe.flatten()/(e+lambda1)/SCALE
         dqe0 = [ np.sign(i)*self.options['MAXAD'] if abs(i)>self.options['MAXAD'] else i for i in dqe0 ]
         dqe0 = np.asarray(dqe0)
-        
+
         # => Convert step back to DLC basis <= #
         dq = np.dot(v_temp,dqe0)
         dq = [ np.sign(i)*self.options['MAXAD'] if abs(i)>self.options['MAXAD'] else i for i in dq ]
@@ -565,9 +564,9 @@ class base_optimizer(object):
         norm = np.linalg.norm(Cn)
         Cn = Cn/norm
 
-        # => get eigensolution of Hessian <= 
+        # => get eigensolution of Hessian <=
         self.Hessian = molecule.Hessian.copy()
-        eigen,tmph = np.linalg.eigh(self.Hessian) #nicd,nicd 
+        eigen,tmph = np.linalg.eigh(self.Hessian) #nicd,nicd
         tmph = tmph.T
 
         #TODO nneg should be self and checked
@@ -616,7 +615,7 @@ class base_optimizer(object):
             g = molecule.gradient
             print(molecule.constraints.T)
             molecule.form_Hessian_in_basis()
-            dq = self.eigenvector_step(molecule,g) 
+            dq = self.eigenvector_step(molecule,g)
 
         return dq
 
@@ -706,10 +705,10 @@ class base_optimizer(object):
         dxtdg = np.dot(self.dx.T,self.dg)
         dxtGdx = np.dot(self.dx.T,Gdx)
         dxtdx2 = dxtdx*dxtdx
-        dxtdgmdxtGdx = dxtdg - dxtGdx 
+        dxtdgmdxtGdx = dxtdg - dxtGdx
         Gpsb = np.outer(dgmGdx,self.dx)/dxtdx + np.outer(self.dx,dgmGdx)/dxtdx - dxtdgmdxtGdx*dxdx/dxtdx2
 
-        # Bofill mixing 
+        # Bofill mixing
         dxtE = np.dot(self.dx.T,dgmGdx) #(1,nicd)(nicd,1)
         EtE = np.dot(dgmGdx.T,dgmGdx)  #E is dgmGdx
         phi = 1. - dxtE*dxtE/(dxtdx*EtE)

@@ -16,7 +16,6 @@ from collections import Counter
 #import pybel as pb
 
 # local application imports
-sys.path.append(path.dirname( path.dirname( path.abspath(__file__))))
 from utilities import *
 import potential_energy_surfaces
 from potential_energy_surfaces import PES
@@ -37,11 +36,11 @@ ELEMENT_TABLE = elements.ElementData()
 and spin multiplicities.
 """
 class Molecule(object):
-    
+
     @staticmethod
     def default_options():
         if hasattr(Molecule, '_default_options'): return Molecule._default_options.copy()
-        opt = options.Options() 
+        opt = options.Options()
 
         opt.add_option(
                 key='fnm',
@@ -94,7 +93,7 @@ class Molecule(object):
                 required=True,
                 #allowed_types=[PES,Avg_PES,Penalty_PES,potential_energy_surfaces.pes.PES,potential_energy_surfaces.Penalty_PES,potential_energy_surfaces.Avg_PES],
                 doc='potential energy surface object to evaulate energies, gradients, etc. Pes is defined by charge, state, multiplicity,etc. '
-                       
+
                 )
         opt.add_option(
                 key='copy_wavefunction',
@@ -275,12 +274,12 @@ class Molecule(object):
         #    print(" building coordinate object")
         #    self.coord_obj = DelocalizedInternalCoordinates.from_options(xyz=self.xyz,atoms=self.atoms,connect=True,extra_kwargs =self.Data['top_settings'])
         #elif self.Data['coordinate_type'] == "HDLC":
-        #    self.coord_obj = DelocalizedInternalCoordinates.from_options(xyz=self.xyz,atoms=self.atoms,addcart=True,extra_kwargs =self.Data['top_settings']) 
+        #    self.coord_obj = DelocalizedInternalCoordinates.from_options(xyz=self.xyz,atoms=self.atoms,addcart=True,extra_kwargs =self.Data['top_settings'])
         #elif self.Data['coordinate_type'] == "TRIC":
-        #    self.coord_obj = DelocalizedInternalCoordinates.from_options(xyz=self.xyz,atoms=self.atoms,addtr=True,extra_kwargs =self.Data['top_settings']) 
+        #    self.coord_obj = DelocalizedInternalCoordinates.from_options(xyz=self.xyz,atoms=self.atoms,addtr=True,extra_kwargs =self.Data['top_settings'])
         self.Data['coord_obj']=self.coord_obj
 
-        t2 = time() 
+        t2 = time()
         print(" Time  to build coordinate system= %.3f" % (t2-t1))
 
         #TODO
@@ -414,13 +413,13 @@ class Molecule(object):
 
     @property
     def gradient(self):
-        gradx = self.PES.get_gradient(self.xyz,frozen_atoms=self.frozen_atoms) 
+        gradx = self.PES.get_gradient(self.xyz,frozen_atoms=self.frozen_atoms)
         return self.coord_obj.calcGrad(self.xyz,gradx)  #CartesianCoordinate just returns gradx
 
     # for PES seams
     @property
     def avg_gradient(self):
-        gradx = self.PES.get_avg_gradient(self.xyz,frozen_atoms=self.frozen_atoms) 
+        gradx = self.PES.get_avg_gradient(self.xyz,frozen_atoms=self.frozen_atoms)
         return self.coord_obj.calcGrad(self.xyz,gradx)  #CartesianCoordinate just returns gradx
 
     @property
@@ -430,9 +429,9 @@ class Molecule(object):
 
     @property
     def difference_gradient(self):
-        dgradx = self.PES.get_dgrad(self.xyz,frozen_atoms=self.frozen_atoms) 
+        dgradx = self.PES.get_dgrad(self.xyz,frozen_atoms=self.frozen_atoms)
         return self.coord_obj.calcGrad(self.xyz,dgradx)
-    
+
     @property
     def difference_energy(self):
         self.energy
@@ -445,7 +444,7 @@ class Molecule(object):
     @property
     def Primitive_Hessian(self):
         return self.Data['Primitive_Hessian']
-    
+
     @Primitive_Hessian.setter
     def Primitive_Hessian(self,value):
         self.Data['Primitive_Hessian'] = value
@@ -454,7 +453,7 @@ class Molecule(object):
         print(" making primitive Hessian")
         self.Data['Primitive_Hessian'] = self.coord_obj.Prims.guess_hessian(self.xyz)
         self.newHess = 10
-    
+
     def update_Primitive_Hessian(self,change=None):
         print(" updating prim hess")
         if change is not None:
@@ -525,7 +524,7 @@ class Molecule(object):
     @property
     def finiteDifferenceHessian(self):
         return self.PES.get_finite_difference_hessian(self.xyz)
-   
+
     @property
     def primitive_internal_coordinates(self):
         return self.coord_obj.Prims.Internals
@@ -595,7 +594,7 @@ class Molecule(object):
         #for i in range(Der.shape[0]):
         #    Answer.append(Der[i].flatten())
         #return np.array(Answer)
-    
+
     @property
     def BMatrix(self):
         return self.coord_obj.Prims.wilsonB(self.xyz)
@@ -630,7 +629,7 @@ class Molecule(object):
     def node_id(self):
         return self.Data['node_id']
 
-    
+
     @node_id.setter
     def node_id(self,value):
         self.Data['node_id'] = value
@@ -643,7 +642,7 @@ if __name__=='__main__':
 
     pes = PES.from_options(lot=molpro,ad_idx=0,multiplicity=1)
 
-    
+
     reactant = Molecule.from_options(fnm=filepath,PES=pes,coordinate_type="TRIC",Form_Hessian=False)
 
     print(reactant.coord_basis)

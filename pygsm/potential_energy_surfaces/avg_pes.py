@@ -6,7 +6,6 @@ from os import path
 import numpy as np
 
 # local application imports
-sys.path.append(path.dirname( path.dirname( path.abspath(__file__))))
 from .pes import PES
 from utilities import *
 
@@ -90,7 +89,7 @@ class Avg_PES(PES):
         nac = dvec*self.dE/units.KCAL_MOL_PER_AU
         beta = get_beta(dgrad,nac)
         print(" beta = %1.6f" % beta)
-        
+
         # rotate nac and dgrad to be orthonormal
         save_nac = nac.copy()
         nac = nac*np.cos(beta) - dgrad*np.sin(beta)
@@ -135,7 +134,7 @@ class Avg_PES(PES):
         theta_s = np.arctan(sab_y/sab_x)
         print(" pitch  %1.5f, asymmetry %1.5f, sigma %1.5f theta_s %1.5f sx %1.2f sy %1.2f" %(pitch,asymmetry,sigma,theta_s,sab_x,sab_y))
 
-        
+
         P = ((sigma**2.)/(1.-asymmetry**2.))*(1.-asymmetry*np.cos(2*theta_s))
         B = ((sigma**2) / (4*asymmetry**2))**(1./3) * (((1.+asymmetry)*(np.cos(theta_s))**2)**(1./3) + ((1-asymmetry)*(np.sin(theta_s))**2)**(1./3))
         print(" P %2.5f B %2.5f" % (P,B))
@@ -172,7 +171,7 @@ class Avg_PES(PES):
         # discretize branching plane and find critical points
         #theta = np.linspace(0,2*np.pi,num_slices)
         theta = [ i*2*np.pi/num_slices for i in range(num_slices)]
-       
+
         EA=[]
         EB=[]
         for n in range(num_slices):
@@ -180,7 +179,7 @@ class Avg_PES(PES):
             factorB = sigma*np.cos(theta[n] - theta_s) - np.sqrt(1.+asymmetry*np.cos(2*theta[n]))
             EA.append( float(pitch*radius*factorA)) #energy +
             EB.append( float(pitch*radius*factorB)) # energy +
-       
+
         EA = np.asarray(EA)
         EB = np.asarray(EB)
         np.savetxt('model_EA.txt',EA)
@@ -199,7 +198,7 @@ class Avg_PES(PES):
             if EB[i] < EB[i-1] and EB[i+1]>EB[i]:
                 theta_min.append(i)
         # check endpoints
-        if EB[0] < EB[-1] and EB[1] > EB[0]: 
+        if EB[0] < EB[-1] and EB[1] > EB[0]:
             print("Min at 0")
             theta_min.append(0)
         if EB[-1]<EB[-2] and EB[0]>EB[-1]:
@@ -212,13 +211,13 @@ class Avg_PES(PES):
             if EB[i] > EB[i-1] and EB[i+1]<EB[i]:
                 theta_max.append(i)
         # check endpoints
-        if EB[0] > EB[-1] and EB[1] < EB[0]: 
+        if EB[0] > EB[-1] and EB[1] < EB[0]:
             print(" Max at 0")
             theta_max.append(0)
         if EB[-1]> EB[-2] and EB[0]<EB[-1]:
             print(" Max at 39")
             theta_max.append(num_slices-1)
-     
+
         print("mins")
         print(theta_min)
         print("max")
@@ -230,7 +229,7 @@ class Avg_PES(PES):
         nac = np.reshape(nac,(-1,3))
         for n in theta_list:
             mxyz.append(xyz + radius*np.cos(theta[n])*x + radius*np.cos(theta[n])*y)
-        
+
         return mxyz
 
 
@@ -255,18 +254,18 @@ class Avg_PES(PES):
                 E2[rc,cc] = self.lot.get_energy(xyz,self.PES2.multiplicity,self.PES2.ad_idx,runtype='energy')
                 cc+=1
             rc+=1
-         
+
         return E1,E2
 
 
 if __name__ == '__main__':
 
-    from level_of_theories.pytc import PyTC 
+    from level_of_theories.pytc import PyTC
     import psiw
     import lightspeed as ls
 
     filepath='../../data/ethylene.xyz'
-    geom=manage_xyz.read_xyz(filepath,scale=1)   
+    geom=manage_xyz.read_xyz(filepath,scale=1)
     ##### => Job Data <= #####
     states = [(1,0),(1,1)]
     charge=0
@@ -278,7 +277,7 @@ if __name__ == '__main__':
     nifty.printcool("Build resources")
     resources = ls.ResourceList.build()
     nifty.printcool('{}'.format(resources))
-    
+
     molecule = ls.Molecule.from_xyz_file(filepath)
     geom = psiw.geometry.Geometry.build(
         resources=resources,
@@ -286,9 +285,9 @@ if __name__ == '__main__':
         basisname=basis,
         )
     nifty.printcool('{}'.format(geom))
-    
+
     ref = psiw.RHF.from_options(
-         geometry= geom, 
+         geometry= geom,
          g_convergence=1.0E-6,
          fomo=True,
          fomo_method='gaussian',
@@ -318,12 +317,12 @@ if __name__ == '__main__':
         )
 
     nifty.printcool("Build the pyGSM Level of Theory object (LOT)")
-    lot=PyTC.from_options(states=[(1,0),(1,1)],job_data={'psiw':psiw},do_coupling=False,fnm=filepath) 
+    lot=PyTC.from_options(states=[(1,0),(1,1)],job_data={'psiw':psiw},do_coupling=False,fnm=filepath)
 
     pes1 = PES.from_options(lot=lot,ad_idx=0,multiplicity=1)
     pes2 = PES.from_options(lot=lot,ad_idx=1,multiplicity=1)
     pes = Avg_PES(PES1=pes1,PES2=pes2,lot=lot)
-    geom=manage_xyz.read_xyz(filepath,scale=1)   
+    geom=manage_xyz.read_xyz(filepath,scale=1)
     coords= manage_xyz.xyz_to_np(geom)
     print(pes.get_energy(coords))
     print(pes.get_gradient(coords))

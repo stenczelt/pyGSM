@@ -13,7 +13,6 @@ import json
 from parmed import load_file, unit as u
 
 # local application imports
-sys.path.append(path.dirname( path.dirname( path.abspath(__file__))))
 try:
     from .base_lot import Lot
 except:
@@ -90,7 +89,7 @@ class OpenMM(Lot):
                     system = prmtop.createSystem(
                         nonbondedMethod=openmm_app.NoCutoff,
                         )
-   
+
                 # add restraints
                 self.add_restraints(system)
 
@@ -132,7 +131,7 @@ class OpenMM(Lot):
             tforce.addPerTorsionParameter("k")
             tforce.addPerTorsionParameter("theta0")
             system.addForce(tforce)
-            
+
             xyz = manage_xyz.xyz_to_np(self.geom)
             with open(self.restrain_torfile,'r') as input_file:
                 for line in input_file:
@@ -162,9 +161,9 @@ class OpenMM(Lot):
                     columns = line.split()
                     a = int(columns[0])
                     k = float(columns[1])
-                    x0=xyz[a,0]*0.1  # Units are in nm 
-                    y0=xyz[a,1]*0.1  # Units are in nm 
-                    z0=xyz[a,2]*0.1  # Units are in nm 
+                    x0=xyz[a,0]*0.1  # Units are in nm
+                    y0=xyz[a,1]*0.1  # Units are in nm
+                    z0=xyz[a,2]*0.1  # Units are in nm
                     trforce.addParticle(a,[k,x0,y0,z0])
 
     @property
@@ -174,7 +173,7 @@ class OpenMM(Lot):
     @simulation.setter
     def simulation(self,value):
         self.options['job_data']['simulation'] = value
-  
+
     def run(self,geom,mult,ad_idx,runtype='gradient'):
 
         coords  = manage_xyz.xyz_to_np(geom)
@@ -182,7 +181,7 @@ class OpenMM(Lot):
         # Update coordinates of simulation (shallow-copied object)
         xyz_nm = 0.1 * coords  # coords are in angstrom
         self.simulation.context.setPositions(xyz_nm)
-    
+
         # actually compute (only applicable to ground-states,singlet mult)
         if mult!=1 or ad_idx>1:
             raise RuntimeError('MM cant do excited states')
@@ -197,11 +196,11 @@ class OpenMM(Lot):
 
         F = s.getForces()
         G = -1.0 * np.asarray(F.value_in_unit(openmm_units.kilocalories/openmm_units.moles / openmm_units.angstroms))
-             
+
         self._Gradients[(mult,ad_idx)] = self.Gradient(G,'kcal/mol/Angstrom')
         self.hasRanForCurrentCoords=True
 
-        return 
+        return
 
 if __name__=="__main__":
     from openbabel import pybel as pb
@@ -211,7 +210,7 @@ if __name__=="__main__":
     prmtop = openmm_app.AmberPrmtopFile(prmtopfile)
     inpcrd = openmm_app.AmberInpcrdFile(inpcrdfile)
     system = prmtop.createSystem(
-        rigidWater=False, 
+        rigidWater=False,
         removeCMMotion=False,
         nonbondedMethod=openmm_app.PME,
         nonbondedCutoff=1*openmm_units.nanometer  #10 ang

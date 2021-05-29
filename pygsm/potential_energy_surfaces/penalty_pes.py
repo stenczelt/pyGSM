@@ -6,7 +6,6 @@ from os import path
 import numpy as np
 
 # local application imports
-sys.path.append(path.dirname( path.dirname( path.abspath(__file__))))
 from .pes import PES
 from utilities import *
 
@@ -40,7 +39,7 @@ class Penalty_PES(PES):
     def get_energy(self,geom):
         E1 = self.PES1.get_energy(geom)
         E2 = self.PES2.get_energy(geom)
-   
+
         #avgE = 0.5*(self.PES1.get_energy(geom) + self.PES2.get_energy(geom))
         avgE = 0.5*(E1+E2)
         #self.dE = self.PES2.get_energy(geom) - self.PES1.get_energy(geom)
@@ -73,12 +72,12 @@ class Penalty_PES(PES):
 
 if __name__ == '__main__':
 
-    from level_of_theories.pytc import PyTC 
+    from level_of_theories.pytc import PyTC
     import psiw
     import lightspeed as ls
 
     filepath='../../data/ethylene.xyz'
-    geom=manage_xyz.read_xyz(filepath,scale=1)   
+    geom=manage_xyz.read_xyz(filepath,scale=1)
     ##### => Job Data <= #####
     states = [(1,0),(1,1)]
     charge=0
@@ -90,7 +89,7 @@ if __name__ == '__main__':
     nifty.printcool("Build resources")
     resources = ls.ResourceList.build()
     nifty.printcool('{}'.format(resources))
-    
+
     molecule = ls.Molecule.from_xyz_file(filepath)
     geom = psiw.geometry.Geometry.build(
         resources=resources,
@@ -98,9 +97,9 @@ if __name__ == '__main__':
         basisname=basis,
         )
     nifty.printcool('{}'.format(geom))
-    
+
     ref = psiw.RHF.from_options(
-         geometry= geom, 
+         geometry= geom,
          g_convergence=1.0E-6,
          fomo=True,
          fomo_method='gaussian',
@@ -130,12 +129,12 @@ if __name__ == '__main__':
         )
 
     nifty.printcool("Build the pyGSM Level of Theory object (LOT)")
-    lot=PyTC.from_options(states=[(1,0),(1,1)],job_data={'psiw':psiw},do_coupling=False,fnm=filepath) 
+    lot=PyTC.from_options(states=[(1,0),(1,1)],job_data={'psiw':psiw},do_coupling=False,fnm=filepath)
 
     pes1 = PES.from_options(lot=lot,ad_idx=0,multiplicity=1)
     pes2 = PES.from_options(lot=lot,ad_idx=1,multiplicity=1)
     pes = Penalty_PES(PES1=pes1,PES2=pes2,lot=lot)
-    geom=manage_xyz.read_xyz(filepath,scale=1)   
+    geom=manage_xyz.read_xyz(filepath,scale=1)
     coords= manage_xyz.xyz_to_np(geom)
     print(pes.get_energy(coords))
     print(pes.get_gradient(coords))

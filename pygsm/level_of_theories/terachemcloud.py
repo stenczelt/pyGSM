@@ -10,8 +10,7 @@ import tcc
 import json
 
 # local application imports
-sys.path.append(path.dirname( path.dirname( path.abspath(__file__))))
-from .base_lot import Lot 
+from .base_lot import Lot
 from utilities import *
 
 class TeraChemCloud(Lot):
@@ -43,7 +42,7 @@ class TeraChemCloud(Lot):
         self.options['job_data']['TC'] = self.options['job_data'].get('TC',None)
 
         if self.lot_inp_file is not None:
-           exec(open(self.lot_inp_file).read()) 
+           exec(open(self.lot_inp_file).read())
            print(' done executing lot_inp_file')
            self.options['job_data']['TC'] = TC
            self.options['job_data']['tcc_options']= tcc_options
@@ -53,7 +52,7 @@ class TeraChemCloud(Lot):
         self.tcc_options = tcc_options_copy
 
     def run(self,coords):
-   
+
         E=[]
         grada=[]
         for state in self.states:
@@ -106,7 +105,7 @@ class TeraChemCloud(Lot):
                 sys.stdout.flush()
             #print((json.dumps(results, indent=2, sort_keys=True)))
             coup = results['nacme']
-            self.Couplings[self.coupling_states] = self.Coupling(coup,'Hartree/Bohr') 
+            self.Couplings[self.coupling_states] = self.Coupling(coup,'Hartree/Bohr')
 
         for energy,state in zip(E,self.states):
             self._Energies[state] = self.Energy(energy,'Hartree')
@@ -114,5 +113,5 @@ class TeraChemCloud(Lot):
             self._Gradients[state] = self.Gradient(grad,"Hartree/Bohr")
 
         self.hasRanForCurrentCoords=True
-        return  
+        return
 

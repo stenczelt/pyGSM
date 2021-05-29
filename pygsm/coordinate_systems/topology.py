@@ -5,9 +5,6 @@ import time
 import sys
 from os import path
 
-# i don't know what this is doing
-sys.path.append(path.dirname( path.dirname( path.abspath(__file__))))
-
 import numpy as np
 import itertools
 from pkg_resources import parse_version
@@ -192,7 +189,7 @@ class Topology():
             bonds = Topology.build_bonds(xyz,atoms,primitive_indices,prim_idx_start_stop)
             #print(" done")
             assert bondlistfile is None
-        else: 
+        else:
             #bondlistfile:
             #prim_idx_start_stop = kwargs.get('prim_idx_start_stop',None)
             try:
@@ -226,7 +223,7 @@ class Topology():
         topology = G
         fragments = [G.subgraph(c).copy() for c in nx.connected_components(G)]
         for g in fragments: g.__class__ = MyG
-        
+
         #print(len(fragments))
         #for frag in fragments:
         #    print(frag.L())
@@ -271,7 +268,7 @@ class Topology():
         for bond in bonds:
             atoms = bond.atoms
             G.add_edge(atoms[0],atoms[1])
-        
+
         # The Topology is simply the NetworkX graph object.
         topology = G
         fragments = [G.subgraph(c).copy() for c in nx.connected_components(G)]
@@ -472,7 +469,7 @@ class Topology():
                             np.fromiter(itertools.chain(*second_list),dtype=np.int32)
                             )).T
                     )
-                    #np.fromiter(itertools.chain(*[[i]*(natoms-i-1) for i in primitive_indices]),dtype=np.int32), 
+                    #np.fromiter(itertools.chain(*[[i]*(natoms-i-1) for i in primitive_indices]),dtype=np.int32),
 
 
         # Create a list of thresholds for determining whether a certain interatomic distance is considered to be a bond.
@@ -529,7 +526,7 @@ class Topology():
     def read_bonds_from_file(filename):
         print("reading bonds")
         bondlist = np.loadtxt(filename)
-        
+
         bonds=[]
         for b in bondlist:
             i = int(b[0])
@@ -538,7 +535,7 @@ class Topology():
                 bonds.append((i,j))
             else:
                 bonds.append((j,i))
-        
+
         sorted_bonds = sorted(list(set(bonds)))
         built_bonds = True
         print(sorted_bonds[:10])
@@ -559,7 +556,7 @@ class Topology():
         dxij.append(dxij_i)
         return AtomIterator, drij, dxij
 
-    # these aren't used 
+    # these aren't used
     def find_angles(self):
 
         """ Return a list of 3-tuples corresponding to all of the
@@ -585,7 +582,7 @@ class Topology():
                         angidx.append((a1, a2, a3))
         return angidx
 
-    # these aren't used 
+    # these aren't used
     def find_dihedrals(self):
 
         """ Return a list of 4-tuples corresponding to all of the
@@ -626,7 +623,6 @@ class Topology():
 
 if __name__ =='__main__' and __package__ is None:
     from os import sys, path
-    sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
     #filepath='../../data/butadiene_ethene.xyz'
     #filepath='crystal.xyz'
@@ -668,7 +664,7 @@ if __name__ =='__main__' and __package__ is None:
 
     #fragments = [G.subgraph(c).copy() for c in nx.connected_components(G)]
     #for g in fragments: g.__class__ = MyG
-   
+
     #print(" fragments")
     #for frag in fragments:
     #    print(frag.L())

@@ -4,7 +4,7 @@ import os
 from os import path
 import numpy as np
 
-# third party 
+# third party
 import pMolecule as pM
 import pCore     as pC
 from  pScientific.Geometry3 import Coordinates3
@@ -16,7 +16,6 @@ import glob
 
 import json
 
-sys.path.append(path.dirname( path.dirname( path.abspath(__file__))))
 try:
     from .base_lot import Lot
 except:
@@ -27,7 +26,7 @@ from utilities import *
 
 class pDynamo(Lot):
     """
-    Level of theory is a wrapper object to do QM/MM DFT  calculations 
+    Level of theory is a wrapper object to do QM/MM DFT  calculations
     Requires a system object. lot_inp_file must create  a pdynamo object
     called system
     """
@@ -41,7 +40,7 @@ class pDynamo(Lot):
 
         print(" making folder scratch/{}".format(self.node_id))
         os.system('mkdir -p scratch/{}'.format(self.node_id))
-        
+
         # if simulation doesn't exist create it
         if self.lot_inp_file is not None and self.simulation is None:
             # Now go through the logic of determining which FILE options are activated.
@@ -60,7 +59,7 @@ class pDynamo(Lot):
             self.file_options.set_active('scfconvtol','NormalSCF',str,"Convergence option for ORCA",allowed=['NormalSCF','TightSCF','ExtremeSCF'])
             self.file_options.set_active('d3',False,bool,"Use Grimme's D3 dispersion")
 
-            # QM/MM CHARMM 
+            # QM/MM CHARMM
             self.file_options.set_active('qmatom_file',None,str,'')
             self.file_options.set_active('use_charmm_qmmm',False,bool,'Use CHARMM molecular mechanics parameters to perform QMMM',
                     depend=(self.file_options.qmatom_file is not None),
@@ -96,7 +95,7 @@ class pDynamo(Lot):
             setattr(self, key, self.file_options.ActiveOptions[key])
 
     def build_system(self):
-        
+
         # save xyz file
         manage_xyz.write_xyz('scratch/{}/tmp.xyz'.format(self.node_id),self.geom)
 
@@ -109,12 +108,12 @@ class pDynamo(Lot):
                     parsed_keywords.append(key)
             print(parsed_keywords)
 
-            qcmodel =  pM.QCModel.QCModelORCA.WithOptions ( keywords = parsed_keywords, 
-                    deleteJobFiles = False, 
+            qcmodel =  pM.QCModel.QCModelORCA.WithOptions ( keywords = parsed_keywords,
+                    deleteJobFiles = False,
                     command = self.command,
                     scratch = self.scratch,
                     )
-       
+
             # assuming only one state for now
             qcmodel.electronicState = pM.QCModel.ElectronicState.WithOptions ( charge = self.charge , multiplicity = self.states[0][0] )
             nbModel = pM.NBModel.NBModelORCA.WithDefaults ( )
@@ -141,10 +140,10 @@ class pDynamo(Lot):
                 with open(self.qmatom_file) as f:
                     qmatom_indices = f.read().splitlines()
                 qmatom_indices = [int(x) for x in qmatom_indices]
-                
+
                 system.DefineQCModel ( qcmodel, qcSelection = pC.Selection(qmatom_indices) )
                 system.DefineNBModel ( nbModel )
-            else:            
+            else:
                 # Define System
                 system = pB.XYZFile_ToSystem('scratch/{}/tmp.xyz'.format(self.node_id))
                 system.DefineQCModel ( qcmodel)

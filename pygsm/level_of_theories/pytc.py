@@ -2,15 +2,14 @@
 import sys
 from os import path
 
-# third party 
+# third party
 import numpy as np
-import lightspeed as ls 
+import lightspeed as ls
 #import psiw
 import est
 import json
 
 # local application imports
-sys.path.append(path.dirname( path.dirname( path.abspath(__file__))))
 from .base_lot import Lot
 from utilities import *
 from .rhf_lot import RHF_LOT
@@ -19,7 +18,7 @@ from .casci_lot_svd import CASCI_LOT_SVD
 #TODO get rid of get_energy, get_gradient
 class PyTC(Lot):
     """
-    Level of theory is a wrapper object to do DFT and CASCI calculations 
+    Level of theory is a wrapper object to do DFT and CASCI calculations
     Inherits from Lot. Requires a PSIW object
     """
 
@@ -29,7 +28,7 @@ class PyTC(Lot):
             self.build_lot_from_dictionary()
             #print(self.lot)
             #print(' done executing lot_inp_file')
-            #exec(open(self.lot_inp_file).read()) 
+            #exec(open(self.lot_inp_file).read())
             #print(lot)
             #self.options['job_data']['lot'] = lot
 
@@ -54,7 +53,7 @@ class PyTC(Lot):
         diis_use_disk = d.get('diis_use_disk',False)
         rhf_guess=d.get('rhf_guess',True)
         rhf_mom=d.get('rhf_mom',True)
-    
+
         # active space
         doCASCI = d.get('doCASCI',False)
         nactive = d.get('nactive',0)
@@ -75,19 +74,19 @@ class PyTC(Lot):
         prmtopfile = d.get('prmtopfile',None)
         inpcrdfile = d.get('inpcrdfile',None)
         qmindsfile = d.get('qmindsfile',None)
-        
+
         # DFT
         doDFT = d.get('doDFT',False)
         dft_functional=d.get('dft_functional','None')
         dft_grid_name = d.get('dft_grid_name','SG0')
-   
+
         nifty.printcool("Building Resources")
         resources = ls.ResourceList.build()
         nifty.printcool("{}".format(resources))
 
         if not doQMMM:
             nifty.printcool("Building Molecule and Geom")
-            molecule = ls.Molecule.from_xyz_file(filepath)    
+            molecule = ls.Molecule.from_xyz_file(filepath)
             geom =est.Geometry.build(
                 resources=resources,
                 molecule=molecule,
@@ -123,7 +122,7 @@ class PyTC(Lot):
                     fomo_nact=nactive,
                     )
             ref.compute_energy()
-        elif doDFT: 
+        elif doDFT:
             nifty.printcool("Building DFT LOT")
             ref = est.RHF.from_options(
                     geometry=geom,
@@ -206,7 +205,7 @@ class PyTC(Lot):
             if self.lot.__class__.__name__=="CASCI_LOT" or self.lot.__class__.__name__=="CASCI_LOT_SVD":
                 self.E.append((multiplicity,self.lot.compute_energy(S=S,index=ad_idx)))
                 tmp = self.lot.compute_gradient(S=S,index=ad_idx)
-            elif self.lot.__class__.__name__=="RHF_LOT": 
+            elif self.lot.__class__.__name__=="RHF_LOT":
                 self.E.append((multiplicity,self.lot.compute_energy()))
                 tmp = self.lot.compute_gradient()
             self.grada.append((multiplicity,tmp[...]))
@@ -273,7 +272,7 @@ if __name__=="__main__":
     nifty.printcool("Build resources")
     resources = ls.ResourceList.build()
     nifty.printcool('{}'.format(resources))
-    
+
     molecule = ls.Molecule.from_xyz_file(filepath)
     geom = psiw.geometry.Geometry.build(
         resources=resources,
@@ -281,9 +280,9 @@ if __name__=="__main__":
         basisname=basis,
         )
     nifty.printcool('{}'.format(geom))
-    
+
     ref = psiw.RHF.from_options(
-         geometry= geom, 
+         geometry= geom,
          g_convergence=1.0E-6,
          fomo=True,
          fomo_method='gaussian',
@@ -313,7 +312,7 @@ if __name__=="__main__":
         )
 
     nifty.printcool("Build the pyGSM Level of Theory object (LOT)")
-    lot=PyTC.from_options(states=[(1,0),(1,1)],job_data={'psiw':psiw},do_coupling=False,fnm=filepath) 
+    lot=PyTC.from_options(states=[(1,0),(1,1)],job_data={'psiw':psiw},do_coupling=False,fnm=filepath)
 
     geoms = manage_xyz.read_xyz(filepath,scale=1.)
     coords= manage_xyz.xyz_to_np(geoms)

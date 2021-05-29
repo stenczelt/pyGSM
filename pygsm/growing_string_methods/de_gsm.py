@@ -8,7 +8,6 @@ from os import path
 import numpy as np
 
 # local application imports
-sys.path.append(path.dirname( path.dirname( path.abspath(__file__))))
 from utilities import *
 from wrappers import Molecule
 try:
@@ -34,7 +33,7 @@ class DE_GSM(MainGSM):
     def go_gsm(self,max_iters=50,opt_steps=3,rtype=2):
         """
         rtype=2 Find and Climb TS,
-        1 Climb with no exact find, 
+        1 Climb with no exact find,
         0 turning of climbing image and TS search
         """
         self.set_V0()
@@ -48,7 +47,7 @@ class DE_GSM(MainGSM):
                 self.add_GSM_nodeP(1)
 
             # Grow String
-            self.grow_string(max_iters=max_iters,max_opt_steps=opt_steps) 
+            self.grow_string(max_iters=max_iters,max_opt_steps=opt_steps)
             nifty.printcool("Done Growing the String!!!")
             self.done_growing = True
 
@@ -56,7 +55,7 @@ class DE_GSM(MainGSM):
             self.reparameterize()
             self.xyz_writer('grown_string_{:03}.xyz'.format(self.ID),self.geometries,self.energies,self.gradrmss,self.dEs)
 
-        
+
         # Can check for intermediate at beginning but not doing that now.
         #else:
         #    if self.has_intermediate(self.noise):
@@ -85,9 +84,9 @@ class DE_GSM(MainGSM):
         filename="opt_converged_{:03d}.xyz".format(self.ID)
         print(" Printing string to " + filename)
         self.xyz_writer(filename,self.geometries,self.energies,self.gradrmss,self.dEs)
-        print("Finished GSM!") 
+        print("Finished GSM!")
 
-        return 
+        return
 
     def add_GSM_nodes(self,newnodes=1):
         if self.current_nnodes+newnodes > self.nnodes:
@@ -131,7 +130,7 @@ class DE_GSM(MainGSM):
     def check_if_grown(self):
         '''
         Check if the string is grown
-        Returns True if grown 
+        Returns True if grown
         '''
 
         return self.current_nnodes==self.nnodes
@@ -256,8 +255,8 @@ if __name__=='__main__':
     # It's not clear if we should form the topology so the bonds
     # are the same since this might affect the Primitives of the xyz1 (slightly)
     # Later we stil need to form the union of bonds, angles and torsions
-    # However, I think this is important, the way its formulated, for identifiyin 
-    # the number of fragments and blocks, which is used in hybrid TRIC. 
+    # However, I think this is important, the way its formulated, for identifiyin
+    # the number of fragments and blocks, which is used in hybrid TRIC.
     for bond in top2.edges():
         if bond in top1.edges:
             pass
@@ -269,7 +268,7 @@ if __name__=='__main__':
                 top1.add_edge(bond[0],bond[1])
             else:
                 top1.add_edge(bond[1],bond[0])
-    
+
     addtr = True
     connect = addcart = False
     p1 = PrimitiveInternalCoordinates.from_options(
@@ -281,7 +280,7 @@ if __name__=='__main__':
             topology=top1,
             )
 
-    
+
     p2 = PrimitiveInternalCoordinates.from_options(
             xyz=xyz2,
             atoms=atoms,
@@ -301,7 +300,7 @@ if __name__=='__main__':
             addcart=addcart,
             connect=connect,
             primitives=p1,
-            ) 
+            )
 
     optimizer = eigenvector_follow.from_options()
 
@@ -329,7 +328,7 @@ if __name__=='__main__':
     energies = [0.0,0.31894656200893223,1.0911851973214652,2.435532565781614,5.29310522499145,20.137409660528647,-30.240701181493932,-39.4328096016543,-41.09534010407515,-44.007087726989994,-45.82765071728499]
 
     for e,m in zip(energies,gsm.nodes):
-        m.PES.lot._Energies[(1,0)] = lot.Energy(e,'kcal/mol') 
+        m.PES.lot._Energies[(1,0)] = lot.Energy(e,'kcal/mol')
         m.PES.lot.hasRanForCurrentCoords = True
 
     #print(gsm.nodes[-1].PES.lot.get_energy(xyz2,1,0))

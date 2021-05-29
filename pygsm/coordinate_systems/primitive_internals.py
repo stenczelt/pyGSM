@@ -5,8 +5,6 @@ import time
 import sys
 from os import path
 
-# i don't know what this is doing
-sys.path.append(path.dirname( path.dirname( path.abspath(__file__))))
 
 # third party
 from copy import deepcopy,copy
@@ -36,7 +34,7 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
     def __init__(self,
             options
             ):
-        
+
         super(PrimitiveInternalCoordinates, self).__init__(options)
 
         # Cache some useful attributes
@@ -44,7 +42,7 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
         self.atoms = options['atoms']
         #extra_kwargs=options['extra_kwargs']
 
-        # initialize 
+        # initialize
         self.Internals = []
         self.tmp_Internals = []
         self.cPrims = []
@@ -71,7 +69,7 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
                 print(" Warning it's better to build the topology before calling PrimitiveInternals\n Only the most basic option is enabled here \n You get better control of the topology by controlling extra bonds, angles etc.")
                 self.topology = Topology.build_topology(xyz,self.atoms)
                 print(" done making topology")
-    
+
             self.fragments = [self.topology.subgraph(c).copy() for c in nx.connected_components(self.topology)]
             for g in self.fragments: g.__class__ = MyG
 
@@ -94,7 +92,7 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
 
     @classmethod
     def copy(cls,Prims):
-        newPrims = cls(Prims.options.copy().set_values({'form_primitives':False})) 
+        newPrims = cls(Prims.options.copy().set_values({'form_primitives':False}))
         newPrims.hybrid_idx_start_stop = Prims.hybrid_idx_start_stop
         newPrims.topology = deepcopy(Prims.topology)
         newPrims.Internals = deepcopy(Prims.Internals)
@@ -113,9 +111,9 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
         addcart=self.options['addcart']
         addtr=self.options['addtr']
 
-        # LPW also uses resid from molecule . . . 
+        # LPW also uses resid from molecule . . .
         frags = [m.nodes() for m in self.fragments]
-        
+
         # coordinates in Angstrom
         coords = xyz.flatten()
 
@@ -152,7 +150,7 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
                         self.add(TranslationX(i, w=np.ones(len(i))/len(i)))
                         self.add(TranslationY(i, w=np.ones(len(i))/len(i)))
                         self.add(TranslationZ(i, w=np.ones(len(i))/len(i)))
-                        sel = coords.reshape(-1,3)[i,:] 
+                        sel = coords.reshape(-1,3)[i,:]
                         sel -= np.mean(sel, axis=0)
                         # rg is sqrt(sum(x^2))
                         rg = np.sqrt(np.mean(np.sum(sel**2, axis=1)))
@@ -214,7 +212,7 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
                                 # Add two of the most perpendicular Cartesian coordinates
                                 for i in np.argsort(dots)[:2]:
                                     self.add(trans[i]([a, b, c], w=w))
-                            
+
         for b in self.topology.nodes():
             for a in self.topology.neighbors(b):
                 for c in self.topology.neighbors(b):
@@ -233,7 +231,7 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
                                     self.delete(Angle(i, b, j))
                                     self.add(OutOfPlane(b, i, j, k))
                                     break
-                                
+
         # Find groups of atoms that are in straight lines
         atom_lines = [list(i) for i in self.topology.edges()]
         while True:
@@ -262,7 +260,7 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
                             aline.append(az)
             if atom_lines == atom_lines0: break
         atom_lines_uniq = []
-        for i in atom_lines:    # 
+        for i in atom_lines:    #
             if tuple(i) not in set(atom_lines_uniq):
                 atom_lines_uniq.append(tuple(i))
         lthree = [l for l in atom_lines_uniq if len(l) > 2]
@@ -337,7 +335,7 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
             nifty.logger.warning("\x1b[91mWarning: more than 100 B-matrices stored, memory leaks likely\x1b[0m")
             CacheWarning = True
         return ans
-    
+
     def GMatrix(self,xyz):
         #if len(self.nprims_frag)==1:
         #    return block_matrix(super(PrimitiveInternalCoordinates,self).GMatrix(xyz))
@@ -390,7 +388,7 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
         print("Build G: %.3f SVD: %.3f" % (time_G, time_svd))
 
         LargeVals = 0
-        
+
         tmpSinv = []
         for smat in S.matlist:
             sinv = np.zeros_like(smat)
@@ -406,7 +404,7 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
         tmpInv = []
         for v,sinv,ut in zip(V.matlist,Sinv.matlist,UT.matlist):
             tmpInv.append(np.dot(v,np.dot(sinv,ut)))
-        
+
         return block_matrix(tmpInv)
 
     def GInverse_EIG(self, xyz):
@@ -418,7 +416,7 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
         matlist=[]
         for Gmat in G.matlist:
             matlist.append(np.linalg.inv(Gmat))
-        
+
         Gt = block_matrix(matlist)
         #time_inv = nifty.click()
         #print("G-time: %.3f Inv-time: %.3f" % (time_G, time_inv))
@@ -436,11 +434,11 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
     #    return block_matrix.dot( Ginv,block_matrix.dot(Bmat,gradx) )
 
     def makeConstraints(self, xyz, constraints, cvals=None):
-        # Add the list of constraints. 
+        # Add the list of constraints.
         xyz = xyz.flatten()
         if cvals is None and constraints is not None:
             cvals=[]
-            # If coordinates are provided instead of a constraint value, 
+            # If coordinates are provided instead of a constraint value,
             # then calculate the constraint value from the positions.
             # If both are provided, then the coordinates are ignored.
             for c in constraints:
@@ -642,7 +640,7 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
             return True
         else:
             return False
-    
+
     def dof_index(self,dof):
         return self.Internals.index(dof)
 
@@ -667,7 +665,7 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
         if cVal is None and xyz is None:
             raise RuntimeError('Please provide either cval or xyz')
         if cVal is None:
-            # If coordinates are provided instead of a constraint value, 
+            # If coordinates are provided instead of a constraint value,
             # then calculate the constraint value from the positions.
             # If both are provided, then the coordinates are ignored.
             cVal = cPrim.value(xyz)
@@ -702,7 +700,7 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
         else:
             # all atoms are considered one "fragment"
             self.block_info = [(1,self.natoms,len(newPrims),'P')]
-        
+
 
     def newMakePrimitives(self,xyz):
         self.Internals = []
@@ -721,7 +719,7 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
             tmp_block_info.append((nodes[0],nodes[-1]+1,frag,'reg'))
             #TODO can assert blocks are contiguous here
         print(" number of primitive blocks is ",len(self.fragments))
-        
+
         # get hybrid blocks
         for tup in self.hybrid_idx_start_stop:
             # Add primitive Cartesians for each atom in hybrid block
@@ -763,7 +761,7 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
                             print("Adding %s from minimum spanning tree" % str(edge))
                             self.topology.add_edge(edge[0], edge[1])
                             noncov.append(edge)
-           
+
                 else: #Add Cart or TR
                     if addcart:
                         for i in range(info[0],info[1]):
@@ -779,7 +777,7 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
                             self.tmp_add(TranslationX(nodes, w=np.ones(len(nodes))/len(nodes)))
                             self.tmp_add(TranslationY(nodes, w=np.ones(len(nodes))/len(nodes)))
                             self.tmp_add(TranslationZ(nodes, w=np.ones(len(nodes))/len(nodes)))
-                            sel = xyz.reshape(-1,3)[nodes,:] 
+                            sel = xyz.reshape(-1,3)[nodes,:]
                             sel -= np.mean(sel, axis=0)
                             rg = np.sqrt(np.mean(np.sum(sel**2, axis=1)))
                             self.tmp_add(RotationA(nodes, coords, self.Rotators, w=rg))
@@ -845,7 +843,7 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
                                         for i in np.argsort(dots)[:2]:
                                             if self.tmp_add(trans[i]([a, b, c], w=w)):
                                                 nprims+=1
-                            
+
                 # Make Dihedrals
                 for b in frag.nodes():
                     for a in frag.neighbors(b):
@@ -867,7 +865,7 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
                                             if self.tmp_add(OutOfPlane(b, i, j, k)):
                                                 nprims+=1
                                             break
-                                        
+
                 # Find groups of atoms that are in straight lines
                 atom_lines = [list(i) for i in frag.edges()]
                 while True:
@@ -896,7 +894,7 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
                                     aline.append(az)
                     if atom_lines == atom_lines0: break
                 atom_lines_uniq = []
-                for i in atom_lines:    # 
+                for i in atom_lines:    #
                     if tuple(i) not in set(atom_lines_uniq):
                         atom_lines_uniq.append(tuple(i))
                 lthree = [l for l in atom_lines_uniq if len(l) > 2]
@@ -994,10 +992,10 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
 
         # Orders the primitives by fragment, also takes into accoutn hybrid fragments (those that don't contain primitives)
         # if it's 'P' then its primitive and the BMatrix uses the derivative
-        # if it's 'H' then its hybrid and the BMatrix uses the diagonal 
+        # if it's 'H' then its hybrid and the BMatrix uses the diagonal
         #TODO rename variables to reflect current understanding
-        #TODO The 'P' and 'H' nomenclature is probably not necessary since the regions are 
-        # distinguishable by the number of primitives they contain, 
+        #TODO The 'P' and 'H' nomenclature is probably not necessary since the regions are
+        # distinguishable by the number of primitives they contain,
         # gt 0 in the former and eq 0 in the latter
 
         #print(" Getting the block information")
@@ -1059,7 +1057,7 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
         #    #print(np.setdiff1d(self.Internals,newPrims))
         #    raise RuntimeError("Not all internal coordinates have been accounted for. You may need to add something to reorderPrimitives()")
         self.Internals = newPrims
-        
+
         print(self.Internals)
         self.clearCache()
         return
@@ -1092,7 +1090,7 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
             if np.abs(diff*factor) > maxdiff:
                 maxdiff = np.abs(diff*factor)
         return maxdiff
-    
+
     def printConstraints(self, xyz, thre=1e-5):
         nc = len(self.cPrims)
         out_lines = []
@@ -1137,18 +1135,18 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
 
     def guess_hessian(self, coords):
         """
-        Build a guess Hessian that roughly follows Schlegel's guidelines. 
+        Build a guess Hessian that roughly follows Schlegel's guidelines.
         """
         xyzs = coords.reshape(-1,3)
         def covalent(a, b):
             r = np.linalg.norm(xyzs[a]-xyzs[b])
             rcov = self.atoms[a].covalent_radius + self.atoms[b].covalent_radius
             return r/rcov < 1.2
-       
+
         Hdiag = []
         for ic in self.Internals:
             if type(ic) is Distance:
-                r = np.linalg.norm(xyzs[ic.a]-xyzs[ic.b]) 
+                r = np.linalg.norm(xyzs[ic.a]-xyzs[ic.b])
                 elem1 = min(self.atoms[ic.a].atomic_num,self.atoms[ic.b].atomic_num)
                 elem2 = max(self.atoms[ic.a].atomic_num,self.atoms[ic.b].atomic_num)
                 #A = 1.734
@@ -1266,12 +1264,12 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
             sp = info[2]
             ep = info[3]
             na = ea - sa
-            SDer = np.array( 
+            SDer = np.array(
                     [ np.reshape(p.second_derivative(xyz[sa:ea,:],start_idx=sa),(3*na,3*na)) for p in self.Internals[sp:ep] ]
                     )
 
             c_list.append(SDer)
-        
+
         answer = block_tensor(c_list)
         # This array has dimensions:
         # 1) Number of internal coordinates
@@ -1354,7 +1352,7 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
         if count==None:
             count=0
             for info in self.block_info:
-                if info[3]-info[2] != 3:  # this is a hybrid block skipping 
+                if info[3]-info[2] != 3:  # this is a hybrid block skipping
                     if all([atom in range(info[0],info[1]) for atom in prim.atoms]):
                         break
                 count+=1
@@ -1382,7 +1380,7 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
 
         return
 
-    def add_union_primitives(self,other):  
+    def add_union_primitives(self,other):
 
         # Can make this faster if only check primitive indices
         # Need the primitive internal coordinates -- not the Cartesian internal coordinates
@@ -1477,7 +1475,6 @@ def get_driving_coord_prim(dc):
 
 if __name__ =='__main__' and __package__ is None:
     from os import sys, path
-    sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
     #filepath='../../data/butadiene_ethene.xyz'
     #filepath='crystal.xyz'
@@ -1516,7 +1513,7 @@ if __name__ =='__main__' and __package__ is None:
         print("testing rotation")
         Rotators = OrderedDict()
         i = list(range(10,16))
-        sel = xyz.reshape(-1,3)[i,:] 
+        sel = xyz.reshape(-1,3)[i,:]
         sel -= np.mean(sel, axis=0)
         rg = np.sqrt(np.mean(np.sum(sel**2, axis=1)))
         rotation = RotationA(i, xyz, Rotators, w=rg)
@@ -1595,7 +1592,7 @@ if __name__ =='__main__' and __package__ is None:
             addtr = True,
             topology=G1,
             #extra_kwargs = {  'hybrid_indices' : hybrid_indices},
-            ) 
+            )
 
     p2 = PrimitiveInternalCoordinates.from_options(
             xyz=xyz2,
@@ -1603,7 +1600,7 @@ if __name__ =='__main__' and __package__ is None:
             addtr = True,
             topology=G1,
             #extra_kwargs = {  'hybrid_indices' : hybrid_indices},
-            ) 
+            )
 
     #print("Does p1 equal p2? ", p1==p2)
 

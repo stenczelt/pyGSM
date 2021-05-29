@@ -5,15 +5,14 @@ from os import path
 import subprocess
 import re
 
-# third party 
+# third party
 import numpy as np
 
 # local application imports
-sys.path.append(path.dirname( path.dirname( path.abspath(__file__))))
 try:
-    from .base_lot import Lot 
+    from .base_lot import Lot
 except:
-    from base_lot import Lot 
+    from base_lot import Lot
 
 from utilities import *
 
@@ -49,12 +48,12 @@ class DFTB(Lot):
         self.E = []
         temp = 0
         tmpgrada=[]
-        tmpgrad=[]  
+        tmpgrad=[]
         pattern=re.compile(r"Total energy:                     [-+]?[0-9]*\.?[0-9]+ H")
         for line in olines:
             for match in re.finditer(pattern,line):
                 tmpline = line.split()
-                self.E.append((1,0,float(tmpline[2])))  
+                self.E.append((1,0,float(tmpline[2])))
             if line==" Total Forces\n":
                 temp+=1
             elif temp>0:

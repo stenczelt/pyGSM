@@ -11,7 +11,6 @@ from xtb.interface import Environment
 from xtb.libxtb import VERBOSITY_FULL
 
 # local application imports
-sys.path.append(path.dirname( path.dirname( path.abspath(__file__))))
 try:
     from .base_lot import Lot
 except:
@@ -30,10 +29,10 @@ class xTB_lot(Lot):
         self.numbers = np.asarray(numbers)
 
     def run(self,geom,multiplicity,state,verbose=False):
-        
+
         #print('running!')
         #sys.stdout.flush()
-        coords = manage_xyz.xyz_to_np(geom) 
+        coords = manage_xyz.xyz_to_np(geom)
 
         # convert to bohr
         positions = coords* units.ANGSTROM_TO_AU
@@ -41,7 +40,7 @@ class xTB_lot(Lot):
         calc.set_output('lot_jobs_{}.txt'.format(self.node_id))
         res = calc.singlepoint()  # energy printed is only the electronic part
         calc.release_output()
-     
+
         # energy in hartree
         self._Energies[(multiplicity,state)] = self.Energy(res.get_energy(),'Hartree')
 
@@ -57,13 +56,13 @@ class xTB_lot(Lot):
 
 
 if __name__=="__main__":
-    
+
 
     geom=manage_xyz.read_xyz('../../data/ethylene.xyz')
     #geoms=manage_xyz.read_xyzs('../../data/diels_alder.xyz')
     #geom = geoms[0]
     #geom=manage_xyz.read_xyz('xtbopt.xyz')
-    xyz = manage_xyz.xyz_to_np(geom) 
+    xyz = manage_xyz.xyz_to_np(geom)
     #xyz *= units.ANGSTROM_TO_AU
 
     lot  = xTB_lot.from_options(states=[(1,0)],gradient_states=[(1,0)],geom=geom,node_id=0)

@@ -25,7 +25,7 @@ except:
     from slots import *
 
 from utilities import *
-   
+
 
 class DelocalizedInternalCoordinates(InternalCoordinates):
 
@@ -89,23 +89,23 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
 
     def __repr__(self):
         return self.Prims.__repr__()
-            
+
     def update(self, other):
         return self.Prims.update(other.Prims)
-        
+
     def join(self, other):
         return self.Prims.join(other.Prims)
 
     def copy(self,xyz):
         return type(self)(self.options.copy().set_values({'xyz':xyz}))
         #return type(self)(self.options.copy().set_values({'primitives':self.Prims}))
-        
+
     def addConstraint(self, cPrim, cVal, xyz):
         self.Prims.addConstraint(cPrim, cVal, xyz)
 
     def getConstraints_from(self, other):
         self.Prims.getConstraints_from(other.Prims)
-        
+
     def haveConstraints(self):
         return len(self.Prims.cPrims) > 0
 
@@ -124,15 +124,15 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
         Add extra dimensions to the gradient and Hessian corresponding to the constrained degrees of freedom.
         The Hessian becomes:  H  c
                               cT 0
-        where the elements of cT are the first derivatives of the constraint function 
-        (typically a single primitive minus a constant) with respect to the DLCs. 
-        
-        Since we picked a DLC to represent the constraint (cProj), we only set one element 
+        where the elements of cT are the first derivatives of the constraint function
+        (typically a single primitive minus a constant) with respect to the DLCs.
+
+        Since we picked a DLC to represent the constraint (cProj), we only set one element
         in each row of cT to be nonzero. Because cProj = a_i * Prim_i + a_j * Prim_j, we have
         d(Prim_c)/d(cProj) = 1.0/a_c where "c" is the index of the primitive being constrained.
-        
+
         The extended elements of the Gradient are equal to the constraint violation.
-        
+
         Parameters
         ----------
         xyz : np.ndarray
@@ -183,7 +183,7 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
         GC[0:ni] = G[:]
         GC[ni:nt] = -c0[:]
         return GC, HC
-    
+
     def applyConstraints(self, xyz):
         """
         Pass in Cartesian coordinates and return new coordinates that satisfy the constraints exactly.
@@ -217,7 +217,7 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
             xyz1 = xyz2.copy()
             niter += 1
             dQ0 = dQ.copy()
-            
+
     def newCartesian_withConstraint(self, xyz, dQ, thre=0.1, verbose=False):
         xyz2 = self.newCartesian(xyz, dQ, verbose)
         constraintSmall = len(self.Prims.cPrims) > 0
@@ -235,7 +235,7 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
         if constraintSmall:
             xyz2 = self.applyConstraints(xyz2)
         return xyz2
-    
+
     def wilsonB(self,xyz):
         Bp = self.Prims.wilsonB(xyz)
         #Vt = block_matrix.transpose(self.Vecs)
@@ -262,7 +262,7 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
     #    #Gq = np.dot(np.multiply(np.diag(Ginv)[:,None],Bmat),gradx)
     #    #print("time to do efficient mult %.3f" % nifty.click())
     #    return Gq
-    
+
     def calcGradProj(self, xyz, gradx):
         """
         Project out the components of the internal coordinate gradient along the
@@ -292,16 +292,16 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
         # Gxc = np.array(np.matrix(Bmat.T)*np.matrix(Gqc).T).flatten()
         Gxc = multi_dot([Bmat.T, Gqc.T]).flatten()
         return Gxc
-    
+
     def build_dlc(self, xyz, C=None):
         """
-        Build the delocalized internal coordinates (DLCs) which are linear 
+        Build the delocalized internal coordinates (DLCs) which are linear
         combinations of the primitive internal coordinates. Each DLC is stored
         as a column in self.Vecs.
-        
+
         In short, each DLC is an eigenvector of the G-matrix, and the number of
-        nonzero eigenvalues of G should be equal to 3*N. 
-        
+        nonzero eigenvalues of G should be equal to 3*N.
+
         After creating the DLCs, we construct special ones corresponding to primitive
         coordinates that are constrained (cProj).  These are placed in the front (i.e. left)
         of the list of DLCs, and then we perform a Gram-Schmidt orthogonalization.
@@ -312,7 +312,7 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
         Parameters
         ----------
         xyz     : np.ndarray
-                  Flat array containing Cartesian coordinates in atomic units 
+                  Flat array containing Cartesian coordinates in atomic units
         C       : np.ndarray
                 Float array containing difference in primitive coordinates
         """
@@ -369,7 +369,7 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
             # normalize C_U
             try:
                 #print(cVecs.T)
-                cVecs = math_utils.orthogonalize(cVecs) 
+                cVecs = math_utils.orthogonalize(cVecs)
             except:
                 print(cVecs)
                 print("error forming cVec")
@@ -384,13 +384,13 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
 
     def build_dlc_conjugate(self, xyz, C=None):
         """
-        Build the delocalized internal coordinates (DLCs) which are linear 
+        Build the delocalized internal coordinates (DLCs) which are linear
         combinations of the primitive internal coordinates. Each DLC is stored
         as a column in self.Vecs.
-        
+
         In short, each DLC is an eigenvector of the G-matrix, and the number of
-        nonzero eigenvalues of G should be equal to 3*N. 
-        
+        nonzero eigenvalues of G should be equal to 3*N.
+
         After creating the DLCs, we construct special ones corresponding to primitive
         coordinates that are constrained (cProj).  These are placed in the front (i.e. left)
         of the list of DLCs, and then we perform a Gram-Schmidt orthogonalization.
@@ -401,7 +401,7 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
         Parameters
         ----------
         xyz     : np.ndarray
-                  Flat array containing Cartesian coordinates in atomic units 
+                  Flat array containing Cartesian coordinates in atomic units
         C       : np.ndarray
                 Float array containing difference in primitive coordinates
         """
@@ -452,7 +452,7 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
             # normalize C_U
             try:
                 #print(cVecs.T)
-                #cVecs = math_utils.orthogonalize(cVecs) 
+                #cVecs = math_utils.orthogonalize(cVecs)
                 cVecs = math_utils.conjugate_orthogonalize(cVecs,G)
             except:
                 print(cVecs)
@@ -466,20 +466,20 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
 
         def build_dlc_0(self, xyz):
               """
-              Build the delocalized internal coordinates (DLCs) which are linear 
+              Build the delocalized internal coordinates (DLCs) which are linear
               combinations of the primitive internal coordinates. Each DLC is stored
               as a column in self.Vecs.
-              
+
               In short, each DLC is an eigenvector of the G-matrix, and the number of
-              nonzero eigenvalues of G should be equal to 3*N. 
-              
+              nonzero eigenvalues of G should be equal to 3*N.
+
               After creating the DLCs, we construct special ones corresponding to primitive
               coordinates that are constrained (cProj).  These are placed in the front (i.e. left)
               of the list of DLCs, and then we perform a Gram-Schmidt orthogonalization.
-        
+
               This function is called at the end of __init__ after the coordinate system is already
               specified (including which primitives are constraints).
-        
+
               Parameters
               ----------
               xyz : np.ndarray
@@ -511,7 +511,7 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
               # print "%i atoms (expect %i coordinates); %i/%i singular values are > 1e-6" % (self.na, Expect, LargeVals, len(L))
               # if LargeVals <= Expect:
               self.Vecs = Q[:, LargeIdx]
-        
+
               # Vecs has number of rows equal to the number of primitives, and
               # number of columns equal to the number of delocalized internal coordinates.
               if self.haveConstraints():
@@ -557,26 +557,26 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
                   # Constrained DLCs are on the left of self.Vecs.
                   self.cDLC = [i for i in range(len(self.Prims.cPrims))]
               # Now self.Internals is no longer a list of InternalCoordinate objects but only a list of strings.
-              # We do not create objects for individual DLCs but 
+              # We do not create objects for individual DLCs but
               self.Internals = ["Constraint-DLC" if i < ncon else "DLC" + " %i" % (i+1) for i in range(self.Vecs.shape[1])]
-        
+
         def build_dlc_1(self, xyz):
               """
-              Build the delocalized internal coordinates (DLCs) which are linear 
+              Build the delocalized internal coordinates (DLCs) which are linear
               combinations of the primitive internal coordinates. Each DLC is stored
               as a column in self.Vecs.
-              
+
               After some thought, build_dlc_0 did not implement constraint satisfaction
               in the most correct way. Constraint satisfaction was rather slow and
               the --enforce 0.1 may be passed to improve performance. Rethinking how the
               G matrix is constructed provides a more fundamental solution.
-        
-              In the new approach implemented here, constrained primitive ICs (PICs) are 
+
+              In the new approach implemented here, constrained primitive ICs (PICs) are
               first set aside from the rest of the PICs. Next, a G-matrix is constructed
-              from the rest of the PICs and diagonalized to form DLCs, called "residual" DLCs. 
+              from the rest of the PICs and diagonalized to form DLCs, called "residual" DLCs.
               The union of the cPICs and rDLCs forms a generalized set of DLCs, but the
               cPICs are not orthogonal to each other or to the rDLCs.
-              
+
               A set of orthogonal DLCs is constructed by carrying out Gram-Schmidt
               on the generalized set. Orthogonalization is carried out on the cPICs in order.
               Next, orthogonalization is carried out on the rDLCs using a greedy algorithm
@@ -584,22 +584,22 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
               remaining norm. This way we avoid keeping rDLCs that are almost redundant with
               the cPICs. The longest projected rDLC is added to the set and continued until
               the expected number is reached.
-        
+
               One special note in orthogonalization is that the "overlap" between internal
               coordinates corresponds to the G matrix element. Thus, for DLCs that's a linear
               combination of PICs, then the overlap is given by:
-        
+
               v_i * B * B^T * v_j = v_i * G * v_j
-        
-              Notes on usage: 1) When this is activated, constraints tend to be satisfied very 
+
+              Notes on usage: 1) When this is activated, constraints tend to be satisfied very
               rapidly even if the current coordinates are very far from the constraint values,
               leading to possible blowing up of the energies. In augment_GH, maximum steps in
               constrained degrees of freedom are restricted to 0.1 a.u./radian for this reason.
-              
+
               2) Although the performance of this method is generally superior to the old method,
               the old method with --enforce 0.1 is more extensively tested and recommended.
               Thus, this method isn't enabled by default but provided as an optional feature.
-        
+
               Parameters
               ----------
               xyz : np.ndarray
@@ -635,18 +635,18 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
                       LargeIdx.append(ival)
               # This is the number of nonredundant DLCs that we expect to have at the end
               Expect = np.sum(np.linalg.eigh(G)[0] > 1e-6)
-        
+
               if (ncon + len(LargeIdx)) < Expect:
                   raise RuntimeError("Expected at least %i delocalized coordinates, but got only %i" % (Expect, ncon + len(LargeIdx)))
               # print("%i atoms (expect %i coordinates); %i/%i singular values are > 1e-6" % (self.na, Expect, LargeVals, len(L)))
-              
+
               # Create "generalized" DLCs where the first six columns are the constrained primitive ICs
               # and the other columns are the DLCs formed from the rest
               self.Vecs = np.zeros((nprim, ncon+LargeVals), dtype=float)
               for i in range(ncon):
                   self.Vecs[i, i] = 1.0
               self.Vecs[ncon:, ncon:ncon+LargeVals] = Q[:, LargeIdx]
-        
+
               # Perform Gram-Schmidt orthogonalization
               def ov(vi, vj):
                   return multi_dot([vi, G, vj])
@@ -658,7 +658,7 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
                   # U holds the Gram-Schmidt orthogonalized DLCs
                   U = np.zeros((V.shape[0], Expect), dtype=float)
                   Unorms = np.zeros(Expect, dtype=float)
-                  
+
                   for ic in range(ncon):
                       # At the top of the loop, V columns are orthogonal to U columns up to ic.
                       # Copy V column corresponding to the next constraint to U.
@@ -672,7 +672,7 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
                       for jc in range(ic+1, nv):
                           vj = V[:, jc]
                           vj -= ui * ov(ui, vj)/Unorms[ic]**2
-                      
+
                   for ic in range(ncon, Expect):
                       # Pick out the V column with the largest norm
                       norms = np.array([np.sqrt(ov(V[:, jc], V[:, jc])) for jc in range(ncon, nv)])
@@ -684,12 +684,12 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
                       # Project out the newest U column from all V columns
                       for jc in range(ncon, nv):
                           V[:, jc] -= ui * ov(ui, V[:, jc])/Unorms[ic]**2
-                      
+
                   # self.Vecs contains the linear combination coefficients that are our new DLCs
                   self.Vecs = U.copy()
                   # Constrained DLCs are on the left of self.Vecs.
                   self.cDLC = [i for i in range(len(self.Prims.cPrims))]
-        
+
               self.Internals = ["Constraint" if i < ncon else "DLC" + " %i" % (i+1) for i in range(self.Vecs.shape[1])]
               # # LPW: Coefficients of DLC's are in each column and DLCs corresponding to constraints should basically be like (0 1 0 0 0 ..)
               # pmat2d(self.Vecs, format='f', precision=2)
@@ -761,7 +761,7 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
         #return self.Vecs.dot(vecq)
         return block_matrix.dot(Vecs,vecq)
 
-    # overwritting the parent internalcoordinates GMatrix 
+    # overwritting the parent internalcoordinates GMatrix
     # which is an elegant way to use the derivatives
     # but there is a more efficient way to compute G
     # using the block diagonal properties of G and V
@@ -801,7 +801,7 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
                 for j in range(block.shape[0]):
                     Answer[count, :, :] += block[j, i] * PrimDers[j, :, :]
                 count+=1
-        
+
         #print(" block matrix way")
         #print(Answer)
         #tmp = block_matrix.full_matrix(self.Vecs)
@@ -827,7 +827,7 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
 
         #print(" block matrix way.")
         #print(Answer[0])
-    
+
         #tmp = block_matrix.full_matrix(self.Vecs)
         #Answer2 = np.tensordot(tmp, PrimDers, axes=(0, 0))
         #print(" np tensor dot with full mat")
@@ -876,7 +876,7 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
         return self.Prims.repr_diff(other.Prims)
 
     def guess_hessian(self, coords):
-        """ Build the guess Hessian, consisting of a diagonal matrix 
+        """ Build the guess Hessian, consisting of a diagonal matrix
         in the primitive space and changed to the basis of DLCs. """
         Hprim = self.Prims.guess_hessian(coords)
         return multi_dot([self.Vecs.T,Hprim,self.Vecs])
@@ -890,7 +890,7 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
         xvec and yvec are some delocalized coordinate basis vector (or some linear combination of them)
         nx and ny are the number of grid points
         mag is the step along the delocalized coordinate basis. Don't recommend using greater than 0.5
-        
+
         returns an xyz grid to calculate energies on (see potential_energy_surface modules).
 
         '''
@@ -928,12 +928,11 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
                 xyzgrid[rc,cc,:] = self.newCartesian(xyz,dq).flatten()
                 cc+=1
             rc+=1
-        
+
         return xyzgrid
 
 if __name__ =='__main__' and __package__ is None:
     from os import sys, path
-    sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
     filepath = 'two_CO2.xyz'
     filepath2 = 'two_CO2_RX.xyz'
@@ -960,7 +959,7 @@ if __name__ =='__main__' and __package__ is None:
             atoms=atoms,
             addtr = True,
             topology=G1,
-            ) 
+            )
     print(p1.Prims)
     print(p1.Prims.calcDiff(xyz1,xyz2))
     print(p1.Prims.calcDiff(xyz1,xyz3))
@@ -997,7 +996,7 @@ if __name__ =='__main__' and __package__ is None:
     #        atoms=atoms,
     #        addtr = True,
     #        topology=G1,
-    #        ) 
+    #        )
 
 
     ##print(" Prims")

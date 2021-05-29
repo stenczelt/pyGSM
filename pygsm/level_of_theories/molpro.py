@@ -8,13 +8,12 @@ import re
 import numpy as np
 
 # local application imports
-sys.path.append(path.dirname( path.dirname( path.abspath(__file__))))
 try:
     from .base_lot import Lot
 except:
     from base_lot import Lot
 from utilities import *
-import subprocess 
+import subprocess
 
 class Molpro(Lot):
 
@@ -110,9 +109,9 @@ class Molpro(Lot):
                 tempfile.write('Force;SAMC,{};varsav\n'.format(grad_name))
 
         tempfile.close()
-    
+
     # designed to do multiple multiplicities at once... maybe not such a good idea, that feature is currently broken
-    #TODO 
+    #TODO
     def runall(self,geom,runtype=None):
 
         self.Gradients={}
@@ -136,7 +135,7 @@ class Molpro(Lot):
         output = subprocess.Popen(command, stdout=open('scratch/{}/gopro.out'.format(self.node_id),'w'), stderr = subprocess.PIPE).communicate()
         print(output[0])
 
-        
+
         # Parse
         self.parse()
         self.write_E_to_file()
@@ -155,7 +154,7 @@ class Molpro(Lot):
 
         for state,E in zip(self.states,tmp):
             self._Energies[state] = self.Energy(E,'Hartree')
-            
+
         tmpgrada=[]
         tmpgrad=[]
         tmpcoup=[]
