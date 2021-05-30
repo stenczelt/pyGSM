@@ -14,8 +14,8 @@ class xTB_lot(Lot):
         super(xTB_lot, self).__init__(options)
 
         numbers = []
-        E = utilities.utilities.elements.ElementData()
-        for a in utilities.utilities.manage_xyz.get_atoms(self.geom):
+        E = utilities.elements.ElementData()
+        for a in utilities.manage_xyz.get_atoms(self.geom):
             elem = E.from_symbol(a)
             numbers.append(elem.atomic_num)
         self.numbers = np.asarray(numbers)
@@ -23,10 +23,10 @@ class xTB_lot(Lot):
     def run(self, geom, multiplicity, state, verbose=False):
         # print('running!')
         # sys.stdout.flush()
-        coords = utilities.utilities.manage_xyz.xyz_to_np(geom)
+        coords = utilities.manage_xyz.xyz_to_np(geom)
 
         # convert to bohr
-        positions = coords * utilities.utilities.units.ANGSTROM_TO_AU
+        positions = coords * utilities.units.ANGSTROM_TO_AU
         calc = Calculator(get_method("GFN2-xTB"), self.numbers, positions, charge=self.charge)
         calc.set_output('lot_jobs_{}.txt'.format(self.node_id))
         res = calc.singlepoint()  # energy printed is only the electronic part

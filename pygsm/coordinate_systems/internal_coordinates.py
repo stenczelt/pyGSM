@@ -22,7 +22,7 @@ class InternalCoordinates(object):
         ''' InternalCoordinates default options.'''
 
         if hasattr(InternalCoordinates, '_default_options'): return InternalCoordinates._default_options.copy()
-        opt = utilities.utilities.options.Options()
+        opt = utilities.options.Options()
 
         opt.add_option(
                 key="xyz",
@@ -157,7 +157,7 @@ class InternalCoordinates(object):
             WilsonB.append(Der[i].flatten())
         self.stored_wilsonB[xhash] = np.array(WilsonB)
         if len(self.stored_wilsonB) > 1000 and not CacheWarning:
-            utilities.utilities.nifty.logger.warning("\x1b[91mWarning: more than 100 B-matrices stored, memory leaks likely\x1b[0m")
+            utilities.nifty.logger.warning("\x1b[91mWarning: more than 100 B-matrices stored, memory leaks likely\x1b[0m")
             CacheWarning = True
         ans = np.array(WilsonB)
         return ans
@@ -194,7 +194,7 @@ class InternalCoordinates(object):
                 U, S, VT = np.linalg.svd(G)
                 #time_svd = nifty.click()
             except np.linalg.LinAlgError:
-                utilities.utilities.nifty.logger.warning("\x1b[1;91m SVD fails, perturbing coordinates and trying again\x1b[0m")
+                utilities.nifty.logger.warning("\x1b[1;91m SVD fails, perturbing coordinates and trying again\x1b[0m")
                 xyz = xyz + 1e-2*np.random.random(xyz.shape)
                 loops += 1
                 if loops == 10:
@@ -240,7 +240,7 @@ class InternalCoordinates(object):
                 PMDiff = self.calcDiff(x1,x2)
                 FiniteDifference[:,i,j] = PMDiff/(2*h)
         for i in range(Analytical.shape[0]):
-            utilities.utilities.nifty.logger.info("IC %i/%i : %s" % (i, Analytical.shape[0], self.Internals[i]))
+            utilities.nifty.logger.info("IC %i/%i : %s" % (i, Analytical.shape[0], self.Internals[i]))
             lines = [""]
             maxerr = 0.0
             for j in range(Analytical.shape[1]):
@@ -255,10 +255,10 @@ class InternalCoordinates(object):
                     if maxerr < np.abs(error):
                         maxerr = np.abs(error)
             if maxerr > 1e-5:
-                utilities.utilities.nifty.logger.info('\n'.join(lines))
+                utilities.nifty.logger.info('\n'.join(lines))
             else:
-                utilities.utilities.nifty.logger.info("Max Error = %.5e" % maxerr)
-        utilities.utilities.nifty.logger.info("Finite-difference Finished")
+                utilities.nifty.logger.info("Max Error = %.5e" % maxerr)
+        utilities.nifty.logger.info("Finite-difference Finished")
 
     def checkFiniteDifferenceHess(self, xyz):
         xyz = xyz.reshape(-1,3)
@@ -390,14 +390,14 @@ class InternalCoordinates(object):
         # Function to exit from loop
         def finish(microiter, rmsdt, ndqt, xyzsave, xyz_iter1):
             if ndqt > 1e-1:
-                if verbose: utilities.utilities.nifty.logger.info(" Failed to obtain coordinates after %i microiterations (rmsd = %.3e |dQ| = %.3e)\n" % (microiter, rmsdt, ndqt))
+                if verbose: utilities.nifty.logger.info(" Failed to obtain coordinates after %i microiterations (rmsd = %.3e |dQ| = %.3e)\n" % (microiter, rmsdt, ndqt))
                 self.bork = True
                 self.writeCache(xyz, dQ, xyz_iter1)
                 return xyzsave.reshape((-1,3))
             elif ndqt > 1e-3:
-                if verbose: utilities.utilities.nifty.logger.info(" Approximate coordinates obtained after %i microiterations (rmsd = %.3e |dQ| = %.3e)\n" % (microiter, rmsdt, ndqt))
+                if verbose: utilities.nifty.logger.info(" Approximate coordinates obtained after %i microiterations (rmsd = %.3e |dQ| = %.3e)\n" % (microiter, rmsdt, ndqt))
             else:
-                if verbose: utilities.utilities.nifty.logger.info(" Cartesian coordinates obtained after %i microiterations (rmsd = %.3e |dQ| = %.3e)\n" % (microiter, rmsdt, ndqt))
+                if verbose: utilities.nifty.logger.info(" Cartesian coordinates obtained after %i microiterations (rmsd = %.3e |dQ| = %.3e)\n" % (microiter, rmsdt, ndqt))
             self.writeCache(xyz, dQ, xyzsave)
             return xyzsave.reshape((-1,3))
         fail_counter = 0
@@ -422,19 +422,19 @@ class InternalCoordinates(object):
             ndq = np.linalg.norm(dQ1-dQ_actual)
             if len(ndqs) > 0:
                 if ndq > ndqt:
-                    if verbose: utilities.utilities.nifty.logger.info(" Iter: %i Err-dQ (Best) = %.5e (%.5e) RMSD: %.5e Damp: %.5e (Bad)\n" % (microiter, ndq, ndqt, rmsd, damp))
+                    if verbose: utilities.nifty.logger.info(" Iter: %i Err-dQ (Best) = %.5e (%.5e) RMSD: %.5e Damp: %.5e (Bad)\n" % (microiter, ndq, ndqt, rmsd, damp))
                     damp /= 2
                     fail_counter += 1
                     # xyz2 = xyz1.copy()
                 else:
-                    if verbose: utilities.utilities.nifty.logger.info(" Iter: %i Err-dQ (Best) = %.5e (%.5e) RMSD: %.5e Damp: %.5e (Good)\n" % (microiter, ndq, ndqt, rmsd, damp))
+                    if verbose: utilities.nifty.logger.info(" Iter: %i Err-dQ (Best) = %.5e (%.5e) RMSD: %.5e Damp: %.5e (Good)\n" % (microiter, ndq, ndqt, rmsd, damp))
                     fail_counter = 0
                     damp = min(damp*1.2, 1.0)
                     rmsdt = rmsd
                     ndqt = ndq
                     xyzsave = xyz2.copy()
             else:
-                if verbose: utilities.utilities.nifty.logger.info(" Iter: %i Err-dQ = %.5e RMSD: %.5e Damp: %.5e\n" % (microiter, ndq, rmsd, damp))
+                if verbose: utilities.nifty.logger.info(" Iter: %i Err-dQ = %.5e RMSD: %.5e Damp: %.5e\n" % (microiter, ndq, rmsd, damp))
                 rmsdt = rmsd
                 ndqt = ndq
             ndqs.append(ndq)
@@ -468,14 +468,14 @@ class InternalCoordinates(object):
         # Function to exit from loop
         def finish(microiter, rmsdt, ndqt, xyzsave, xyz_iter1):
             if ndqt > 1e-1:
-                if verbose: utilities.utilities.nifty.logger.info(" Failed to obtain coordinates after %i microiterations (rmsd = %.3e |dQ| = %.3e)\n" % (microiter, rmsdt, ndqt))
+                if verbose: utilities.nifty.logger.info(" Failed to obtain coordinates after %i microiterations (rmsd = %.3e |dQ| = %.3e)\n" % (microiter, rmsdt, ndqt))
                 self.bork = True
                 self.writeCache(xyz, dQ, xyz_iter1)
                 return xyzsave.reshape((-1,3))
             elif ndqt > 1e-3:
-                if verbose: utilities.utilities.nifty.logger.info(" Approximate coordinates obtained after %i microiterations (rmsd = %.3e |dQ| = %.3e)\n" % (microiter, rmsdt, ndqt))
+                if verbose: utilities.nifty.logger.info(" Approximate coordinates obtained after %i microiterations (rmsd = %.3e |dQ| = %.3e)\n" % (microiter, rmsdt, ndqt))
             else:
-                if verbose: utilities.utilities.nifty.logger.info(" Cartesian coordinates obtained after %i microiterations (rmsd = %.3e |dQ| = %.3e)\n" % (microiter, rmsdt, ndqt))
+                if verbose: utilities.nifty.logger.info(" Cartesian coordinates obtained after %i microiterations (rmsd = %.3e |dQ| = %.3e)\n" % (microiter, rmsdt, ndqt))
             self.writeCache(xyz, dQ, xyzsave)
             return xyzsave.reshape((-1,3))
         fail_counter = 0
@@ -501,19 +501,19 @@ class InternalCoordinates(object):
             ndq = np.linalg.norm(dQ1-dQ_actual)
             if len(ndqs) > 0:
                 if ndq > ndqt:
-                    if verbose: utilities.utilities.nifty.logger.info(" Iter: %i Err-dQ (Best) = %.5e (%.5e) RMSD: %.5e Damp: %.5e (Bad)\n" % (microiter, ndq, ndqt, rmsd, damp))
+                    if verbose: utilities.nifty.logger.info(" Iter: %i Err-dQ (Best) = %.5e (%.5e) RMSD: %.5e Damp: %.5e (Bad)\n" % (microiter, ndq, ndqt, rmsd, damp))
                     damp /= 2
                     fail_counter += 1
                     #xyz2 = xyz1.copy()
                 else:
-                    if verbose: utilities.utilities.nifty.logger.info(" Iter: %i Err-dQ (Best) = %.5e (%.5e) RMSD: %.5e Damp: %.5e (Good)\n" % (microiter, ndq, ndqt, rmsd, damp))
+                    if verbose: utilities.nifty.logger.info(" Iter: %i Err-dQ (Best) = %.5e (%.5e) RMSD: %.5e Damp: %.5e (Good)\n" % (microiter, ndq, ndqt, rmsd, damp))
                     fail_counter = 0
                     damp = min(damp*1.2, 1.0)
                     rmsdt = rmsd
                     ndqt = ndq
                     xyzsave = xyz2.copy()
             else:
-                if verbose: utilities.utilities.nifty.logger.info(" Iter: %i Err-dQ = %.5e RMSD: %.5e Damp: %.5e\n" % (microiter, ndq, rmsd, damp))
+                if verbose: utilities.nifty.logger.info(" Iter: %i Err-dQ = %.5e RMSD: %.5e Damp: %.5e\n" % (microiter, ndq, rmsd, damp))
                 rmsdt = rmsd
                 ndqt = ndq
             ndqs.append(ndq)

@@ -148,7 +148,7 @@ class Topology():
 
         # can do an assert for xyz here CRA TODO
         if natoms > 100000:
-            utilities.utilities.nifty.logger.warning("Warning: Large number of atoms (%i), topology building may take a long time" % natoms)
+            utilities.nifty.logger.warning("Warning: Large number of atoms (%i), topology building may take a long time" % natoms)
 
         # Get hybrid indices
         hybrid_indices=hybrid_indices
@@ -178,7 +178,7 @@ class Topology():
                         hybrid_idx_start_stop.append((start,end))
 
         if not bondlistfile:
-            utilities.utilities.nifty.printcool(" building bonds")
+            utilities.nifty.printcool(" building bonds")
             print(prim_idx_start_stop)
             bonds = Topology.build_bonds(xyz,atoms,primitive_indices,prim_idx_start_stop)
             #print(" done")
@@ -306,7 +306,7 @@ class Topology():
             ymax = boxes[sn].b
             zmax = boxes[sn].c
             if any([i != 90.0 for i in [boxes[sn].alpha, boxes[sn].beta, boxes[sn].gamma]]):
-                utilities.utilities.nifty.logger.warning("Warning: Topology building will not work with broken molecules in nonorthogonal cells.")
+                utilities.nifty.logger.warning("Warning: Topology building will not work with broken molecules in nonorthogonal cells.")
                 toppbc = False
         else:
             xmin = mins[0]
@@ -398,7 +398,7 @@ class Topology():
             AtomIterator = []
             for i in gasn:
                 for j in gngh[i]:
-                    apairs = utilities.utilities.nifty.cartesian_product2([gasn[i], gasn[j]])
+                    apairs = utilities.nifty.cartesian_product2([gasn[i], gasn[j]])
                     if len(apairs) > 0: AtomIterator.append(apairs[apairs[:,0]>apairs[:,1]])
             AtomIterator = np.ascontiguousarray(np.vstack(AtomIterator))
         else:

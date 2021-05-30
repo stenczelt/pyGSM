@@ -181,7 +181,7 @@ class beales_cg(base_optimizer):
             if ostep % xyzframerate==0:
                 geoms.append(molecule.geometry)
                 energies.append(molecule.energy-refE)
-                utilities.utilities.manage_xyz.write_xyzs_w_comments('opt_{}.xyz'.format(molecule.node_id), geoms, energies, scale=1.)
+                utilities.manage_xyz.write_xyzs_w_comments('opt_{}.xyz'.format(molecule.node_id), geoms, energies, scale=1.)
 
             # save variables for update Hessian!
             if not molecule.coord_obj.__class__.__name__=='CartesianCoordinates' or self.options['update_hess_in_bg']:
@@ -220,7 +220,7 @@ class beales_cg(base_optimizer):
                 if ostep % xyzframerate!=0:
                     geoms.append(molecule.geometry)
                     energies.append(molecule.energy-refE)
-                    utilities.utilities.manage_xyz.write_xyzs_w_comments('opt_{}.xyz'.format(molecule.node_id), geoms, energies, scale=1.)
+                    utilities.manage_xyz.write_xyzs_w_comments('opt_{}.xyz'.format(molecule.node_id), geoms, energies, scale=1.)
                 break
 
             #update DLC  --> this changes q, g, Hint

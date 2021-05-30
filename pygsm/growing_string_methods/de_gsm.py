@@ -39,7 +39,7 @@ class DE_GSM(MainGSM):
 
             # Grow String
             self.grow_string(max_iters=max_iters,max_opt_steps=opt_steps)
-            utilities.utilities.nifty.printcool("Done Growing the String!!!")
+            utilities.nifty.printcool("Done Growing the String!!!")
             self.done_growing = True
 
             #nifty.printcool("initial ic_reparam")

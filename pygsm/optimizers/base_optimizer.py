@@ -51,7 +51,7 @@ class base_optimizer(object):
         """ default options. """
 
         if hasattr(base_optimizer, '_default_options'): return base_optimizer._default_options.copy()
-        opt = utilities.utilities.options.Options()
+        opt = utilities.options.Options()
 
         opt.add_option(
             key='OPTTHRESH',
@@ -403,7 +403,7 @@ class base_optimizer(object):
             print(" norm_dg is %1.4f" % norm_dg)
             print(" dE is %1.4f" % molecule.difference_energy)
 
-        dq = -molecule.difference_energy / utilities.utilities.units.KCAL_MOL_PER_AU / norm_dg
+        dq = -molecule.difference_energy / utilities.units.KCAL_MOL_PER_AU / norm_dg
         if dq < self.DMAX / 5:
             dq = -self.DMAX / 5
         if dq < -0.075:

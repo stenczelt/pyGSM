@@ -163,8 +163,8 @@ def double_golden_section(x,xyz1,xyz7,f1,f7,molecule):
     xyz6 = xyz4 + (xyz7 - xyz4)/z
 
     xyzs = [xyz1,xyz2,xyz3,xyz4,xyz5,xyz6,xyz7]
-    geoms = [utilities.utilities.manage_xyz.combine_atom_xyz(molecule.atom_symbols, xyz) for xyz in xyzs]
-    utilities.utilities.manage_xyz.write_xyzs('test.xyz', geoms, scale=1.)
+    geoms = [utilities.manage_xyz.combine_atom_xyz(molecule.atom_symbols, xyz) for xyz in xyzs]
+    utilities.manage_xyz.write_xyzs('test.xyz', geoms, scale=1.)
 
     sys.stdout.flush()
 

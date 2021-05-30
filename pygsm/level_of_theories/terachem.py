@@ -283,9 +283,9 @@ class TeraChem(Lot):
 
         # Write the temporary geometry files
         if "prmtop" in self.file_options.ActiveOptions:
-            utilities.utilities.manage_xyz.write_amber_xyz('scratch/{:03}/{}/tmp.inpcrd'.format(self.ID, self.node_id), geom)
+            utilities.manage_xyz.write_amber_xyz('scratch/{:03}/{}/tmp.inpcrd'.format(self.ID, self.node_id), geom)
         else:
-            utilities.utilities.manage_xyz.write_xyz('scratch/{:03}/{}/tmp.xyz'.format(self.ID, self.node_id), geom, scale=1.0)
+            utilities.manage_xyz.write_xyz('scratch/{:03}/{}/tmp.xyz'.format(self.ID, self.node_id), geom, scale=1.0)
 
         return
 
@@ -492,8 +492,8 @@ class TeraChem(Lot):
         else:
             # getting gradient of non-prmtop job
             gradfile='scratch/{:03}/{}/grad_{}_{}.xyz'.format(self.ID,self.node_id,state[0],state[1])
-            grad = utilities.utilities.manage_xyz.read_xyz(gradfile, scale=1.0)
-            grad = utilities.utilities.manage_xyz.xyz_to_np(grad)
+            grad = utilities.manage_xyz.read_xyz(gradfile, scale=1.0)
+            grad = utilities.manage_xyz.xyz_to_np(grad)
         self._Gradients[state] = self.Gradient(grad,"Hartree/Bohr")
 
     def parse_coup(self):
@@ -530,8 +530,8 @@ class TeraChem(Lot):
             coup[self.mm_indices] = tmpcoup[len(self.qmindices):]
         else:
             coupfile='scratch/{:03}/{}/coup_{}_{}.xyz'.format(self.ID,self.node_id,self.coupling_states[0],self.coupling_states[1])
-            coup = utilities.utilities.manage_xyz.read_xyz(coupfile, scale=1.0)
-            coup = utilities.utilities.manage_xyz.xyz_to_np(coup)
+            coup = utilities.manage_xyz.read_xyz(coupfile, scale=1.0)
+            coup = utilities.manage_xyz.xyz_to_np(coup)
         self.Couplings[self.coupling_states] = self.Coupling(coup,'Hartree/Bohr')
 
 

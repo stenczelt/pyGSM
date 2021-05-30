@@ -324,7 +324,7 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
 
         self.stored_wilsonB[xhash] = ans
         if len(self.stored_wilsonB) > 1000 and not CacheWarning:
-            utilities.utilities.nifty.logger.warning("\x1b[91mWarning: more than 100 B-matrices stored, memory leaks likely\x1b[0m")
+            utilities.nifty.logger.warning("\x1b[91mWarning: more than 100 B-matrices stored, memory leaks likely\x1b[0m")
             CacheWarning = True
         return ans
 

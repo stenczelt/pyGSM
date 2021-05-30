@@ -23,7 +23,7 @@ class DFTB(Lot):
 
     def run(self,geom):
         owd = os.getcwd()
-        utilities.utilities.manage_xyz.write_xyz('scratch/{}/tmp.xyz'.format(self.node_id), geom, scale=1.0)
+        utilities.manage_xyz.write_xyz('scratch/{}/tmp.xyz'.format(self.node_id), geom, scale=1.0)
         os.system('./xyz2gen scratch/{}/tmp.xyz'.format(self.node_id))
         os.chdir('scratch/{}'.format(self.node_id))
         os.system('pwd')
@@ -74,18 +74,18 @@ class DFTB(Lot):
     def get_energy(self,coords,multiplicity,state):
         if self.hasRanForCurrentCoords==False or (coords != self.currentCoords).any():
             self.currentCoords = coords.copy()
-            geom = utilities.utilities.manage_xyz.np_to_xyz(self.geom, self.currentCoords)
+            geom = utilities.manage_xyz.np_to_xyz(self.geom, self.currentCoords)
             self.run(geom)
         tmp = self.search_PES_tuple(self.E,multiplicity,state)[0][2]
-        return self.search_PES_tuple(self.E,multiplicity,state)[0][2] * utilities.utilities.units.KCAL_MOL_PER_AU
+        return self.search_PES_tuple(self.E,multiplicity,state)[0][2] * utilities.units.KCAL_MOL_PER_AU
 
     def get_gradient(self,coords,multiplicity,state):
         if self.hasRanForCurrentCoords==False or (coords != self.currentCoords).any():
             self.currentCoords = coords.copy()
-            geom = utilities.utilities.manage_xyz.np_to_xyz(self.geom, self.currentCoords)
+            geom = utilities.manage_xyz.np_to_xyz(self.geom, self.currentCoords)
             self.run(geom)
         tmp = self.search_PES_tuple(self.grada,multiplicity,state)[0][2]
-        return np.asarray(tmp) * -1. * utilities.utilities.units.ANGSTROM_TO_AU
+        return np.asarray(tmp) * -1. * utilities.units.ANGSTROM_TO_AU
 
 if __name__=='__main__':
     filepath="../../data/ethylene.xyz"

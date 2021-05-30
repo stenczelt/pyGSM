@@ -173,8 +173,8 @@ class lbfgs(base_optimizer):
             dq = x-xp
 
             # TODO dEpre is missing second order effects or is it?
-            dEpre = np.dot(gc.T,dq) * utilities.utilities.units.KCAL_MOL_PER_AU
-            constraint_energy = np.dot(gp.T,constraint_steps) * utilities.utilities.units.KCAL_MOL_PER_AU
+            dEpre = np.dot(gc.T,dq) * utilities.units.KCAL_MOL_PER_AU
+            constraint_energy = np.dot(gp.T,constraint_steps) * utilities.units.KCAL_MOL_PER_AU
             if opt_type not in ['UNCONSTRAINED','ICTAN']:
                 print("constraint_energy: %1.4f" % constraint_energy)
             dEpre += constraint_energy
@@ -284,7 +284,7 @@ class lbfgs(base_optimizer):
             if ostep % xyzframerate==0:
                 geoms.append(molecule.geometry)
                 energies.append(molecule.energy-refE)
-                utilities.utilities.manage_xyz.write_xyzs_w_comments('{}/opt_{}.xyz'.format(path, molecule.node_id), geoms, energies, scale=1.)
+                utilities.manage_xyz.write_xyzs_w_comments('{}/opt_{}.xyz'.format(path, molecule.node_id), geoms, energies, scale=1.)
 
             if self.options['print_level']>0:
                 print(" Node: %d Opt step: %d E: %5.4f predE: %5.4f ratio: %1.3f gradrms: %1.5f ss: %1.3f DMAX: %1.3f" % (molecule.node_id,ostep+1,fx-refE,dEpre,ratio,molecule.gradrms,step,self.DMAX))
@@ -317,7 +317,7 @@ class lbfgs(base_optimizer):
                 if ostep % xyzframerate!=0:
                     geoms.append(molecule.geometry)
                     energies.append(molecule.energy-refE)
-                    utilities.utilities.manage_xyz.write_xyzs_w_comments('{}/opt_{}.xyz'.format(path, molecule.node_id), geoms, energies, scale=1.)
+                    utilities.manage_xyz.write_xyzs_w_comments('{}/opt_{}.xyz'.format(path, molecule.node_id), geoms, energies, scale=1.)
                 break
             #print " ########## DONE WITH TOTAL STEP #########"
 

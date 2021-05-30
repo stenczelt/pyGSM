@@ -84,7 +84,7 @@ class Avg_PES(PES):
         print(" dE is %5.4f" % self.dE)
 
         # non-adiabatic coupling is derivative coupling times dE
-        nac = dvec * self.dE / utilities.utilities.units.KCAL_MOL_PER_AU
+        nac = dvec * self.dE / utilities.units.KCAL_MOL_PER_AU
         beta = get_beta(dgrad,nac)
         print(" beta = %1.6f" % beta)
 

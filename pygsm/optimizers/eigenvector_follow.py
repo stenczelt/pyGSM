@@ -172,9 +172,9 @@ class eigenvector_follow(base_optimizer):
             scaled_dq = dq*step
             dEtemp = np.dot(self.Hessian,scaled_dq)
             dEpre = np.dot(np.transpose(scaled_dq),gc) + 0.5*np.dot(np.transpose(dEtemp),scaled_dq)
-            dEpre *=utilities.utilities.units.KCAL_MOL_PER_AU
+            dEpre *=utilities.units.KCAL_MOL_PER_AU
             #print(constraint_steps.T)
-            constraint_energy = np.dot(gp.T,constraint_steps) * utilities.utilities.units.KCAL_MOL_PER_AU
+            constraint_energy = np.dot(gp.T,constraint_steps) * utilities.units.KCAL_MOL_PER_AU
             #print("constraint_energy: %1.4f" % constraint_energy)
             dEpre += constraint_energy
             #if abs(dEpre)<0.01:
@@ -198,7 +198,7 @@ class eigenvector_follow(base_optimizer):
             if ostep % xyzframerate==0:
                 geoms.append(molecule.geometry)
                 energies.append(molecule.energy-refE)
-                utilities.utilities.manage_xyz.write_xyzs_w_comments('{}/opt_{}.xyz'.format(path, molecule.node_id), geoms, energies, scale=1.)
+                utilities.manage_xyz.write_xyzs_w_comments('{}/opt_{}.xyz'.format(path, molecule.node_id), geoms, energies, scale=1.)
 
             # save variables for update Hessian!
             if not molecule.coord_obj.__class__.__name__=='CartesianCoordinates':
@@ -258,7 +258,7 @@ class eigenvector_follow(base_optimizer):
                 if ostep % xyzframerate!=0:
                     geoms.append(molecule.geometry)
                     energies.append(molecule.energy-refE)
-                    utilities.utilities.manage_xyz.write_xyzs_w_comments('{}/opt_{}.xyz'.format(path, molecule.node_id), geoms, energies, scale=1.)
+                    utilities.manage_xyz.write_xyzs_w_comments('{}/opt_{}.xyz'.format(path, molecule.node_id), geoms, energies, scale=1.)
                 break
 
             #update DLC  --> this changes q, g, Hint

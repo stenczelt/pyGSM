@@ -314,10 +314,10 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
                 Float array containing difference in primitive coordinates
         """
 
-        utilities.utilities.nifty.click()
+        utilities.nifty.click()
         #print(" Beginning to build G Matrix")
         G = self.Prims.GMatrix(xyz)  # in primitive coords
-        time_G = utilities.utilities.nifty.click()
+        time_G = utilities.nifty.click()
         #print(" Timings: Build G: %.3f " % (time_G))
 
         tmpvecs=[]
@@ -338,7 +338,7 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
         #print(" shape of DLC")
         #print(self.Vecs.shape)
 
-        time_eig = utilities.utilities.nifty.click()
+        time_eig = utilities.nifty.click()
         print(" Timings: Build G: %.3f Eig: %.3f" % (time_G, time_eig))
 
         #self.Internals = ["DLC %i" % (i+1) for i in range(len(LargeIdx))]
@@ -355,7 +355,7 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
             #C = C.copy()
             if (C[:]==0.).all():
                 raise RuntimeError
-            Cn = utilities.utilities.math_utils.orthogonalize(C)
+            Cn = utilities.math_utils.orthogonalize(C)
 
             # transform C into basis of DLC
             # CRA 3/2019 NOT SURE WHY THIS IS DONE
@@ -366,7 +366,7 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
             # normalize C_U
             try:
                 #print(cVecs.T)
-                cVecs = utilities.utilities.math_utils.orthogonalize(cVecs)
+                cVecs = utilities.math_utils.orthogonalize(cVecs)
             except:
                 print(cVecs)
                 print("error forming cVec")
@@ -404,9 +404,9 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
         """
 
         print(" starting to build G prim")
-        utilities.utilities.nifty.click()
+        utilities.nifty.click()
         G = self.Prims.GMatrix(xyz)  # in primitive coords
-        time_G = utilities.utilities.nifty.click()
+        time_G = utilities.nifty.click()
         print(" Timings: Build G: %.3f " % (time_G))
 
         tmpvecs=[]
@@ -422,7 +422,7 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
             #print("LargeVals %i" % LargeVals)
             tmpvecs.append(Q[:,LargeIdx])
         self.Vecs = utilities.block_matrix(tmpvecs)
-        time_eig = utilities.utilities.nifty.click()
+        time_eig = utilities.nifty.click()
         #print(" Timings: Build G: %.3f Eig: %.3f" % (time_G, time_eig))
 
         self.Internals = ["DLC %i" % (i+1) for i in range(len(LargeIdx))]
@@ -439,7 +439,7 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
             if (C[:]==0.).all():
                 raise RuntimeError
             G =  utilities.block_matrix.full_matrix(self.Prims.GMatrix(xyz))
-            Cn = utilities.utilities.math_utils.conjugate_orthogonalize(C, G)
+            Cn = utilities.math_utils.conjugate_orthogonalize(C, G)
 
             # transform C into basis of DLC
             # CRA 3/2019 NOT SURE WHY THIS IS DONE
@@ -450,7 +450,7 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
             try:
                 #print(cVecs.T)
                 #cVecs = math_utils.orthogonalize(cVecs)
-                cVecs = utilities.utilities.math_utils.conjugate_orthogonalize(cVecs, G)
+                cVecs = utilities.math_utils.conjugate_orthogonalize(cVecs, G)
             except:
                 print(cVecs)
                 print("error forming cVec")

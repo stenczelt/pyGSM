@@ -14,7 +14,7 @@ class PES(object):
     def default_options():
 
         if hasattr(PES, '_default_options'): return PES._default_options.copy()
-        opt = utilities.utilities.options.Options()
+        opt = utilities.options.Options()
 
         opt.add_option(
                 key='lot',
@@ -160,8 +160,8 @@ class PES(object):
             for i in self.FORCE:
                 force=i[2]
                 diff = (xyz[i[0]]- xyz[i[1]])
-                d = np.linalg.norm(diff) * utilities.utilities.units.ANGSTROM_TO_AU  # AU
-                fdE += force * d * utilities.utilities.units.KCAL_MOL_PER_AU
+                d = np.linalg.norm(diff) * utilities.units.ANGSTROM_TO_AU  # AU
+                fdE += force * d * utilities.units.KCAL_MOL_PER_AU
                 #print(" Force energy: {} kcal/mol".format(fdE))
         kdE=0.
         if self.RESTRAINTS is not None:
@@ -225,8 +225,8 @@ class PES(object):
         bwd_coords = coords-fdstep
 
         # calculate grad fwd and bwd in a.u. (Bohr/Ha)
-        grad_fwd = self.get_gradient(fwd_coords) / utilities.utilities.units.ANGSTROM_TO_AU
-        grad_bwd = self.get_gradient(bwd_coords) / utilities.utilities.units.ANGSTROM_TO_AU
+        grad_fwd = self.get_gradient(fwd_coords) / utilities.units.ANGSTROM_TO_AU
+        grad_bwd = self.get_gradient(bwd_coords) / utilities.units.ANGSTROM_TO_AU
 
         return (grad_fwd-grad_bwd)/(FD_STEP_LENGTH*2)
 
@@ -297,12 +297,12 @@ class PES(object):
                 atoms=[i[0],i[1]]
                 force=i[2]
                 diff = (xyz[i[0]]- xyz[i[1]])
-                d = np.linalg.norm(diff) * utilities.utilities.units.ANGSTROM_TO_AU  # Bohr
+                d = np.linalg.norm(diff) * utilities.units.ANGSTROM_TO_AU  # Bohr
 
                 # Constant force
                 # grad=\nabla E + FORCE
                 t = (force/d/2.)  # Hartree/bohr
-                t*= utilities.utilities.units.ANGSTROM_TO_AU   # Ha/bohr * bohr/ang = Ha/ang
+                t*= utilities.units.ANGSTROM_TO_AU   # Ha/bohr * bohr/ang = Ha/ang
                 sign=1
                 for a in atoms:
                     grad[a] += sign*t*diff.T
@@ -317,7 +317,7 @@ class PES(object):
         return grad  #Ha/ang
 
     def check_input(self,geom):
-        atoms = utilities.utilities.manage_xyz.get_atoms(self.geom)
+        atoms = utilities.manage_xyz.get_atoms(self.geom)
         elements = [ELEMENT_TABLE.from_symbol(atom) for atom in atoms]
         atomic_num = [ele.atomic_num for ele in elements]
         self.checked_input =True

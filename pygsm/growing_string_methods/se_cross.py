@@ -20,9 +20,9 @@ class SE_Cross(SE_GSM):
         """
         assert rtype in [0,1], "rtype not defined"
         if rtype==0:
-            utilities.utilities.nifty.printcool("Doing SE-MECI search")
+            utilities.nifty.printcool("Doing SE-MECI search")
         else:
-            utilities.utilities.nifty.printcool("Doing SE-MESX search")
+            utilities.nifty.printcool("Doing SE-MESX search")
 
         self.nodes[0].gradrms=0.
         self.nodes[0].V0 = self.nodes[0].energy
