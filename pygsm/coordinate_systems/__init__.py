@@ -14,4 +14,4 @@ from .slots import (
     TranslationY,
     TranslationZ,
 )
-from .topology import MyG, Topology
+from .topology import MolecularGraph, Topology

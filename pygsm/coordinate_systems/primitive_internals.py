@@ -13,7 +13,7 @@ from pygsm import utilities
 
 from . import slots
 from .internal_coordinates import InternalCoordinates
-from .topology import MyG, Topology
+from .topology import MolecularGraph, Topology
 
 np.set_printoptions(precision=4, suppress=True)
 
@@ -65,7 +65,7 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
                 for c in nx.connected_components(self.topology)
             ]
             for g in self.fragments:
-                g.__class__ = MyG
+                g.__class__ = MolecularGraph
 
             self.get_hybrid_indices(xyz)
             # nifty.click()
@@ -96,7 +96,7 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
             for c in nx.connected_components(Prims.topology)
         ]
         for g in newPrims.fragments:
-            g.__class__ = MyG
+            g.__class__ = MolecularGraph
 
         return newPrims
 

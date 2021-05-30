@@ -14,21 +14,27 @@ from pygsm import utilities
 # |  Good for doing simple  |#
 # |     topology tricks     |#
 # ===========================#
-class MyG(nx.Graph):
+class MolecularGraph(nx.Graph):
     def __init__(self):
-        super(MyG, self).__init__()
-        self.Alive = True
+        super(MolecularGraph, self).__init__()
+        self.alive = True
 
     def __eq__(self, other):
         # This defines whether two MyG objects are "equal" to one another.
-        if not self.Alive:
+        if not self.alive:
             return False
-        if not other.Alive:
+        if not other.alive:
             return False
-        return nx.is_isomorphic(self, other, node_match=nodematch)
+        return nx.is_isomorphic(self, other, node_match=self.node_match)
+
+    @staticmethod
+    def node_match(node1, node2):
+        """Matching two nodes of a graph.  Nodes are equivalent if the elements are the same"""
+        return node1["e"] == node2["e"]
 
     def __hash__(self):
-        """ The hash function is something we can use to discard two things that are obviously not equal.  Here we neglect the hash. """
+        """ The hash function is something we can use to discard
+        two things that are obviously not equal.  Here we neglect the hash. """
         return 1
 
     def L(self):
@@ -36,21 +42,23 @@ class MyG(nx.Graph):
         return sorted(list(self.nodes()))
 
     def AStr(self):
-        """ Return a string of atoms, which serves as a rudimentary 'fingerprint' : '99,100,103,151' . """
+        """ Return a string of atoms, which serves as a
+        rudimentary 'fingerprint' : '99,100,103,151' . """
         return ",".join(["%i" % i for i in self.L()])
 
     def e(self):
-        """ Return an array of the elements.  For instance ['H' 'C' 'C' 'H']. """
-        elems = nx.get_node_attributes(self, "e")
-        return [elems[i] for i in self.L()]
+        """ Return an array of the elements.
+        For instance ['H' 'C' 'C' 'H']. """
+        elements = nx.get_node_attributes(self, "e")
+        return [elements[i] for i in self.L()]
 
     def ef(self):
-        """ Create an Empirical Formula """
-        Formula = list(self.e())
+        """ Create an Empirical formula """
+        formula = list(self.e())
         return "".join(
             [
-                ("%s%i" % (k, Formula.count(k)) if Formula.count(k) > 1 else "%s" % k)
-                for k in sorted(set(Formula))
+                ("%s%i" % (k, formula.count(k)) if formula.count(k) > 1 else "%s" % k)
+                for k in sorted(set(formula))
             ]
         )
 
@@ -225,7 +233,7 @@ class Topology:
             # print(bonds)
 
         # Create a NetworkX graph object to hold the bonds.
-        G = MyG()
+        G = MolecularGraph()
 
         for i in primitive_indices:
             element = atoms[i]
@@ -244,7 +252,7 @@ class Topology:
         topology = G
         fragments = [G.subgraph(c).copy() for c in nx.connected_components(G)]
         for g in fragments:
-            g.__class__ = MyG
+            g.__class__ = MolecularGraph
 
         # print(len(fragments))
         # for frag in fragments:
@@ -277,7 +285,7 @@ class Topology:
                 bonds.append(p)
 
         # Create a NetworkX graph object to hold the bonds.
-        G = MyG()
+        G = MolecularGraph()
         for i, a_dict in enumerate(atoms):
             a = a_dict.symbol
             G.add_node(i)
@@ -295,7 +303,7 @@ class Topology:
         topology = G
         fragments = [G.subgraph(c).copy() for c in nx.connected_components(G)]
         for g in fragments:
-            g.__class__ = MyG
+            g.__class__ = MolecularGraph
 
     @staticmethod
     def build_bonds(xyz, atoms, primitive_indices, prim_idx_start_stop=None, **kwargs):
