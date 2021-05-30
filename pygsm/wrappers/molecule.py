@@ -14,7 +14,6 @@ from pygsm import utilities
 from pygsm.coordinate_systems import CartesianCoordinates
 from pygsm.potential_energy_surfaces import PES
 
-
 #logger = logging.getLogger(__name__)
 ELEMENT_TABLE = utilities.elements.ElementData()
 

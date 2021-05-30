@@ -11,13 +11,14 @@ except ModuleNotFoundError:
     est = None
     ls = None
 
-# local application imports
-from .base_lot import Lot
 from pygsm import utilities
 
+# local application imports
+from .base_lot import Lot
+
 try:
-    from .rhf_lot import RHF_LOT
     from .casci_lot_svd import CASCI_LOT_SVD
+    from .rhf_lot import RHF_LOT
 except ModuleNotFoundError:
     RHF_LOT = None
     CASCI_LOT_SVD = None

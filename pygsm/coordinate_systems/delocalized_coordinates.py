@@ -10,6 +10,7 @@ from numpy.linalg import multi_dot
 
 # local application imports
 from pygsm import utilities
+
 from . import slots
 from .internal_coordinates import InternalCoordinates
 from .primitive_internals import PrimitiveInternalCoordinates

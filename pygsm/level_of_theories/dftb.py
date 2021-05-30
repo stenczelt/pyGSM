@@ -8,6 +8,7 @@ import numpy as np
 
 # local application imports
 from pygsm import utilities
+
 from .base_lot import Lot
 
 

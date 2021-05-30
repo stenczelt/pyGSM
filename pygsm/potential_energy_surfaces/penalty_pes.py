@@ -3,6 +3,7 @@ import sys
 
 # local application imports
 from pygsm import utilities
+
 from .pes import PES
 
 
@@ -71,9 +72,9 @@ class Penalty_PES(PES):
 
 
 if __name__ == '__main__':
-    from level_of_theories.pytc import PyTC
-    import psiw
     import lightspeed as ls
+    import psiw
+    from pygsm.level_of_theories.pytc import PyTC
 
     filepath = '../../data/ethylene.xyz'
     geom = utilities.manage_xyz.read_xyz(filepath, scale=1)

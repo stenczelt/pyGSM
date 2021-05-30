@@ -12,6 +12,7 @@ import numpy as np
 from pygsm import utilities
 from pygsm.coordinate_systems import Angle, Dihedral, Distance, OutOfPlane
 from pygsm.wrappers import Molecule
+
 from .main_gsm import MainGSM
 
 
@@ -537,10 +538,10 @@ class SE_GSM(MainGSM):
         #        isDone=True
 
 if __name__=='__main__':
-    from .qchem import QChem
-    from .pes import PES
     from .eigenvector_follow import eigenvector_follow
     from .molecule import Molecule
+    from .pes import PES
+    from .qchem import QChem
 
     basis='6-31G'
     nproc=8

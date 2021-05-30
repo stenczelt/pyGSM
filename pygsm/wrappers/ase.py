@@ -8,8 +8,10 @@ import os
 import ase.io
 from ase import Atoms
 
-from pygsm.coordinate_systems.delocalized_coordinates import DelocalizedInternalCoordinates
-from pygsm.coordinate_systems.primitive_internals import PrimitiveInternalCoordinates
+from pygsm.coordinate_systems.delocalized_coordinates import \
+    DelocalizedInternalCoordinates
+from pygsm.coordinate_systems.primitive_internals import \
+    PrimitiveInternalCoordinates
 from pygsm.coordinate_systems.topology import Topology
 from pygsm.growing_string_methods import DE_GSM
 from pygsm.level_of_theories.ase import ASELoT
@@ -19,6 +21,7 @@ from pygsm.potential_energy_surfaces import PES
 from pygsm.utilities import nifty
 from pygsm.utilities.elements import ElementData
 from pygsm.wrappers.molecule import Molecule
+
 from .main import cleanup_scratch, post_processing
 
 

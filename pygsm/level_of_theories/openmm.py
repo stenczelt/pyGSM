@@ -2,20 +2,23 @@
 import numpy as np
 
 try:
-    import simtk.unit as openmm_units
-    import simtk.openmm.app as openmm_app
     import simtk.openmm as openmm
-    from parmed import load_file, unit as u
+    import simtk.openmm.app as openmm_app
+    import simtk.unit as openmm_units
+    from parmed import load_file
+    from parmed import unit as u
 except ModuleNotFoundError:
     openmm_units = None
     openmm_app = None
     openmm = None
     u = None
 
-# local application imports
-from .base_lot import Lot
 from pygsm import utilities
 from pygsm.coordinate_systems import Dihedral
+
+# local application imports
+from .base_lot import Lot
+
 
 class OpenMM(Lot):
     def __init__(self,options):
@@ -201,6 +204,7 @@ class OpenMM(Lot):
 
 if __name__=="__main__":
     from openbabel import pybel as pb
+
     # Create and initialize System object from prmtop/inpcrd
     prmtopfile='../../data/solvated.prmtop'
     inpcrdfile='../../data/solvated.rst7'

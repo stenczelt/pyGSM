@@ -3,8 +3,8 @@ import os
 
 # local application imports
 from pygsm.utilities import elements, manage_xyz, options, units
-from .file_options import File_Options
 
+from .file_options import File_Options
 
 ELEMENT_TABLE = elements.ElementData()
 from collections import namedtuple

@@ -3,6 +3,7 @@ from __future__ import print_function
 # local application imports
 from pygsm import utilities
 from pygsm.wrappers import Molecule
+
 from .main_gsm import MainGSM
 
 
@@ -213,10 +214,11 @@ class DE_GSM(MainGSM):
 
 
 if __name__=='__main__':
-    from level_of_theories.dummy_lot import Dummy
-    from potential_energy_surfaces.pes import PES
-    from coordinate_systems.delocalized_coordinates import DelocalizedInternalCoordinates,PrimitiveInternalCoordinates,Topology
-    from optimizers import eigenvector_follow
+    from pygsm.coordinate_systems.delocalized_coordinates import (
+        DelocalizedInternalCoordinates, PrimitiveInternalCoordinates, Topology)
+    from pygsm.level_of_theories.dummy_lot import Dummy
+    from pygsm.optimizers import eigenvector_follow
+    from pygsm.potential_energy_surfaces.pes import PES
 
     geoms = utilities.manage_xyz.read_molden_geoms('../growing_string_methods/opt_converged_000.xyz')
     lot = Dummy.from_options(geom=geoms[0])

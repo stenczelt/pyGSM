@@ -8,8 +8,7 @@ import numpy as np
 from numpy.linalg import multi_dot
 
 # local application imports
-from pygsm.utilities import nifty,manage_xyz
-
+from pygsm.utilities import manage_xyz, nifty
 
 """
 References

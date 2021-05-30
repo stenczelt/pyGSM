@@ -8,6 +8,7 @@ import numpy as np
 
 # local application imports
 from pygsm import utilities
+
 from .base_optimizer import base_optimizer
 
 

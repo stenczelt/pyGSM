@@ -10,6 +10,7 @@ import numpy as np
 
 # local application imports
 from pygsm import utilities
+
 from .base_optimizer import base_optimizer
 
 
@@ -281,11 +282,11 @@ class eigenvector_follow(base_optimizer):
 
 
 if __name__=='__main__':
-    from qchem import QChem
-    from pes import PES
-    from molecule import Molecule
     from _linesearch import NoLineSearch
-    from slots import Distance
+    from pygsm.wrappers.molecule import Molecule
+    from pygsm.potential_energy_surfaces import PES
+    from qchem import QChem
+    from pygsm.coordinate_systems.slots import Distance
 
     basis="6-31G*"
     nproc=8

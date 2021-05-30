@@ -5,6 +5,7 @@ from xtb.utils import get_method
 
 # local application imports
 from pygsm import utilities
+
 from .base_lot import Lot
 
 

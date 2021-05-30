@@ -12,6 +12,7 @@ import numpy as np
 
 # local application imports
 from pygsm import utilities
+
 from . import slots
 from .internal_coordinates import InternalCoordinates
 from .topology import MyG, Topology

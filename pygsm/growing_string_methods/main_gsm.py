@@ -12,6 +12,7 @@ from pygsm.utilities import block_matrix
 from pygsm.utilities.manage_xyz import get_atoms, np_to_xyz, xyz_to_np
 from pygsm.utilities.nifty import printcool
 from pygsm.wrappers.molecule import Molecule
+
 from .gsm import GSM
 
 

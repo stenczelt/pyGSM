@@ -4,7 +4,6 @@ import numpy as np
 
 from pygsm import utilities
 
-
 #TODO remove unecessary arguments: nconstraints, xp, ,...
 
 def NoLineSearch(n, x, fx, g, d, step, xp, constraint_step, parameters,molecule,verbose=False):

@@ -3,6 +3,7 @@ import numpy as np
 
 # local application imports
 from pygsm import utilities
+
 from ._linesearch import NoLineSearch, backtrack
 
 

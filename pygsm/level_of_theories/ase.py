@@ -10,7 +10,7 @@ from ase import Atoms, units
 from ase.calculators.calculator import Calculator
 from ase.data import atomic_numbers
 
-from .base_lot import LoTError, Lot
+from .base_lot import Lot, LoTError
 
 
 class ASELoT(Lot):

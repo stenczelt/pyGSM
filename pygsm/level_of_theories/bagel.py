@@ -7,6 +7,7 @@ import numpy as np
 
 # local application imports
 from pygsm import utilities
+
 from .base_lot import Lot
 from .file_options import File_Options
 

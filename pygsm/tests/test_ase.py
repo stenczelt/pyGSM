@@ -1,10 +1,10 @@
 import numpy as np
 from ase.calculators.lj import LennardJones
+from ase.units import Bohr, Ha
 from pytest import approx, raises
 
 from pygsm.level_of_theories.ase import ASELoT, geom_to_ase, xyz_to_ase
 from pygsm.level_of_theories.base_lot import LoTError
-from ase.units import Ha, Bohr
 
 xyz_4x4 = [
     ["H", 1.0, 2.0, 3.0],

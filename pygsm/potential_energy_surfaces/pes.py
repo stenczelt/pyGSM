@@ -330,9 +330,9 @@ if __name__ == '__main__':
         #from .qchem import QChem
         from level_of_theories.qchem import QChem
     elif PYTC:
-        from level_of_theories.pytc import PyTC
-        import psiw
         import lightspeed as ls
+        import psiw
+        from level_of_theories.pytc import PyTC
 
     filepath='../../data/ethylene.xyz'
     geom=utilities.manage_xyz.read_xyz(filepath, scale=1)

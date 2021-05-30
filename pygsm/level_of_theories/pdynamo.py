@@ -6,19 +6,20 @@ import os
 import numpy as np
 
 try:
+    import pBabel as pB
+    import pCore as pC
     import pMolecule as pM
-    import pCore     as pC
     from pScientific.Geometry3 import Coordinates3
-    import pBabel    as pB
 except ModuleNotFoundError:
     pM = None
     pC = None
     Coordinates3 = None
     pB = None
 
+from pygsm import utilities
+
 # local application imports
 from .base_lot import Lot
-from pygsm import utilities
 
 
 class pDynamo(Lot):

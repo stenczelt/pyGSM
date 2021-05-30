@@ -14,18 +14,16 @@ Named after the mighty Sniffy Handy Nifty (King Sniffy)
 @author Lee-Ping Wang
 @date 2018-03-10
 """
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import filecmp
 import itertools
+import logging
 import os
 import re
 import shutil
 import sys
 from select import select
-import logging
 
 import numpy as np
 from numpy.linalg import multi_dot
@@ -35,24 +33,28 @@ try:
     from itertools import zip_longest as zip_longest
 except ImportError:
     from itertools import izip_longest as zip_longest
-import threading
-from pickle import Pickler, Unpickler
-import tarfile
-import time
-import subprocess
+
+import io
 import math
-import six # For six.string_types
-from subprocess import PIPE
+import subprocess
+import tarfile
+import threading
+import time
 from collections import OrderedDict, defaultdict
-#import pybel as pb
-#import openbabel as ob
+from contextlib import contextmanager
+from pickle import Pickler, Unpickler
+from subprocess import PIPE
+
+import six  # For six.string_types
 
 #local
 from . import elements
 
+#import pybel as pb
+#import openbabel as ob
 
-from contextlib import contextmanager
-import io
+
+
 @contextmanager
 def custom_redirection(fileobj):
     old = sys.stdout

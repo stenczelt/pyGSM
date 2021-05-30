@@ -6,8 +6,9 @@ import sys
 
 # local application imports
 from pygsm import utilities
-from pygsm.potential_energy_surfaces import Avg_PES, PES
+from pygsm.potential_energy_surfaces import PES, Avg_PES
 from pygsm.wrappers import Molecule
+
 from .se_gsm import SE_GSM
 
 

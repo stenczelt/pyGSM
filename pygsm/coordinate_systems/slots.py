@@ -3,6 +3,7 @@ import numpy as np
 
 # local application imports
 from pygsm.utilities import math_utils, nifty
+
 from .rotate import calc_rot_vec_diff, get_expmap, get_expmap_der, is_linear
 
 

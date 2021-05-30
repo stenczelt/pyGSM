@@ -7,9 +7,9 @@ import numpy as np
 
 # local application imports
 from pygsm import utilities
+
 from .base_lot import Lot, copy_file
 from .file_options import File_Options
-
 
 '''
 Unfortunately TC calculates one gradient at time. THis makes it difficult to calculate multiple states since two calculations need to be done per state. 
