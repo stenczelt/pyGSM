@@ -14,7 +14,7 @@ Named after the mighty Sniffy Handy Nifty (King Sniffy)
 @author Lee-Ping Wang
 @date 2018-03-10
 """
-from __future__ import absolute_import, division, print_function
+
 
 import filecmp
 import itertools
