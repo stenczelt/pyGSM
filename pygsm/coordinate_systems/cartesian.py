@@ -9,22 +9,25 @@ class CartesianCoordinates(InternalCoordinates):
     This one does not support constraints, because that requires adding some
     primitive internal coordinates.
     """
+
     def __init__(self, options):
         super(CartesianCoordinates, self).__init__(options)
         self.Internals = []
         self.cPrims = []
         self.cVals = []
-        self.atoms = options['atoms']
+        self.atoms = options["atoms"]
         self.natoms = len(self.atoms)
-        top_settings={'make_primitives':False}
-        self.Prims = PrimitiveInternalCoordinates(options.copy().set_values({'extra_kwargs':top_settings}))
-        #self.Prims = PrimitiveInternalCoordinates(options.copy())
+        top_settings = {"make_primitives": False}
+        self.Prims = PrimitiveInternalCoordinates(
+            options.copy().set_values({"extra_kwargs": top_settings})
+        )
+        # self.Prims = PrimitiveInternalCoordinates(options.copy())
 
         for i in range(self.natoms):
             self.Prims.add(slots.CartesianX(i, w=1.0))
             self.Prims.add(slots.CartesianY(i, w=1.0))
             self.Prims.add(slots.CartesianZ(i, w=1.0))
-        #if 'constraints' in kwargs and kwargs['constraints'] is not None:
+        # if 'constraints' in kwargs and kwargs['constraints'] is not None:
         #    raise RuntimeError('Do not use constraints with Cartesian coordinates')
 
         self.Vecs = slots.np.eye(3 * self.natoms)
@@ -32,16 +35,17 @@ class CartesianCoordinates(InternalCoordinates):
     def guess_hessian(self, xyz):
         return 0.5 * slots.np.eye(len(xyz.flatten()))
 
-    def calcGrad(self,xyz,gradx):
+    def calcGrad(self, xyz, gradx):
         return gradx
 
-    def newCartesian(self,xyz,dq,verbose=True):
+    def newCartesian(self, xyz, dq, verbose=True):
         return xyz + slots.np.reshape(dq, (-1, 3))
 
-    def calculate(self,coords):
+    def calculate(self, coords):
         return coords
 
-#class Cartesian:
+
+# class Cartesian:
 #    def __init__(self,q,geom,pes):
 #        self.q = q  # the value in the current basis
 #        self.xs=[]
@@ -78,7 +82,7 @@ class CartesianCoordinates(InternalCoordinates):
 #        self.PES.lot.hasRanForCurrentCoords= False
 #        return fx,g
 #
-#if __name__ =='__main__':
+# if __name__ =='__main__':
 #    from qchem import *
 #    import pybel as pb
 #    basis="sto-3g"

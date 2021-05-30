@@ -1,5 +1,3 @@
-
-
 # standard library imports
 from sys import exit
 from time import time
@@ -23,62 +21,62 @@ logger = None
 click = None
 
 
-
 class DelocalizedInternalCoordinates(InternalCoordinates):
-
-    def __init__(self,
-            options
-            ):
+    def __init__(self, options):
 
         super(DelocalizedInternalCoordinates, self).__init__(options)
 
         # Cache  some useful attributes
         self.options = options
-        constraints = options['constraints']
-        cvals = options['cVals']
-        self.atoms = options['atoms']
+        constraints = options["constraints"]
+        cvals = options["cVals"]
+        self.atoms = options["atoms"]
         self.natoms = len(self.atoms)
 
         # The DLC contains an instance of primitive internal coordinates.
-        if self.options['primitives'] is None:
+        if self.options["primitives"] is None:
             print(" making primitives ")
             t1 = time()
             self.Prims = PrimitiveInternalCoordinates(options.copy())
             dt = time() - t1
             print(" Time to make prims %.3f" % dt)
-            self.options['primitives'] = self.Prims
+            self.options["primitives"] = self.Prims
         else:
             print(" setting primitives from options!")
-            #print(" warning: not sure if a deep copy prims")
-            #self.Prims=self.options['primitives']
+            # print(" warning: not sure if a deep copy prims")
+            # self.Prims=self.options['primitives']
             t0 = time()
-            self.Prims = PrimitiveInternalCoordinates.copy(self.options['primitives'])
+            self.Prims = PrimitiveInternalCoordinates.copy(self.options["primitives"])
 
             print(" num of primitives {}".format(len(self.Prims.Internals)))
             dt = time() - t0
             print(" Time to copy prims %.3f" % dt)
             self.Prims.clearCache()
-        #print "in constructor",len(self.Prims.Internals)
+        # print "in constructor",len(self.Prims.Internals)
 
-        xyz = options['xyz']
+        xyz = options["xyz"]
         xyz = xyz.flatten()
-        connect=options['connect']
-        addcart=options['addcart']
-        addtr=options['addtr']
+        connect = options["connect"]
+        addcart = options["addcart"]
+        addtr = options["addtr"]
         if addtr:
             if connect:
-                raise RuntimeError(" Intermolecular displacements are defined by translation and rotations! \
-                                    Don't add connect!")
+                raise RuntimeError(
+                    " Intermolecular displacements are defined by translation and rotations! \
+                                    Don't add connect!"
+                )
         elif addcart:
             if connect:
-                raise RuntimeError(" Intermolecular displacements are defined by cartesians! \
-                                    Don't add connect!")
+                raise RuntimeError(
+                    " Intermolecular displacements are defined by cartesians! \
+                                    Don't add connect!"
+                )
         else:
             pass
 
         self.build_dlc(xyz)
-        #print("vecs after build")
-        #print(self.Vecs)
+        # print("vecs after build")
+        # print(self.Vecs)
 
     def clearCache(self):
         super(DelocalizedInternalCoordinates, self).clearCache()
@@ -93,9 +91,9 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
     def join(self, other):
         return self.Prims.join(other.Prims)
 
-    def copy(self,xyz):
-        return type(self)(self.options.copy().set_values({'xyz':xyz}))
-        #return type(self)(self.options.copy().set_values({'primitives':self.Prims}))
+    def copy(self, xyz):
+        return type(self)(self.options.copy().set_values({"xyz": xyz}))
+        # return type(self)(self.options.copy().set_values({'primitives':self.Prims}))
 
     def addConstraint(self, cPrim, cVal, xyz):
         self.Prims.addConstraint(cPrim, cVal, xyz)
@@ -116,7 +114,7 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
         return self.Prims.getConstraintTargetVals()
 
     def augmentGH(self, xyz, G, H):
-        #CRA This fxn not used in current eigenvector follow regime
+        # CRA This fxn not used in current eigenvector follow regime
         """
         Add extra dimensions to the gradient and Hessian corresponding to the constrained degrees of freedom.
         The Hessian becomes:  H  c
@@ -151,7 +149,7 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
         # Number of constraints
         nc = len(self.Prims.cPrims)
         # Total dimension
-        nt = ni+nc
+        nt = ni + nc
         # Lower block of the augmented Hessian
         cT = np.zeros((nc, ni), dtype=float)
         c0 = np.zeros(nc, dtype=float)
@@ -160,21 +158,21 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
             iPrim = self.Prims.Internals.index(c)
             # The DLC corresponding to the constrained primitive (a.k.a. cProj) is self.Vecs[self.cDLC[ic]].
             # For a differential change in the DLC, the primitive that we are constraining changes by:
-            cT[ic, self.cDLC[ic]] = 1.0/self.Vecs[iPrim, self.cDLC[ic]]
+            cT[ic, self.cDLC[ic]] = 1.0 / self.Vecs[iPrim, self.cDLC[ic]]
             # Calculate the further change needed in this constrained variable
             c0[ic] = self.Prims.cVals[ic] - c.value(xyz)
             if c.isPeriodic:
-                Plus2Pi = c0[ic] + 2*np.pi
-                Minus2Pi = c0[ic] - 2*np.pi
+                Plus2Pi = c0[ic] + 2 * np.pi
+                Minus2Pi = c0[ic] - 2 * np.pi
                 if np.abs(c0[ic]) > np.abs(Plus2Pi):
                     c0[ic] = Plus2Pi
                 if np.abs(c0[ic]) > np.abs(Minus2Pi):
                     c0[ic] = Minus2Pi
         # Construct augmented Hessian
         HC = np.zeros((nt, nt), dtype=float)
-        HC[0:ni, 0:ni] = H[:,:]
-        HC[ni:nt, 0:ni] = cT[:,:]
-        HC[0:ni, ni:nt] = cT.T[:,:]
+        HC[0:ni, 0:ni] = H[:, :]
+        HC[ni:nt, 0:ni] = cT[:, :]
+        HC[0:ni, ni:nt] = cT.T[:, :]
         # Construct augmented gradient
         GC = np.zeros(nt, dtype=float)
         GC[0:ni] = G[:]
@@ -196,10 +194,12 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
                 # Look up the index of the DLC that corresponds to the constraint
                 iDLC = self.cDLC[ic]
                 # Calculate the further change needed in this constrained variable
-                dQ[iDLC] = (self.Prims.cVals[ic] - c.value(xyz1))/self.Vecs[iPrim, iDLC]
+                dQ[iDLC] = (self.Prims.cVals[ic] - c.value(xyz1)) / self.Vecs[
+                    iPrim, iDLC
+                ]
                 if c.isPeriodic:
-                    Plus2Pi = dQ[iDLC] + 2*np.pi
-                    Minus2Pi = dQ[iDLC] - 2*np.pi
+                    Plus2Pi = dQ[iDLC] + 2 * np.pi
+                    Minus2Pi = dQ[iDLC] - 2 * np.pi
                     if np.abs(dQ[iDLC]) > np.abs(Plus2Pi):
                         dQ[iDLC] = Plus2Pi
                     if np.abs(dQ[iDLC]) > np.abs(Minus2Pi):
@@ -219,28 +219,34 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
         xyz2 = self.newCartesian(xyz, dQ, verbose)
         constraintSmall = len(self.Prims.cPrims) > 0
         for ic, c in enumerate(self.Prims.cPrims):
-            w = c.w if type(c) in [slots.RotationA, slots.RotationB, slots.RotationC] else 1.0
-            current = c.value(xyz)/w
-            reference = self.Prims.cVals[ic]/w
-            diff = (current - reference)
-            if np.abs(diff-2*np.pi) < np.abs(diff):
-                diff -= 2*np.pi
-            if np.abs(diff+2*np.pi) < np.abs(diff):
-                diff += 2*np.pi
+            w = (
+                c.w
+                if type(c) in [slots.RotationA, slots.RotationB, slots.RotationC]
+                else 1.0
+            )
+            current = c.value(xyz) / w
+            reference = self.Prims.cVals[ic] / w
+            diff = current - reference
+            if np.abs(diff - 2 * np.pi) < np.abs(diff):
+                diff -= 2 * np.pi
+            if np.abs(diff + 2 * np.pi) < np.abs(diff):
+                diff += 2 * np.pi
             if np.abs(diff) > thre:
                 constraintSmall = False
         if constraintSmall:
             xyz2 = self.applyConstraints(xyz2)
         return xyz2
 
-    def wilsonB(self,xyz):
+    def wilsonB(self, xyz):
         Bp = self.Prims.wilsonB(xyz)
-        #Vt = block_matrix.transpose(self.Vecs)
-        #print(Vt.shape)
-        #return block_matrix.dot(Vt,block_matrix.dot(Bp,self.Vecs))
-        return utilities.block_matrix.dot(utilities.block_matrix.transpose(self.Vecs), Bp)
+        # Vt = block_matrix.transpose(self.Vecs)
+        # print(Vt.shape)
+        # return block_matrix.dot(Vt,block_matrix.dot(Bp,self.Vecs))
+        return utilities.block_matrix.dot(
+            utilities.block_matrix.transpose(self.Vecs), Bp
+        )
 
-    #def calcGrad(self, xyz, gradx):
+    # def calcGrad(self, xyz, gradx):
     #    #q0 = self.calculate(xyz)
     #    Ginv = self.GInverse(xyz)
     #    Bmat = self.wilsonB(xyz)
@@ -315,45 +321,45 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
         """
 
         utilities.nifty.click()
-        #print(" Beginning to build G Matrix")
+        # print(" Beginning to build G Matrix")
         G = self.Prims.GMatrix(xyz)  # in primitive coords
         time_G = utilities.nifty.click()
-        #print(" Timings: Build G: %.3f " % (time_G))
+        # print(" Timings: Build G: %.3f " % (time_G))
 
-        tmpvecs=[]
+        tmpvecs = []
         for A in G.matlist:
-            L,Q = np.linalg.eigh(A)
+            L, Q = np.linalg.eigh(A)
             LargeVals = 0
             LargeIdx = []
             for ival, value in enumerate(L):
-                #print("val=%.4f" %value,end=' ')
+                # print("val=%.4f" %value,end=' ')
                 if np.abs(value) > 1e-6:
                     LargeVals += 1
                     LargeIdx.append(ival)
-            #print('\n')
-            #print("LargeVals %i" % LargeVals)
-            tmpvecs.append(Q[:,LargeIdx])
+            # print('\n')
+            # print("LargeVals %i" % LargeVals)
+            tmpvecs.append(Q[:, LargeIdx])
 
         self.Vecs = utilities.block_matrix(tmpvecs)
-        #print(" shape of DLC")
-        #print(self.Vecs.shape)
+        # print(" shape of DLC")
+        # print(self.Vecs.shape)
 
         time_eig = utilities.nifty.click()
         print(" Timings: Build G: %.3f Eig: %.3f" % (time_G, time_eig))
 
-        #self.Internals = ["DLC %i" % (i+1) for i in range(len(LargeIdx))]
-        self.Internals = ["DLC %i" % (i+1) for i in range(self.Vecs.shape[1])]
+        # self.Internals = ["DLC %i" % (i+1) for i in range(len(LargeIdx))]
+        self.Internals = ["DLC %i" % (i + 1) for i in range(self.Vecs.shape[1])]
 
         # Vecs has number of rows equal to the number of primitives, and
         # number of columns equal to the number of delocalized internal coordinates.
         if self.haveConstraints():
-            assert slots.cVec is None,"can't have vector constraint and cprim."
-            cVec=self.form_cVec_from_cPrims()
+            assert slots.cVec is None, "can't have vector constraint and cprim."
+            cVec = self.form_cVec_from_cPrims()
 
         if C is not None:
             # orthogonalize
-            #C = C.copy()
-            if (C[:]==0.).all():
+            # C = C.copy()
+            if (C[:] == 0.0).all():
                 raise RuntimeError
             Cn = utilities.math_utils.orthogonalize(C)
 
@@ -361,23 +367,27 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
             # CRA 3/2019 NOT SURE WHY THIS IS DONE
             # couldn't Cn just be used?
 
-            cVecs = utilities.block_matrix.dot(utilities.block_matrix.dot(self.Vecs, utilities.block_matrix.transpose(self.Vecs)), Cn)
+            cVecs = utilities.block_matrix.dot(
+                utilities.block_matrix.dot(
+                    self.Vecs, utilities.block_matrix.transpose(self.Vecs)
+                ),
+                Cn,
+            )
 
             # normalize C_U
             try:
-                #print(cVecs.T)
+                # print(cVecs.T)
                 cVecs = utilities.math_utils.orthogonalize(cVecs)
             except:
                 print(cVecs)
                 print("error forming cVec")
                 exit(-1)
 
-            #project constraints into vectors
+            # project constraints into vectors
             self.Vecs = utilities.block_matrix.project_constraint(self.Vecs, cVecs)
-            #print(" shape of DLC")
-            #print(self.Vecs.shape)
+            # print(" shape of DLC")
+            # print(self.Vecs.shape)
         return self.Vecs
-
 
     def build_dlc_conjugate(self, xyz, C=None):
         """
@@ -409,60 +419,67 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
         time_G = utilities.nifty.click()
         print(" Timings: Build G: %.3f " % (time_G))
 
-        tmpvecs=[]
+        tmpvecs = []
         for A in G.matlist:
-            L,Q = np.linalg.eigh(A)
+            L, Q = np.linalg.eigh(A)
             LargeVals = 0
             LargeIdx = []
             for ival, value in enumerate(L):
-                #print("val=%.4f" %value,end=' ')
+                # print("val=%.4f" %value,end=' ')
                 if np.abs(value) > 1e-6:
                     LargeVals += 1
                     LargeIdx.append(ival)
-            #print("LargeVals %i" % LargeVals)
-            tmpvecs.append(Q[:,LargeIdx])
+            # print("LargeVals %i" % LargeVals)
+            tmpvecs.append(Q[:, LargeIdx])
         self.Vecs = utilities.block_matrix(tmpvecs)
         time_eig = utilities.nifty.click()
-        #print(" Timings: Build G: %.3f Eig: %.3f" % (time_G, time_eig))
+        # print(" Timings: Build G: %.3f Eig: %.3f" % (time_G, time_eig))
 
-        self.Internals = ["DLC %i" % (i+1) for i in range(len(LargeIdx))]
+        self.Internals = ["DLC %i" % (i + 1) for i in range(len(LargeIdx))]
 
         # Vecs has number of rows equal to the number of primitives, and
         # number of columns equal to the number of delocalized internal coordinates.
         if self.haveConstraints():
-            assert slots.cVec is None,"can't have vector constraint and cprim."
-            cVec=self.form_cVec_from_cPrims()
+            assert slots.cVec is None, "can't have vector constraint and cprim."
+            cVec = self.form_cVec_from_cPrims()
 
-        #TODO use block diagonal
+        # TODO use block diagonal
         if C is not None:
             # orthogonalize
-            if (C[:]==0.).all():
+            if (C[:] == 0.0).all():
                 raise RuntimeError
-            G =  utilities.block_matrix.full_matrix(self.Prims.GMatrix(xyz))
+            G = utilities.block_matrix.full_matrix(self.Prims.GMatrix(xyz))
             Cn = utilities.math_utils.conjugate_orthogonalize(C, G)
 
             # transform C into basis of DLC
             # CRA 3/2019 NOT SURE WHY THIS IS DONE
             # couldn't Cn just be used?
-            cVecs = utilities.block_matrix.dot(utilities.block_matrix.dot(self.Vecs, utilities.block_matrix.transpose(self.Vecs)), Cn)
+            cVecs = utilities.block_matrix.dot(
+                utilities.block_matrix.dot(
+                    self.Vecs, utilities.block_matrix.transpose(self.Vecs)
+                ),
+                Cn,
+            )
 
             # normalize C_U
             try:
-                #print(cVecs.T)
-                #cVecs = math_utils.orthogonalize(cVecs)
+                # print(cVecs.T)
+                # cVecs = math_utils.orthogonalize(cVecs)
                 cVecs = utilities.math_utils.conjugate_orthogonalize(cVecs, G)
             except:
                 print(cVecs)
                 print("error forming cVec")
                 exit(-1)
 
-            #project constraints into vectors
-            self.Vecs = utilities.block_matrix.project_conjugate_constraint(self.Vecs, cVecs, G)
+            # project constraints into vectors
+            self.Vecs = utilities.block_matrix.project_conjugate_constraint(
+                self.Vecs, cVecs, G
+            )
 
         return
 
         def build_dlc_0(self, xyz):
-              """
+            """
               Build the delocalized internal coordinates (DLCs) which are linear
               combinations of the primitive internal coordinates. Each DLC is stored
               as a column in self.Vecs.
@@ -482,83 +499,89 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
               xyz : np.ndarray
                   Flat array containing Cartesian coordinates in atomic units
               """
-              # Perform singular value decomposition
-              click()
-              G = self.Prims.GMatrix(xyz)
-              # Manipulate G-Matrix to increase weight of constrained coordinates
-              if self.haveConstraints():
-                  for ic, c in enumerate(self.Prims.cPrims):
-                      iPrim = self.Prims.Internals.index(c)
-                      G[:, iPrim] *= 1.0
-                      G[iPrim, :] *= 1.0
-              ncon = len(self.Prims.cPrims)
-              # Water Dimer: 100.0, no check -> -151.1892668451
-              time_G = click()
-              L, Q = np.linalg.eigh(G)
-              time_eig = click()
-              # print "Build G: %.3f Eig: %.3f" % (time_G, time_eig)
-              LargeVals = 0
-              LargeIdx = []
-              for ival, value in enumerate(L):
-                  # print ival, value
-                  if np.abs(value) > 1e-6:
-                      LargeVals += 1
-                      LargeIdx.append(ival)
-              Expect = 3*self.na
-              # print "%i atoms (expect %i coordinates); %i/%i singular values are > 1e-6" % (self.na, Expect, LargeVals, len(L))
-              # if LargeVals <= Expect:
-              self.Vecs = Q[:, LargeIdx]
+            # Perform singular value decomposition
+            click()
+            G = self.Prims.GMatrix(xyz)
+            # Manipulate G-Matrix to increase weight of constrained coordinates
+            if self.haveConstraints():
+                for ic, c in enumerate(self.Prims.cPrims):
+                    iPrim = self.Prims.Internals.index(c)
+                    G[:, iPrim] *= 1.0
+                    G[iPrim, :] *= 1.0
+            ncon = len(self.Prims.cPrims)
+            # Water Dimer: 100.0, no check -> -151.1892668451
+            time_G = click()
+            L, Q = np.linalg.eigh(G)
+            time_eig = click()
+            # print "Build G: %.3f Eig: %.3f" % (time_G, time_eig)
+            LargeVals = 0
+            LargeIdx = []
+            for ival, value in enumerate(L):
+                # print ival, value
+                if np.abs(value) > 1e-6:
+                    LargeVals += 1
+                    LargeIdx.append(ival)
+            Expect = 3 * self.na
+            # print "%i atoms (expect %i coordinates); %i/%i singular values are > 1e-6" % (self.na, Expect, LargeVals, len(L))
+            # if LargeVals <= Expect:
+            self.Vecs = Q[:, LargeIdx]
 
-              # Vecs has number of rows equal to the number of primitives, and
-              # number of columns equal to the number of delocalized internal coordinates.
-              if self.haveConstraints():
-                  click()
-                  # print "Projecting out constraints...",
-                  V = []
-                  for ic, c in enumerate(self.Prims.cPrims):
-                      # Look up the index of the primitive that is being constrained
-                      iPrim = self.Prims.Internals.index(c)
-                      # Pick a row out of the eigenvector space. This is a linear combination of the DLCs.
-                      cVec = self.Vecs[iPrim, :]
-                      cVec = np.array(cVec)
-                      cVec /= np.linalg.norm(cVec)
-                      # This is a "new DLC" that corresponds to the primitive that we are constraining
-                      cProj = np.dot(self.Vecs,cVec.T)
-                      cProj /= np.linalg.norm(cProj)
-                      V.append(np.array(cProj).flatten())
-                      # print c, cProj[iPrim]
-                  # V contains the constraint vectors on the left, and the original DLCs on the right
-                  V = np.hstack((np.array(V).T, np.array(self.Vecs)))
-                  # Apply Gram-Schmidt to V, and produce U.
-                  # The Gram-Schmidt process should produce a number of orthogonal DLCs equal to the original number
-                  thre = 1e-6
-                  while True:
-                      U = []
-                      for iv in range(V.shape[1]):
-                          v = V[:, iv].flatten()
-                          U.append(v.copy())
-                          for ui in U[:-1]:
-                              U[-1] -= ui * np.dot(ui, v)
-                          if np.linalg.norm(U[-1]) < thre:
-                              U = U[:-1]
-                              continue
-                          U[-1] /= np.linalg.norm(U[-1])
-                      if len(U) > self.Vecs.shape[1]:
-                          thre *= 10
-                      elif len(U) == self.Vecs.shape[1]:
-                          break
-                      elif len(U) < self.Vecs.shape[1]:
-                          raise RuntimeError('Gram-Schmidt orthogonalization has failed (expect %i length %i)' % (self.Vecs.shape[1], len(U)))
-                  # print "Gram-Schmidt completed with thre=%.0e" % thre
-                  self.Vecs = np.array(U).T
-                  # Constrained DLCs are on the left of self.Vecs.
-                  self.cDLC = [i for i in range(len(self.Prims.cPrims))]
-              # Now self.Internals is no longer a list of InternalCoordinate objects but only a list of strings.
-              # We do not create objects for individual DLCs but
-              self.Internals = ["Constraint-DLC" if i < ncon else "DLC" + " %i" % (i+1) for i in range(self.Vecs.shape[1])]
+            # Vecs has number of rows equal to the number of primitives, and
+            # number of columns equal to the number of delocalized internal coordinates.
+            if self.haveConstraints():
+                click()
+                # print "Projecting out constraints...",
+                V = []
+                for ic, c in enumerate(self.Prims.cPrims):
+                    # Look up the index of the primitive that is being constrained
+                    iPrim = self.Prims.Internals.index(c)
+                    # Pick a row out of the eigenvector space. This is a linear combination of the DLCs.
+                    cVec = self.Vecs[iPrim, :]
+                    cVec = np.array(cVec)
+                    cVec /= np.linalg.norm(cVec)
+                    # This is a "new DLC" that corresponds to the primitive that we are constraining
+                    cProj = np.dot(self.Vecs, cVec.T)
+                    cProj /= np.linalg.norm(cProj)
+                    V.append(np.array(cProj).flatten())
+                    # print c, cProj[iPrim]
+                # V contains the constraint vectors on the left, and the original DLCs on the right
+                V = np.hstack((np.array(V).T, np.array(self.Vecs)))
+                # Apply Gram-Schmidt to V, and produce U.
+                # The Gram-Schmidt process should produce a number of orthogonal DLCs equal to the original number
+                thre = 1e-6
+                while True:
+                    U = []
+                    for iv in range(V.shape[1]):
+                        v = V[:, iv].flatten()
+                        U.append(v.copy())
+                        for ui in U[:-1]:
+                            U[-1] -= ui * np.dot(ui, v)
+                        if np.linalg.norm(U[-1]) < thre:
+                            U = U[:-1]
+                            continue
+                        U[-1] /= np.linalg.norm(U[-1])
+                    if len(U) > self.Vecs.shape[1]:
+                        thre *= 10
+                    elif len(U) == self.Vecs.shape[1]:
+                        break
+                    elif len(U) < self.Vecs.shape[1]:
+                        raise RuntimeError(
+                            "Gram-Schmidt orthogonalization has failed (expect %i length %i)"
+                            % (self.Vecs.shape[1], len(U))
+                        )
+                # print "Gram-Schmidt completed with thre=%.0e" % thre
+                self.Vecs = np.array(U).T
+                # Constrained DLCs are on the left of self.Vecs.
+                self.cDLC = [i for i in range(len(self.Prims.cPrims))]
+            # Now self.Internals is no longer a list of InternalCoordinate objects but only a list of strings.
+            # We do not create objects for individual DLCs but
+            self.Internals = [
+                "Constraint-DLC" if i < ncon else "DLC" + " %i" % (i + 1)
+                for i in range(self.Vecs.shape[1])
+            ]
 
         def build_dlc_1(self, xyz):
-              """
+            """
               Build the delocalized internal coordinates (DLCs) which are linear
               combinations of the primitive internal coordinates. Each DLC is stored
               as a column in self.Vecs.
@@ -602,113 +625,127 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
               xyz : np.ndarray
                   Flat array containing Cartesian coordinates in atomic units
               """
-              click()
-              G = self.Prims.GMatrix(xyz)
-              nprim = len(self.Prims.Internals)
-              cPrimIdx = []
-              if self.haveConstraints():
-                  for ic, c in enumerate(self.Prims.cPrims):
-                      iPrim = self.Prims.Internals.index(c)
-                      cPrimIdx.append(iPrim)
-              ncon = len(self.Prims.cPrims)
-              if cPrimIdx != list(range(ncon)):
-                  raise RuntimeError("The constraint primitives should be at the start of the list")
-              # Form a sub-G-matrix that doesn't include the constrained primitives and diagonalize it to form DLCs.
-              Gsub = G[ncon:, ncon:]
-              time_G = click()
-              L, Q = np.linalg.eigh(Gsub)
-              # Sort eigenvalues and eigenvectors in descending order (for cleanliness)
-              L = L[::-1]
-              Q = Q[:, ::-1]
-              time_eig = click()
-              # print "Build G: %.3f Eig: %.3f" % (time_G, time_eig)
-              # Figure out which eigenvectors from the G submatrix to include
-              LargeVals = 0
-              LargeIdx = []
-              GEigThre = 1e-6
-              for ival, value in enumerate(L):
-                  if np.abs(value) > GEigThre:
-                      LargeVals += 1
-                      LargeIdx.append(ival)
-              # This is the number of nonredundant DLCs that we expect to have at the end
-              Expect = np.sum(np.linalg.eigh(G)[0] > 1e-6)
+            click()
+            G = self.Prims.GMatrix(xyz)
+            nprim = len(self.Prims.Internals)
+            cPrimIdx = []
+            if self.haveConstraints():
+                for ic, c in enumerate(self.Prims.cPrims):
+                    iPrim = self.Prims.Internals.index(c)
+                    cPrimIdx.append(iPrim)
+            ncon = len(self.Prims.cPrims)
+            if cPrimIdx != list(range(ncon)):
+                raise RuntimeError(
+                    "The constraint primitives should be at the start of the list"
+                )
+            # Form a sub-G-matrix that doesn't include the constrained primitives and diagonalize it to form DLCs.
+            Gsub = G[ncon:, ncon:]
+            time_G = click()
+            L, Q = np.linalg.eigh(Gsub)
+            # Sort eigenvalues and eigenvectors in descending order (for cleanliness)
+            L = L[::-1]
+            Q = Q[:, ::-1]
+            time_eig = click()
+            # print "Build G: %.3f Eig: %.3f" % (time_G, time_eig)
+            # Figure out which eigenvectors from the G submatrix to include
+            LargeVals = 0
+            LargeIdx = []
+            GEigThre = 1e-6
+            for ival, value in enumerate(L):
+                if np.abs(value) > GEigThre:
+                    LargeVals += 1
+                    LargeIdx.append(ival)
+            # This is the number of nonredundant DLCs that we expect to have at the end
+            Expect = np.sum(np.linalg.eigh(G)[0] > 1e-6)
 
-              if (ncon + len(LargeIdx)) < Expect:
-                  raise RuntimeError("Expected at least %i delocalized coordinates, but got only %i" % (Expect, ncon + len(LargeIdx)))
-              # print("%i atoms (expect %i coordinates); %i/%i singular values are > 1e-6" % (self.na, Expect, LargeVals, len(L)))
+            if (ncon + len(LargeIdx)) < Expect:
+                raise RuntimeError(
+                    "Expected at least %i delocalized coordinates, but got only %i"
+                    % (Expect, ncon + len(LargeIdx))
+                )
+            # print("%i atoms (expect %i coordinates); %i/%i singular values are > 1e-6" % (self.na, Expect, LargeVals, len(L)))
 
-              # Create "generalized" DLCs where the first six columns are the constrained primitive ICs
-              # and the other columns are the DLCs formed from the rest
-              self.Vecs = np.zeros((nprim, ncon+LargeVals), dtype=float)
-              for i in range(ncon):
-                  self.Vecs[i, i] = 1.0
-              self.Vecs[ncon:, ncon:ncon+LargeVals] = Q[:, LargeIdx]
+            # Create "generalized" DLCs where the first six columns are the constrained primitive ICs
+            # and the other columns are the DLCs formed from the rest
+            self.Vecs = np.zeros((nprim, ncon + LargeVals), dtype=float)
+            for i in range(ncon):
+                self.Vecs[i, i] = 1.0
+            self.Vecs[ncon:, ncon : ncon + LargeVals] = Q[:, LargeIdx]
 
-              # Perform Gram-Schmidt orthogonalization
-              def ov(vi, vj):
-                  return multi_dot([vi, G, vj])
-              if self.haveConstraints():
-                  click()
-                  V = self.Vecs.copy()
-                  nv = V.shape[1]
-                  Vnorms = np.array([np.sqrt(ov(V[:,ic], V[:, ic])) for ic in range(nv)])
-                  # U holds the Gram-Schmidt orthogonalized DLCs
-                  U = np.zeros((V.shape[0], Expect), dtype=float)
-                  Unorms = np.zeros(Expect, dtype=float)
+            # Perform Gram-Schmidt orthogonalization
+            def ov(vi, vj):
+                return multi_dot([vi, G, vj])
 
-                  for ic in range(ncon):
-                      # At the top of the loop, V columns are orthogonal to U columns up to ic.
-                      # Copy V column corresponding to the next constraint to U.
-                      U[:, ic] = V[:, ic].copy()
-                      ui = U[:, ic]
-                      Unorms[ic] = np.sqrt(ov(ui, ui))
-                      if Unorms[ic]/Vnorms[ic] < 0.1:
-                          logger.warning("Constraint %i is almost redundant; after projection norm is %.3f of original\n" % (ic, Unorms[ic]/Vnorms[ic]))
-                      V0 = V.copy()
-                      # Project out newest U column from all remaining V columns.
-                      for jc in range(ic+1, nv):
-                          vj = V[:, jc]
-                          vj -= ui * ov(ui, vj)/Unorms[ic]**2
+            if self.haveConstraints():
+                click()
+                V = self.Vecs.copy()
+                nv = V.shape[1]
+                Vnorms = np.array([np.sqrt(ov(V[:, ic], V[:, ic])) for ic in range(nv)])
+                # U holds the Gram-Schmidt orthogonalized DLCs
+                U = np.zeros((V.shape[0], Expect), dtype=float)
+                Unorms = np.zeros(Expect, dtype=float)
 
-                  for ic in range(ncon, Expect):
-                      # Pick out the V column with the largest norm
-                      norms = np.array([np.sqrt(ov(V[:, jc], V[:, jc])) for jc in range(ncon, nv)])
-                      imax = ncon+np.argmax(norms)
-                      # Add this column to U
-                      U[:, ic] = V[:, imax].copy()
-                      ui = U[:, ic]
-                      Unorms[ic] = np.sqrt(ov(ui, ui))
-                      # Project out the newest U column from all V columns
-                      for jc in range(ncon, nv):
-                          V[:, jc] -= ui * ov(ui, V[:, jc])/Unorms[ic]**2
+                for ic in range(ncon):
+                    # At the top of the loop, V columns are orthogonal to U columns up to ic.
+                    # Copy V column corresponding to the next constraint to U.
+                    U[:, ic] = V[:, ic].copy()
+                    ui = U[:, ic]
+                    Unorms[ic] = np.sqrt(ov(ui, ui))
+                    if Unorms[ic] / Vnorms[ic] < 0.1:
+                        logger.warning(
+                            "Constraint %i is almost redundant; after projection norm is %.3f of original\n"
+                            % (ic, Unorms[ic] / Vnorms[ic])
+                        )
+                    V0 = V.copy()
+                    # Project out newest U column from all remaining V columns.
+                    for jc in range(ic + 1, nv):
+                        vj = V[:, jc]
+                        vj -= ui * ov(ui, vj) / Unorms[ic] ** 2
 
-                  # self.Vecs contains the linear combination coefficients that are our new DLCs
-                  self.Vecs = U.copy()
-                  # Constrained DLCs are on the left of self.Vecs.
-                  self.cDLC = [i for i in range(len(self.Prims.cPrims))]
+                for ic in range(ncon, Expect):
+                    # Pick out the V column with the largest norm
+                    norms = np.array(
+                        [np.sqrt(ov(V[:, jc], V[:, jc])) for jc in range(ncon, nv)]
+                    )
+                    imax = ncon + np.argmax(norms)
+                    # Add this column to U
+                    U[:, ic] = V[:, imax].copy()
+                    ui = U[:, ic]
+                    Unorms[ic] = np.sqrt(ov(ui, ui))
+                    # Project out the newest U column from all V columns
+                    for jc in range(ncon, nv):
+                        V[:, jc] -= ui * ov(ui, V[:, jc]) / Unorms[ic] ** 2
 
-              self.Internals = ["Constraint" if i < ncon else "DLC" + " %i" % (i+1) for i in range(self.Vecs.shape[1])]
-              # # LPW: Coefficients of DLC's are in each column and DLCs corresponding to constraints should basically be like (0 1 0 0 0 ..)
-              # pmat2d(self.Vecs, format='f', precision=2)
-              # B = self.Prims.wilsonB(xyz)
-              # Bdlc = np.einsum('ji,jk->ik', self.Vecs, B)
-              # Gdlc = np.dot(Bdlc, Bdlc.T)
-              # # Expect to see a diagonal matrix here
-              # print("Gdlc")
-              # pmat2d(Gdlc, format='e', precision=2)
-              # # Expect to see "large" eigenvalues here (no less than 0.1 ideally)
-              # print("L, Q")
-              # L, Q = np.linalg.eigh(Gdlc)
-              # print(L)
+                # self.Vecs contains the linear combination coefficients that are our new DLCs
+                self.Vecs = U.copy()
+                # Constrained DLCs are on the left of self.Vecs.
+                self.cDLC = [i for i in range(len(self.Prims.cPrims))]
+
+            self.Internals = [
+                "Constraint" if i < ncon else "DLC" + " %i" % (i + 1)
+                for i in range(self.Vecs.shape[1])
+            ]
+            # # LPW: Coefficients of DLC's are in each column and DLCs corresponding to constraints should basically be like (0 1 0 0 0 ..)
+            # pmat2d(self.Vecs, format='f', precision=2)
+            # B = self.Prims.wilsonB(xyz)
+            # Bdlc = np.einsum('ji,jk->ik', self.Vecs, B)
+            # Gdlc = np.dot(Bdlc, Bdlc.T)
+            # # Expect to see a diagonal matrix here
+            # print("Gdlc")
+            # pmat2d(Gdlc, format='e', precision=2)
+            # # Expect to see "large" eigenvalues here (no less than 0.1 ideally)
+            # print("L, Q")
+            # L, Q = np.linalg.eigh(Gdlc)
+            # print(L)
 
     def form_cVec_from_cPrims(self):
         """ forms the constraint vector from self.cPrim -- not used in GSM"""
-        #CRA 3/2019 warning:
-        #I'm not sure how this works!!!
-        #multiple constraints appears to be problematic!!!
+        # CRA 3/2019 warning:
+        # I'm not sure how this works!!!
+        # multiple constraints appears to be problematic!!!
         self.cDLC = [i for i in range(len(self.Prims.cPrims))]
-        #print "Projecting out constraints...",
-        #V=[]
+        # print "Projecting out constraints...",
+        # V=[]
         for ic, c in enumerate(self.Prims.cPrims):
             # Look up the index of the primitive that is being constrained
             iPrim = self.Prims.Internals.index(c)
@@ -717,10 +754,10 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
             cVec = np.array(cVec)
             cVec /= np.linalg.norm(cVec)
             # This is a "new DLC" that corresponds to the primitive that we are constraining
-            cProj = np.dot(self.Vecs,cVec.T)
+            cProj = np.dot(self.Vecs, cVec.T)
             cProj /= np.linalg.norm(cProj)
-            #V.append(np.array(cProj).flatten())
-        V = cProj.reshape(-1,1)
+            # V.append(np.array(cProj).flatten())
+        V = cProj.reshape(-1, 1)
         return V
 
     def __eq__(self, other):
@@ -736,60 +773,66 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
     def calcDiff(self, coord1, coord2):
         """ Calculate difference in internal coordinates, accounting for changes in 2*pi of angles. """
         PMDiff = self.Prims.calcDiff(coord1, coord2)
-        #Answer = np.dot(PMDiff, self.Vecs)
-        Answer = utilities.block_matrix.dot(utilities.block_matrix.transpose(self.Vecs), PMDiff)
+        # Answer = np.dot(PMDiff, self.Vecs)
+        Answer = utilities.block_matrix.dot(
+            utilities.block_matrix.transpose(self.Vecs), PMDiff
+        )
         return np.array(Answer).flatten()
 
     def calculate(self, coords):
         """ Calculate the DLCs given the Cartesian coordinates. """
         PrimVals = self.Prims.calculate(coords)
-        #Answer = np.dot(PrimVals, self.Vecs)
-        Answer = utilities.block_matrix.dot(utilities.block_matrix.transpose(self.Vecs), PrimVals)
+        # Answer = np.dot(PrimVals, self.Vecs)
+        Answer = utilities.block_matrix.dot(
+            utilities.block_matrix.transpose(self.Vecs), PrimVals
+        )
         # print np.dot(np.array(self.Vecs[0,:]).flatten(), np.array(Answer).flatten())
         # print PrimVals[0]
         # raw_input()
         return np.array(Answer).flatten()
 
-    def calcPrim(self,vecq):
+    def calcPrim(self, vecq):
         # To obtain the primitive coordinates from the delocalized internal coordinates,
         # simply multiply self.Vecs*Answer.T where Answer.T is the column vector of delocalized
         # internal coordinates. That means the "c's" in Equation 23 of Schlegel's review paper
         # are simply the rows of the Vecs matrix.
-        #return self.Vecs.dot(vecq)
+        # return self.Vecs.dot(vecq)
         return utilities.block_matrix.dot(slots.Vecs, vecq)
 
     # overwritting the parent internalcoordinates GMatrix
     # which is an elegant way to use the derivatives
     # but there is a more efficient way to compute G
     # using the block diagonal properties of G and V
-    def GMatrix(self,xyz):
-        tmpvecs=[]
-        s3a=0
-        sp=0
+    def GMatrix(self, xyz):
+        tmpvecs = []
+        s3a = 0
+        sp = 0
         Gp = self.Prims.GMatrix(xyz)
         Vt = utilities.block_matrix.transpose(self.Vecs)
-        for vt,G,v in zip(Vt.matlist,Gp.matlist,self.Vecs.matlist):
-            tmpvecs.append( np.dot(np.dot(vt,G),v))
+        for vt, G, v in zip(Vt.matlist, Gp.matlist, self.Vecs.matlist):
+            tmpvecs.append(np.dot(np.dot(vt, G), v))
         return utilities.block_matrix(tmpvecs)
 
-    def MW_GMatrix(self,xyz,mass):
-        tmpvecs=[]
-        s3a=0
-        sp=0
+    def MW_GMatrix(self, xyz, mass):
+        tmpvecs = []
+        s3a = 0
+        sp = 0
         Bp = self.Prims.wilsonB(xyz)
         Vt = utilities.block_matrix.transpose(self.Vecs)
 
         s3a = 0
-        for vt,b,v in zip(Vt.matlist,Bp.matlist,self.Vecs.matlist):
+        for vt, b, v in zip(Vt.matlist, Bp.matlist, self.Vecs.matlist):
             e3a = s3a + b.shape[1]
-            tmpvecs.append( np.linalg.multi_dot([vt,b/mass[s3a:e3a],b.T,v]))
+            tmpvecs.append(np.linalg.multi_dot([vt, b / mass[s3a:e3a], b.T, v]))
             s3a = e3a
         return utilities.block_matrix(tmpvecs)
 
     def derivatives(self, coords):
         """ Obtain the change of the DLCs with respect to the Cartesian coordinates. """
         PrimDers = self.Prims.derivatives(coords)
-        Answer = np.zeros((self.Vecs.shape[1], PrimDers.shape[1], PrimDers.shape[2]), dtype=float)
+        Answer = np.zeros(
+            (self.Vecs.shape[1], PrimDers.shape[1], PrimDers.shape[2]), dtype=float
+        )
 
         # block matrix tensor dot
         count = 0
@@ -797,15 +840,15 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
             for i in range(block.shape[1]):
                 for j in range(block.shape[0]):
                     Answer[count, :, :] += block[j, i] * PrimDers[j, :, :]
-                count+=1
+                count += 1
 
-        #print(" block matrix way")
-        #print(Answer)
-        #tmp = block_matrix.full_matrix(self.Vecs)
-        #Answer1 = np.tensordot(tmp, PrimDers, axes=(0, 0))
-        #print(" np way")
-        #print(Answer1)
-        #return np.array(Answer1)
+        # print(" block matrix way")
+        # print(Answer)
+        # tmp = block_matrix.full_matrix(self.Vecs)
+        # Answer1 = np.tensordot(tmp, PrimDers, axes=(0, 0))
+        # print(" np way")
+        # print(Answer1)
+        # return np.array(Answer1)
 
         return Answer
 
@@ -814,59 +857,59 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
         PrimDers = self.Prims.second_derivatives(coords)
 
         # block matrix tensor dot
-        Answer = np.zeros((self.Vecs.shape[1],coords.shape[0],3,coords.shape[0],3))
+        Answer = np.zeros((self.Vecs.shape[1], coords.shape[0], 3, coords.shape[0], 3))
         count = 0
         for block in self.Vecs.matlist:
             for i in range(block.shape[1]):
                 for j in range(block.shape[0]):
                     Answer[count, :, :, :, :] += block[j, i] * PrimDers[j, :, :, :, :]
-                count+=1
+                count += 1
 
-        #print(" block matrix way.")
-        #print(Answer[0])
+        # print(" block matrix way.")
+        # print(Answer[0])
 
-        #tmp = block_matrix.full_matrix(self.Vecs)
-        #Answer2 = np.tensordot(tmp, PrimDers, axes=(0, 0))
-        #print(" np tensor dot with full mat")
-        #print(Answer2[0])
-        #return np.array(Answer2)
+        # tmp = block_matrix.full_matrix(self.Vecs)
+        # Answer2 = np.tensordot(tmp, PrimDers, axes=(0, 0))
+        # print(" np tensor dot with full mat")
+        # print(Answer2[0])
+        # return np.array(Answer2)
 
         return Answer
 
-    def MW_GInverse(self,xyz,mass):
-        xyz = xyz.reshape(-1,3)
-        #nifty.click()
-        G = self.MW_GMatrix(xyz,mass)
-        #time_G = nifty.click()
-        tmpGi = [ np.linalg.inv(g) for g in G.matlist ]
-        #time_inv = nifty.click()
+    def MW_GInverse(self, xyz, mass):
+        xyz = xyz.reshape(-1, 3)
+        # nifty.click()
+        G = self.MW_GMatrix(xyz, mass)
+        # time_G = nifty.click()
+        tmpGi = [np.linalg.inv(g) for g in G.matlist]
+        # time_inv = nifty.click()
         # print "G-time: %.3f Inv-time: %.3f" % (time_G, time_inv)
         return utilities.block_matrix(tmpGi)
 
     def GInverse(self, xyz):
-        #return self.GInverse_diag(xyz)
+        # return self.GInverse_diag(xyz)
         return self.GInverse_EIG(xyz)
 
-    #TODO this needs to be fixed
-    def GInverse_diag(self,xyz):
+    # TODO this needs to be fixed
+    def GInverse_diag(self, xyz):
         t0 = time()
         G = self.GMatrix(xyz)
-        #print(G)
+        # print(G)
         dt = time() - t0
-        #print(" total time to get GMatrix %.3f" % dt)
+        # print(" total time to get GMatrix %.3f" % dt)
         d = np.diagonal(G)
-        #print(d)
-        return np.diag(1./d)
+        # print(d)
+        return np.diag(1.0 / d)
 
     def GInverse_EIG(self, xyz):
-        xyz = xyz.reshape(-1,3)
-        #nifty.click()
+        xyz = xyz.reshape(-1, 3)
+        # nifty.click()
         G = self.GMatrix(xyz)
-        #time_G = nifty.click()
-        #Gi = np.linalg.inv(G)
-        tmpGi = [ np.linalg.inv(g) for g in G.matlist ]
-        #time_inv = nifty.click()
-        #print("G-time: %.3f Inv-time: %.3f" % (time_G, time_inv))
+        # time_G = nifty.click()
+        # Gi = np.linalg.inv(G)
+        tmpGi = [np.linalg.inv(g) for g in G.matlist]
+        # time_inv = nifty.click()
+        # print("G-time: %.3f Inv-time: %.3f" % (time_G, time_inv))
         return utilities.block_matrix(tmpGi)
 
     def repr_diff(self, other):
@@ -876,68 +919,73 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
         """ Build the guess Hessian, consisting of a diagonal matrix
         in the primitive space and changed to the basis of DLCs. """
         Hprim = self.Prims.guess_hessian(coords)
-        return multi_dot([self.Vecs.T,Hprim,self.Vecs])
+        return multi_dot([self.Vecs.T, Hprim, self.Vecs])
 
     def resetRotations(self, xyz):
         """ Reset the reference geometries for calculating the orientational variables. """
         self.Prims.resetRotations(xyz)
 
-    def create2dxyzgrid(self,xyz,xvec,yvec,nx,ny,mag):
-        '''
+    def create2dxyzgrid(self, xyz, xvec, yvec, nx, ny, mag):
+        """
         xvec and yvec are some delocalized coordinate basis vector (or some linear combination of them)
         nx and ny are the number of grid points
         mag is the step along the delocalized coordinate basis. Don't recommend using greater than 0.5
 
         returns an xyz grid to calculate energies on (see potential_energy_surface modules).
 
-        '''
+        """
 
-        x=np.linspace(-mag,mag,nx)
-        y=np.linspace(-mag,mag,ny)
-        xv,yv = np.meshgrid(x,y)
+        x = np.linspace(-mag, mag, nx)
+        y = np.linspace(-mag, mag, ny)
+        xv, yv = np.meshgrid(x, y)
         xyz1 = xyz.flatten()
-        xyzgrid = np.zeros((xv.shape[0],xv.shape[1],xyz1.shape[0]))
+        xyzgrid = np.zeros((xv.shape[0], xv.shape[1], xyz1.shape[0]))
         print(self.Vecs.shape)
         print(xvec.shape)
 
         # find what linear combination of DLC basis xvec and yvec is
-        proj_xvec = utilities.block_matrix.dot(utilities.block_matrix.transpose(self.Vecs), xvec)
-        proj_yvec = utilities.block_matrix.dot(utilities.block_matrix.transpose(self.Vecs), yvec)
+        proj_xvec = utilities.block_matrix.dot(
+            utilities.block_matrix.transpose(self.Vecs), xvec
+        )
+        proj_yvec = utilities.block_matrix.dot(
+            utilities.block_matrix.transpose(self.Vecs), yvec
+        )
 
-        #proj_xvec = block_matrix.dot(self.Vecs,xvec)
-        #proj_yvec = block_matrix.dot(self.Vecs,yvec)
+        # proj_xvec = block_matrix.dot(self.Vecs,xvec)
+        # proj_yvec = block_matrix.dot(self.Vecs,yvec)
 
         print(proj_xvec.T)
         print(proj_yvec.T)
         print(proj_xvec.shape)
 
-        rc=0
-        for xrow,yrow in zip(xv,yv):
-            cc=0
-            for xx,yy in zip(xrow,yrow):
+        rc = 0
+        for xrow, yrow in zip(xv, yv):
+            cc = 0
+            for xx, yy in zip(xrow, yrow):
 
                 # first form the vector in the grid as the linear comb of the projected vectors
-                dq = xx* proj_xvec + yy*proj_yvec
+                dq = xx * proj_xvec + yy * proj_yvec
                 print(dq.T)
                 print(dq.shape)
 
                 # convert to xyz and save to xyzgrid
-                xyzgrid[rc,cc,:] = self.newCartesian(xyz,dq).flatten()
-                cc+=1
-            rc+=1
+                xyzgrid[rc, cc, :] = self.newCartesian(xyz, dq).flatten()
+                cc += 1
+            rc += 1
 
         return xyzgrid
 
-if __name__ =='__main__' and __package__ is None:
-    filepath = 'two_CO2.xyz'
-    filepath2 = 'two_CO2_RX.xyz'
-    filepath3 = 'two_CO2_RY.xyz'
-    filepath4 = 'two_CO2_RZ.xyz'
+
+if __name__ == "__main__" and __package__ is None:
+    filepath = "two_CO2.xyz"
+    filepath2 = "two_CO2_RX.xyz"
+    filepath3 = "two_CO2_RY.xyz"
+    filepath4 = "two_CO2_RZ.xyz"
     geom1 = utilities.manage_xyz.read_xyz(filepath)
     geom2 = utilities.manage_xyz.read_xyz(filepath2)
     geom3 = utilities.manage_xyz.read_xyz(filepath3)
     geom4 = utilities.manage_xyz.read_xyz(filepath4)
-    atom_symbols  = utilities.manage_xyz.get_atoms(geom1)
+    atom_symbols = utilities.manage_xyz.get_atoms(geom1)
 
     xyz1 = utilities.manage_xyz.xyz_to_np(geom1)
     xyz2 = utilities.manage_xyz.xyz_to_np(geom2)
@@ -947,33 +995,30 @@ if __name__ =='__main__' and __package__ is None:
     ELEMENT_TABLE = utilities.elements.ElementData()
     atoms = [ELEMENT_TABLE.from_symbol(atom) for atom in atom_symbols]
 
-    G1 = Topology.build_topology(xyz1,atoms,hybrid_indices=None)
+    G1 = Topology.build_topology(xyz1, atoms, hybrid_indices=None)
 
     p1 = DelocalizedInternalCoordinates.from_options(
-            xyz=xyz1,
-            atoms=atoms,
-            addtr = True,
-            topology=G1,
-            )
+        xyz=xyz1, atoms=atoms, addtr=True, topology=G1,
+    )
     print(p1.Prims)
-    print(p1.Prims.calcDiff(xyz1,xyz2))
-    print(p1.Prims.calcDiff(xyz1,xyz3))
-    print(p1.Prims.calcDiff(xyz1,xyz4))
+    print(p1.Prims.calcDiff(xyz1, xyz2))
+    print(p1.Prims.calcDiff(xyz1, xyz3))
+    print(p1.Prims.calcDiff(xyz1, xyz4))
 
-    #filepath='../../data/butadiene_ethene.xyz'
-    #filepath='crystal.xyz'
-    #filepath='multi1.xyz'
+    # filepath='../../data/butadiene_ethene.xyz'
+    # filepath='crystal.xyz'
+    # filepath='multi1.xyz'
 
-    #geom1 = manage_xyz.read_xyz(filepath)
-    #atom_symbols  = manage_xyz.get_atoms(geom1)
+    # geom1 = manage_xyz.read_xyz(filepath)
+    # atom_symbols  = manage_xyz.get_atoms(geom1)
 
-    #xyz1 = manage_xyz.xyz_to_np(geom1)
+    # xyz1 = manage_xyz.xyz_to_np(geom1)
 
-    #ELEMENT_TABLE = elements.ElementData()
-    #atoms = [ELEMENT_TABLE.from_symbol(atom) for atom in atom_symbols]
+    # ELEMENT_TABLE = elements.ElementData()
+    # atoms = [ELEMENT_TABLE.from_symbol(atom) for atom in atom_symbols]
 
     ##hybrid_indices = list(range(0,5)) + list(range(21,26))
-    #hybrid_indices=None
+    # hybrid_indices=None
     ##hybrid_indices = list(range(0,74)) + list(range(3348, 3358))
     ##hybrid_indices = None
     ##print(hybrid_indices)
@@ -982,17 +1027,16 @@ if __name__ =='__main__' and __package__ is None:
     ##hybrid_indices = [int(x) for x in hybrid_indices]
     ##print(hybrid_indices)
 
-    #nifty.printcool(" Making topology")
-    #G1 = Topology.build_topology(xyz1,atoms,hybrid_indices=hybrid_indices)
+    # nifty.printcool(" Making topology")
+    # G1 = Topology.build_topology(xyz1,atoms,hybrid_indices=hybrid_indices)
 
-    #nifty.printcool(" Making prim")
-    #p = DelocalizedInternalCoordinates.from_options(
+    # nifty.printcool(" Making prim")
+    # p = DelocalizedInternalCoordinates.from_options(
     #        xyz=xyz1,
     #        atoms=atoms,
     #        addtr = True,
     #        topology=G1,
     #        )
-
 
     ##print(" Prims")
     ##print(p.Prims.Internals)
@@ -1012,26 +1056,24 @@ if __name__ =='__main__' and __package__ is None:
     ##    print(b)
     ###print(p.Prims.wilsonB(xyz1))
 
-    #q = p.calculate(xyz1)
+    # q = p.calculate(xyz1)
     ##print("q")
     ##print(q.T)
     ##print(" Len dlc {}".format(len(q)))
 
-    #dQ = np.zeros(q.shape)
-    #dQ[15] = 0.1
+    # dQ = np.zeros(q.shape)
+    # dQ[15] = 0.1
 
-    #new_xyz = p.newCartesian(xyz1,dQ,verbose=True)
-    #new_geom = manage_xyz.np_to_xyz(geom1,new_xyz)
+    # new_xyz = p.newCartesian(xyz1,dQ,verbose=True)
+    # new_geom = manage_xyz.np_to_xyz(geom1,new_xyz)
 
-    #q1 = p.calculate(new_xyz)
-    #print(q1.T)
+    # q1 = p.calculate(new_xyz)
+    # print(q1.T)
 
-    #print("difference")
-    #print((q1-q).T)
+    # print("difference")
+    # print((q1-q).T)
 
-    #both = [geom1,new_geom]
-    #manage_xyz.write_xyzs('check.xyz',both,scale=1.)
+    # both = [geom1,new_geom]
+    # manage_xyz.write_xyzs('check.xyz',both,scale=1.)
 
     ##print(p.Internals)
-
-
