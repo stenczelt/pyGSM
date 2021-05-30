@@ -1,20 +1,15 @@
 # standard library imports
-import sys
 import os
-from os import path
-import subprocess
 import re
+import subprocess
 
 # third party
 import numpy as np
 
 # local application imports
-try:
-    from .base_lot import Lot
-except:
-    from base_lot import Lot
-
 from pygsm import utilities
+from .base_lot import Lot
+
 
 class DFTB(Lot):
 

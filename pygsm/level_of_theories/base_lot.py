@@ -1,15 +1,10 @@
 # standard library imports
 import os
 
-# third party
-import numpy as np
-
 # local application imports
-from pygsm.utilities import manage_xyz,options,elements,nifty,units
-try:
-    from .file_options import File_Options
-except:
-    from file_options import File_Options
+from pygsm.utilities import elements, manage_xyz, options, units
+from .file_options import File_Options
+
 
 ELEMENT_TABLE = elements.ElementData()
 from collections import namedtuple

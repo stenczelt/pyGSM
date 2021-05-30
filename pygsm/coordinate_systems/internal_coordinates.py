@@ -2,22 +2,14 @@
 
 # standard library imports
 import time
+from collections import OrderedDict
 
 # third party
-from collections import OrderedDict, defaultdict
 import numpy as np
 from numpy.linalg import multi_dot
-import itertools
-import networkx as nx
-from pkg_resources import parse_version
 
 # local application imports
-try:
-    from . import slots
-except:
-    import slots
 from pygsm import utilities
-
 
 ELEMENT_TABLE = utilities.elements.ElementData()
 

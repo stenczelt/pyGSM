@@ -2,20 +2,14 @@ from __future__ import print_function
 
 # standard library imports
 import sys
-from os import path
-try:
-    from io import StringIO
-except:
-    from StringIO import StringIO
+from io import StringIO
 
 # third party
 import numpy as np
 
 # local application imports
-from ._linesearch import backtrack,NoLineSearch,double_golden_section
-from .base_optimizer import base_optimizer
 from pygsm import utilities
-from .eigenvector_follow import eigenvector_follow
+from .base_optimizer import base_optimizer
 
 
 class beales_cg(base_optimizer):

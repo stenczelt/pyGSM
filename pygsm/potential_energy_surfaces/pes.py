@@ -1,7 +1,3 @@
-# standard library imports
-import sys
-from os import path
-
 # third party
 import numpy as np
 

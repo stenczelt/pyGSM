@@ -1,20 +1,19 @@
 from __future__ import print_function
-import numpy as np
+
+import multiprocessing as mp
 import os
+from itertools import chain
 
-try:
-    from .gsm import GSM
-except:
-    from gsm import GSM
+import numpy as np
 
-from pygsm.wrappers.molecule import Molecule
-from pygsm.utilities.nifty import printcool
-from pygsm.utilities.manage_xyz import write_molden_geoms,xyz_to_np,get_atoms,np_to_xyz
-from pygsm.utilities import block_matrix
 from pygsm.coordinate_systems import rotate
 from pygsm.optimizers import eigenvector_follow
-import multiprocessing as mp
-from itertools import chain
+from pygsm.utilities import block_matrix
+from pygsm.utilities.manage_xyz import get_atoms, np_to_xyz, xyz_to_np
+from pygsm.utilities.nifty import printcool
+from pygsm.wrappers.molecule import Molecule
+from .gsm import GSM
+
 
 def worker(arg):
    obj, methname = arg[:2]

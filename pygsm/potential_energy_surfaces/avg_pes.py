@@ -1,13 +1,10 @@
-# standard library imports
-import sys
-from os import path
-
 # third party
 import numpy as np
 
 # local application imports
-from .pes import PES
 from pygsm import utilities
+from .pes import PES
+
 
 class Avg_PES(PES):
     """ Avg potential energy surface calculators """

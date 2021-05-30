@@ -1,31 +1,22 @@
 from __future__ import print_function
 
 # standard library imports
+import itertools
 import time
-import sys
-from os import path
-
+from collections import OrderedDict, defaultdict
+from copy import copy, deepcopy
 
 # third party
-from copy import deepcopy,copy
-import numpy as np
 import networkx as nx
-np.set_printoptions(precision=4,suppress=True)
-import itertools
-from collections import OrderedDict, defaultdict
+import numpy as np
 
 # local application imports
-
-# try:
-from .internal_coordinates import InternalCoordinates
-from .topology import Topology,MyG
-from . import slots
-# except:
-#     from internal_coordinates import InternalCoordinates
-#     from topology import Topology,MyG
-#     from slots import *
-
 from pygsm import utilities
+from . import slots
+from .internal_coordinates import InternalCoordinates
+from .topology import MyG, Topology
+
+np.set_printoptions(precision=4, suppress=True)
 
 CacheWarning = False
 
@@ -1474,7 +1465,6 @@ def get_driving_coord_prim(dc):
 
 
 if __name__ =='__main__' and __package__ is None:
-    from os import sys, path
 
     #filepath='../../data/butadiene_ethene.xyz'
     #filepath='crystal.xyz'

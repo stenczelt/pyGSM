@@ -1,14 +1,13 @@
 # standard library imports
-import sys
 import os
-from os import path
+import subprocess
 
 # third party
 import numpy as np
 
 # local application imports
 from .base_lot import Lot
-import subprocess
+
 
 class QChem(Lot):
     def __init__(self,options):

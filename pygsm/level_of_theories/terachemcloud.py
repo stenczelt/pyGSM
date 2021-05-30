@@ -1,13 +1,6 @@
 # standard library imports
 import sys
-import os
-from os import path
 import time
-
-# third party
-import numpy as np
-import tcc
-import json
 
 # local application imports
 from .base_lot import Lot

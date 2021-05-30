@@ -1,21 +1,18 @@
 from __future__ import print_function
 
 # standard library imports
-import sys
 import os
-try:
-    from io import StringIO
-except:
-    from StringIO import StringIO
+import sys
+from io import StringIO
 
 # third party
 import numpy as np
 from scipy.optimize.lbfgsb import LbfgsInvHessProduct
 
 # local application imports
-from ._linesearch import backtrack,NoLineSearch
-from .base_optimizer import base_optimizer
 from pygsm import utilities
+from .base_optimizer import base_optimizer
+
 
 class iterationData:
     """docstring for iterationData"""

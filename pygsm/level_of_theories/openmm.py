@@ -1,22 +1,19 @@
-# standard library imports
-import sys
-from os import path
-
 # third party
 import numpy as np
-import simtk.unit as openmm_units
-import simtk.openmm.app as openmm_app
-import simtk.openmm as openmm
-import json
 
-
-from parmed import load_file, unit as u
+try:
+    import simtk.unit as openmm_units
+    import simtk.openmm.app as openmm_app
+    import simtk.openmm as openmm
+    from parmed import load_file, unit as u
+except ModuleNotFoundError:
+    openmm_units = None
+    openmm_app = None
+    openmm = None
+    u = None
 
 # local application imports
-try:
-    from .base_lot import Lot
-except:
-    from base_lot import Lot
+from .base_lot import Lot
 from pygsm import utilities
 from pygsm.coordinate_systems import Dihedral
 

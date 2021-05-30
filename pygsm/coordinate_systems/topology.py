@@ -1,21 +1,15 @@
 from __future__ import print_function
 
 # standard library imports
-import time
-import sys
-from os import path
-
-import numpy as np
 import itertools
-from pkg_resources import parse_version
-from collections import OrderedDict, defaultdict
+from collections import OrderedDict
 
-try:
-    import networkx as nx
-except ImportError:
-    nifty.logger.warning("NetworkX cannot be imported (topology tools won't work).  Most functionality should still work though.")
+import networkx as nx
+import numpy as np
+from pkg_resources import parse_version
 
 from pygsm import utilities
+
 
 #===========================#
 #|   Connectivity graph    |#
@@ -622,7 +616,6 @@ class Topology():
         return AtomIterator, drij
 
 if __name__ =='__main__' and __package__ is None:
-    from os import sys, path
 
     #filepath='../../data/butadiene_ethene.xyz'
     #filepath='crystal.xyz'

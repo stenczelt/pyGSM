@@ -3,26 +3,17 @@ This class is the combination of Martinez group and Lee Ping's molecule class.
 """
 
 # standard library imports
-import sys
 import os
-from os import path
 from time import time
 
 # third party
-import logging
 import numpy as np
-from collections import Counter
-#import openbabel as ob
-#import pybel as pb
 
 # local application imports
 from pygsm import utilities
-import pygsm.potential_energy_surfaces
-from pygsm.potential_energy_surfaces import PES
-from pygsm.potential_energy_surfaces import Avg_PES
-from pygsm.potential_energy_surfaces import Penalty_PES
-from pygsm.coordinate_systems import DelocalizedInternalCoordinates
 from pygsm.coordinate_systems import CartesianCoordinates
+from pygsm.potential_energy_surfaces import PES
+
 
 #logger = logging.getLogger(__name__)
 ELEMENT_TABLE = utilities.elements.ElementData()

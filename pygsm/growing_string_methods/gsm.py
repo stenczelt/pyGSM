@@ -1,24 +1,21 @@
 from __future__ import print_function
-# standard library imports
-import sys
-import os
-from os import path
 
-# third party
-import numpy as np
+# standard library imports
 import multiprocessing as mp
+import os
 from collections import Counter
 from copy import copy
 from itertools import chain
 
+# third party
+import numpy as np
+
 # local application imports
-from pygsm.utilities import nifty,options,manage_xyz
+from pygsm.coordinate_systems import Angle, Dihedral, Distance, OutOfPlane
+from pygsm.utilities import nifty, options
 from pygsm.utilities.manage_xyz import write_molden_geoms
 from pygsm.wrappers import Molecule
-from pygsm.coordinate_systems import DelocalizedInternalCoordinates
-from pygsm.optimizers._linesearch import double_golden_section
-from pygsm.coordinate_systems import Distance,Angle,Dihedral,OutOfPlane,TranslationX,TranslationY,TranslationZ,RotationA,RotationB,RotationC
-from pygsm.coordinate_systems.rotate import get_quat,calc_fac_dfac
+
 
 def worker(arg):
    obj, methname = arg[:2]
@@ -36,8 +33,6 @@ def worker(arg):
 
 
 class GSM(object):
-
-    from pygsm.utilities import units
 
     @staticmethod
     def default_options():

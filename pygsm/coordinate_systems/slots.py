@@ -1,18 +1,9 @@
-
-# standard library imports
-import sys
-import os
-from os import path
-
 # third party
 import numpy as np
 
-from pygsm.utilities import nifty,math_utils
-
-try:
-    from .rotate import get_expmap, get_expmap_der, is_linear, calc_rot_vec_diff
-except:
-    from rotate import get_expmap, get_expmap_der, is_linear, calc_rot_vec_diff
+# local application imports
+from pygsm.utilities import math_utils, nifty
+from .rotate import calc_rot_vec_diff, get_expmap, get_expmap_der, is_linear
 
 
 class PrimitiveCoordinate(object):

@@ -1,17 +1,14 @@
 from __future__ import print_function
-# standard library imports
-import sys
-import os
-from os import path
 
-# third party
-import numpy as np
+# standard library imports
+import os
+import sys
 
 # local application imports
 from pygsm import utilities
+from pygsm.potential_energy_surfaces import Avg_PES, PES
 from pygsm.wrappers import Molecule
 from .se_gsm import SE_GSM
-from pygsm.potential_energy_surfaces import Avg_PES,PES
 
 
 class SE_Cross(SE_GSM):

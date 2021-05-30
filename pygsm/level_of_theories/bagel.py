@@ -1,22 +1,15 @@
 # standard library imports
-import sys
 import os
-from os import path
 import re
 
 # third party
 import numpy as np
-import json
 
 # local application imports
-
-try:
-    from .base_lot import Lot
-    from .file_options import File_Options
-except:
-    from base_lot import Lot
-    from file_options import File_Options
 from pygsm import utilities
+from .base_lot import Lot
+from .file_options import File_Options
+
 
 class BAGEL(Lot):
 

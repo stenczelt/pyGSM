@@ -5,11 +5,8 @@ Wrapper to the code using ASE
 
 import os
 
-try:
-    from ase import Atoms
-    import ase.io
-except ModuleNotFoundError:
-    pass
+import ase.io
+from ase import Atoms
 
 from pygsm.coordinate_systems.delocalized_coordinates import DelocalizedInternalCoordinates
 from pygsm.coordinate_systems.primitive_internals import PrimitiveInternalCoordinates
@@ -22,7 +19,7 @@ from pygsm.potential_energy_surfaces import PES
 from pygsm.utilities import nifty
 from pygsm.utilities.elements import ElementData
 from pygsm.wrappers.molecule import Molecule
-from .main import post_processing, cleanup_scratch
+from .main import cleanup_scratch, post_processing
 
 
 def minimal_wrapper_de_gsm(

@@ -1,6 +1,9 @@
 import sys
+
 import numpy as np
+
 from pygsm import utilities
+
 
 #TODO remove unecessary arguments: nconstraints, xp, ,...
 

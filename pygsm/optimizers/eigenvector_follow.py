@@ -1,20 +1,17 @@
 from __future__ import print_function
 
 # standard library imports
-import sys
 import os
-try:
-    from io import StringIO
-except:
-    from StringIO import StringIO
+import sys
+from io import StringIO
 
 # third party
 import numpy as np
 
 # local application imports
-from ._linesearch import backtrack,NoLineSearch,golden_section
-from .base_optimizer import base_optimizer
 from pygsm import utilities
+from .base_optimizer import base_optimizer
+
 
 class eigenvector_follow(base_optimizer):
 

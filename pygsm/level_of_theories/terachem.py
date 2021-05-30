@@ -1,21 +1,15 @@
 # standard library imports
-import sys
 import os
-from os import path
 import re
 
 # third party
 import numpy as np
 
 # local application imports
-
-try:
-    from .base_lot import Lot,copy_file
-    from .file_options import File_Options
-except:
-    from base_lot import Lot,copy_file
-    from file_options import File_Options
 from pygsm import utilities
+from .base_lot import Lot, copy_file
+from .file_options import File_Options
+
 
 '''
 Unfortunately TC calculates one gradient at time. THis makes it difficult to calculate multiple states since two calculations need to be done per state. 

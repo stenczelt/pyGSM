@@ -1,19 +1,27 @@
 # standard library imports
-import sys
-from os import path
+import json
 
 # third party
 import numpy as np
-import lightspeed as ls
-#import psiw
-import est
-import json
+
+try:
+    import est
+    import lightspeed as ls
+except ModuleNotFoundError:
+    est = None
+    ls = None
 
 # local application imports
 from .base_lot import Lot
 from pygsm import utilities
-from .rhf_lot import RHF_LOT
-from .casci_lot_svd import CASCI_LOT_SVD
+
+try:
+    from .rhf_lot import RHF_LOT
+    from .casci_lot_svd import CASCI_LOT_SVD
+except ModuleNotFoundError:
+    RHF_LOT = None
+    CASCI_LOT_SVD = None
+
 
 #TODO get rid of get_energy, get_gradient
 class PyTC(Lot):

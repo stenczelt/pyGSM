@@ -1,5 +1,6 @@
 import collections
 
+
 class Option(object):
 
     """ Class Option represents a key, value Option, with possible restrictions
@@ -13,7 +14,7 @@ class Option(object):
         required=False,
         allowed_types=None,
         allowed_values=None,
-        doc="", 
+        doc="",
         ):
 
         """ Option constructor:
@@ -24,18 +25,18 @@ class Option(object):
             required - True if the user is required to specify the option,
                 False if the default value is acceptable. If required is True,
                 an error will be raised when get_value is called if value is
-                None. 
+                None.
             allowed_types - array of allowed types of value. If this field is
                 not None, a check will be performed on each call to set_value
                 and get_value to ensure that value isinstance of at least one
                 of the allowed_types.
             allowed_values - list of allowed values of value. If this field is
-                not None, a check will be performed on each call to set_value 
+                not None, a check will be performed on each call to set_value
                 and get_value to ensure the value is one of the allowed_values.
             doc - string message providing helpful documentation about the
                 option.
         """
-    
+
         self.key = key
         self.value = value
         self.required = required
@@ -50,7 +51,7 @@ class Option(object):
         Returns:
             value if the Option is in a valid state, else raises RuntimeError.
         """
-        
+
         if self.required and self.value is None:
             raise RuntimeError("Option %s is required" % self.key)
 
@@ -101,7 +102,7 @@ class Options(object):
         define the valid options, rules, and defaults by using the "add_option"
         method. Then, when the user wishes to set or get the values of specific
         options, a copy of the Options object should be provided for the user
-        by calling the "copy" method of Options. 
+        by calling the "copy" method of Options.
 
         The underlying Option objects are stored in the options field, which is
         presently a collections.OrderedDict to remember the order of Option
@@ -138,13 +139,13 @@ class Options(object):
             rules, and documentation.
 
             Params: See Option constructor for valid kwargs
-            Result: Options updated with new Option corresponding to key 
+            Result: Options updated with new Option corresponding to key
         """
 
         self.options[kwargs['key']] = Option(
             **kwargs
             )
-    
+
     def get_option(
         self,
         key,
@@ -176,7 +177,7 @@ class Options(object):
         Returns:
             - value - value of Option (raises RuntimeError if type, value or other validity error).
         """
-        
+
         if key not in self.options:
             raise ValueError("Key %s is not in Options" % key)
         return self.options[key].get_value()
@@ -205,7 +206,7 @@ class Options(object):
         options,
         ):
 
-        """ Set the values of multiple options. 
+        """ Set the values of multiple options.
 
         Params:
             - options - dict of key, value pairs to set (calls __setitem__ once
@@ -213,12 +214,12 @@ class Options(object):
         Results:
             - Option values are updated if valid.
         """
-        
+
         for k, v in options.items():
             self[k] = v
         return self
 
-    def copy(self): 
+    def copy(self):
 
         """ Return a 1-level shallow copy of this Options object. This makes
             copies of all underlying Option objects so that changes to the new
@@ -235,7 +236,7 @@ class Options(object):
         """ Return the string representations of all Option objects in this Options, in insertion order. """
         s = ''.join(str(v) for v in list(self.options.values()))
         return s
-        
+
 if __name__ == '__main__':
 
     import time
@@ -243,49 +244,49 @@ if __name__ == '__main__':
     print(" this demonstrates options")
 
     start = time.time()
-    options1 = Options()        
+    options1 = Options()
     for k in range(500):
         options1.add_option(
             key='size%d' % k,
             value=0,
             allowed_types=[int],
             allowed_values=[0,1],
-            ) 
+            )
 
     start = time.time()
     options2 = options1.copy()
     print('copy time %11.3E' % (time.time() - start))
 
     start = time.time()
-    options3 = Options()        
+    options3 = Options()
     options3.add_option(
         key='size',
         value=0,
         allowed_types=[int],
         allowed_values=[0,1],
-        ) 
+        )
     options4 = options3.copy()
     print('%11.3E' % (time.time() - start))
 
     start = time.time()
-    options3 = Options()        
+    options3 = Options()
     options3.add_option(
         key='size',
         value=0,
         allowed_types=[int],
         allowed_values=[0,1],
-        ) 
+        )
     options4 = options3.copy()
     print('%11.3E' % (time.time() - start))
 
     start = time.time()
-    options3 = Options()        
+    options3 = Options()
     options3.add_option(
         key='size',
         value=0,
         allowed_types=[int],
         allowed_values=[0,1],
-        ) 
+        )
     options4 = options3.copy()
     print('%11.3E' % (time.time() - start))
 

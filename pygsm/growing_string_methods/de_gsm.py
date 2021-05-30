@@ -1,19 +1,9 @@
 from __future__ import print_function
-# standard library imports
-import sys
-import os
-from os import path
-
-# third party
-import numpy as np
 
 # local application imports
 from pygsm import utilities
 from pygsm.wrappers import Molecule
-try:
-    from .main_gsm import MainGSM
-except:
-    from main_gsm import MainGSM
+from .main_gsm import MainGSM
 
 
 class DE_GSM(MainGSM):

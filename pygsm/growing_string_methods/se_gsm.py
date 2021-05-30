@@ -1,18 +1,18 @@
 from __future__ import print_function
+
 # standard library imports
-import sys
 import os
-from os import path
+import sys
+from collections import Counter
 
 # third party
 import numpy as np
-from collections import Counter
 
 # local application imports
 from pygsm import utilities
+from pygsm.coordinate_systems import Angle, Dihedral, Distance, OutOfPlane
 from pygsm.wrappers import Molecule
 from .main_gsm import MainGSM
-from pygsm.coordinate_systems import Distance,Angle,Dihedral,OutOfPlane,TranslationX,TranslationY,TranslationZ,RotationA,RotationB,RotationC
 
 
 class SE_GSM(MainGSM):
@@ -539,9 +539,7 @@ class SE_GSM(MainGSM):
 if __name__=='__main__':
     from .qchem import QChem
     from .pes import PES
-    from .dlc_new import DelocalizedInternalCoordinates
     from .eigenvector_follow import eigenvector_follow
-    from ._linesearch import backtrack,NoLineSearch
     from .molecule import Molecule
 
     basis='6-31G'

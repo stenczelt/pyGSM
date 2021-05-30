@@ -1,20 +1,15 @@
 from __future__ import print_function
 
 # standard library imports
-import sys
-from os import path
-try:
-    from io import StringIO
-except:
-    from StringIO import StringIO
+from io import StringIO
 
 # third party
 import numpy as np
 
 # local application imports
-from ._linesearch import backtrack,NoLineSearch
-from .base_optimizer import base_optimizer
 from pygsm import utilities
+from .base_optimizer import base_optimizer
+
 
 class conjugate_gradient(base_optimizer):
 

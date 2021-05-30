@@ -5,26 +5,17 @@ from sys import exit
 from time import time
 
 # third party
-import networkx as nx
-from collections import OrderedDict, defaultdict
-import itertools
-from numpy.linalg import multi_dot
 import numpy as np
-np.set_printoptions(precision=4,suppress=True)
+from numpy.linalg import multi_dot
 
 # local application imports
-try:
-    from .internal_coordinates import InternalCoordinates
-    from .primitive_internals import PrimitiveInternalCoordinates
-    from .topology import Topology
-    from . import slots
-except:
-    from internal_coordinates import InternalCoordinates
-    from primitive_internals import PrimitiveInternalCoordinates
-    from topology import Topology
-    import slots
-
 from pygsm import utilities
+from . import slots
+from .internal_coordinates import InternalCoordinates
+from .primitive_internals import PrimitiveInternalCoordinates
+from .topology import Topology
+
+np.set_printoptions(precision=4, suppress=True)
 
 # undefined references ???
 logger = None
@@ -937,8 +928,6 @@ class DelocalizedInternalCoordinates(InternalCoordinates):
         return xyzgrid
 
 if __name__ =='__main__' and __package__ is None:
-    from os import sys, path
-
     filepath = 'two_CO2.xyz'
     filepath2 = 'two_CO2_RX.xyz'
     filepath3 = 'two_CO2_RY.xyz'

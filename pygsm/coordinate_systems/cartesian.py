@@ -1,7 +1,7 @@
-import numpy as np
+from . import slots
 from .internal_coordinates import InternalCoordinates
 from .primitive_internals import PrimitiveInternalCoordinates
-from . import slots
+
 
 class CartesianCoordinates(InternalCoordinates):
     """
