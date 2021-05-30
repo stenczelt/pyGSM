@@ -20,7 +20,7 @@ class MolecularGraph(nx.Graph):
         self.alive = True
 
     def __eq__(self, other):
-        # This defines whether two MyG objects are "equal" to one another.
+        # This defines whether two MolecularGraph objects are "equal" to one another.
         if not self.alive:
             return False
         if not other.alive:
@@ -760,7 +760,7 @@ if __name__ == "__main__" and __package__ is None:
     # print(G.L())
 
     # fragments = [G.subgraph(c).copy() for c in nx.connected_components(G)]
-    # for g in fragments: g.__class__ = MyG
+    # for g in fragments: g.__class__ = MolecularGraph
 
     # print(" fragments")
     # for frag in fragments:
