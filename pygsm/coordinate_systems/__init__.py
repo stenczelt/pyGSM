@@ -1,6 +1,8 @@
-from .internal_coordinates import InternalCoordinates
-from .delocalized_coordinates import DelocalizedInternalCoordinates
-from .primitive_internals import PrimitiveInternalCoordinates
 from .cartesian import CartesianCoordinates
-from .topology import Topology,MyG
-from .slots import Distance,Angle,Dihedral,OutOfPlane,TranslationX,TranslationY,TranslationZ,RotationA,RotationB,RotationC
+from .delocalized_coordinates import DelocalizedInternalCoordinates
+from .internal_coordinates import InternalCoordinates
+from .primitive_internals import PrimitiveInternalCoordinates
+from .slots import (Angle, Dihedral, Distance, OutOfPlane, RotationA,
+                    RotationB, RotationC, TranslationX, TranslationY,
+                    TranslationZ)
+from .topology import MyG, Topology

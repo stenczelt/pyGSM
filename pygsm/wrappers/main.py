@@ -11,12 +11,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 # local application imports
-from pygsm.coordinate_systems import Angle, DelocalizedInternalCoordinates, Dihedral, Distance, OutOfPlane, \
-    PrimitiveInternalCoordinates, Topology
-from pygsm.growing_string_methods import DE_GSM, SE_Cross, SE_GSM
+from pygsm.coordinate_systems import (Angle, DelocalizedInternalCoordinates,
+                                      Dihedral, Distance, OutOfPlane,
+                                      PrimitiveInternalCoordinates, Topology)
+from pygsm.growing_string_methods import DE_GSM, SE_GSM, SE_Cross
 from pygsm.level_of_theories.ase import ASELoT
-from pygsm.optimizers import beales_cg, conjugate_gradient, eigenvector_follow, lbfgs
-from pygsm.potential_energy_surfaces import Avg_PES, PES, Penalty_PES
+from pygsm.optimizers import (beales_cg, conjugate_gradient,
+                              eigenvector_follow, lbfgs)
+from pygsm.potential_energy_surfaces import PES, Avg_PES, Penalty_PES
 from pygsm.utilities import elements, manage_xyz, nifty
 from pygsm.utilities.manage_xyz import XYZ_WRITERS
 from pygsm.wrappers import Molecule

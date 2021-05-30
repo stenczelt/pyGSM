@@ -1,23 +1,16 @@
 # standard library imports
-import sys
 import os
-from os import path
 import re
 
 # third party
 import numpy as np
-import json 
 
 # local application imports
-sys.path.append(path.dirname( path.dirname( path.abspath(__file__))))
+from pygsm import utilities
 
-try:
-    from .base_lot import Lot
-    from .file_options import File_Options
-except:
-    from base_lot import Lot
-    from file_options import File_Options
-from utilities import *
+from .base_lot import Lot
+from .file_options import File_Options
+
 
 class BAGEL(Lot):
 
@@ -110,12 +103,12 @@ class BAGEL(Lot):
         # molecule section
         inpfile.write(('{\n'
           ' "title" : "molecule",\n'))
-        
+
         # basis set
         inpfile.write(' "basis" : "{}",\n'.format(self.basis))
         inpfile.write(' "df_basis" : "{}",\n'.format(self.df_basis))
         inpfile.write('"angstrom" : true,\n')
-       
+
         # write geometry
         inpfile.write(' "geometry" : [\n')
         for atom in geom[:-1]:
@@ -134,14 +127,14 @@ class BAGEL(Lot):
         inpfile.write(']\n')
         inpfile.write('},\n')
 
-        
+
         # Load reference
         if 'load_ref' in self.file_options.ActiveOptions:
             inpfile.write(('{{ \n'
               ' "title" : "load_ref", \n'
               ' "file" : "scratch/{}/orbs", \n'
               ' "continue_geom" : false \n}},\n'.format(self.node_id)))
-        
+
         if "casscf" in self.file_options.ActiveOptions:
             inpfile.write(('{{\n'
               ' "title" : "casscf", \n'
@@ -206,8 +199,8 @@ class BAGEL(Lot):
           '"title" : "save_ref",\n'
           '"file" : "scratch/{}/orbs"\n'
         '}}\n'.format(self.node_id)))
-        
-        inpfile.write(']}')    
+
+        inpfile.write(']}')
         inpfile.close()
 
     def parse(self,geom,runtype='gradient'):
@@ -297,10 +290,10 @@ class BAGEL(Lot):
     def runall(self,geom,runtype=None):
         ''' calculate all states with BAGEL '''
         tempfileout='scratch/{}/output.dat'.format(self.node_id)
-        
+
         if (not self.gradient_states and not self.coupling_states) or runtype=='energy':
             print(" only calculating energies")
-            # TODO what about multiple multiplicities? 
+            # TODO what about multiple multiplicities?
             tup = self.states[0]
             self.run(geom,'energy')
             # make grada all None
@@ -319,9 +312,9 @@ class BAGEL(Lot):
 
 
 if __name__=="__main__":
-    geom=manage_xyz.read_xyz('../../data/ethylene.xyz') #,units.ANGSTROM_TO_AU)
+    geom=utilities.manage_xyz.read_xyz('../../data/ethylene.xyz') #,units.ANGSTROM_TO_AU)
     B = BAGEL.from_options(states=[(1,0),(1,1)],gradient_states=[(1,0),(1,1)],coupling_states=(0,1),geom=geom,lot_inp_file='bagel.txt',node_id=0)
-    coords  = manage_xyz.xyz_to_np(geom)
+    coords  = utilities.manage_xyz.xyz_to_np(geom)
     E0 = B.get_energy(coords,1,0)
     E1 = B.get_energy(coords,1,1)
     g0 = B.get_gradient(coords,1,0)

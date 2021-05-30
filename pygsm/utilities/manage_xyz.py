@@ -1,15 +1,13 @@
-import numpy as np
-try:
-    from . import units 
-except:
-    import units
-
 import re
-#import openbabel as ob
+
+import numpy as np
+
+from . import units
+
 
 # => XYZ File Utility <= #
 def read_xyz(
-    filename, 
+    filename,
     scale=1.):
 
     """ Read xyz file
@@ -21,7 +19,7 @@ def read_xyz(
         geom ((natoms,4) np.ndarray) - system geometry (atom symbol, x,y,z)
 
     """
-    
+
     lines = open(filename).readlines()
     lines = lines[2:]
     geom = []
@@ -37,7 +35,7 @@ def read_xyz(
 
 
 def read_xyzs(
-    filename, 
+    filename,
     scale=1.
     ):
 
@@ -50,7 +48,7 @@ def read_xyzs(
         geom ((natoms,4) np.ndarray) - system geometry (atom symbol, x,y,z)
 
     """
-    
+
     lines = open(filename).readlines()
     natoms = int(lines[0])
     total_lines = len(lines)
@@ -74,7 +72,7 @@ def read_xyzs(
     return geoms
 
 def read_molden_geoms(
-    filename, 
+    filename,
     scale=1.
     ):
 
@@ -116,7 +114,7 @@ def read_molden_Energy(
     #print "number of atoms is ",natoms
     nstructs = (nlines-6)/ (natoms+5) #this is for three blocks after GEOCON
     nstructs = int(nstructs)
-    
+
     #print "number of structures in restart file is %i" % nstructs
     coords=[]
     E = [0.]*nstructs
@@ -146,7 +144,7 @@ def read_molden_Energy(
 
     return E
 
-        
+
 def write_molden_geoms(
         filename,
         geoms,
@@ -188,8 +186,8 @@ def get_atoms(
     return atoms
 
 def write_xyz(
-    filename, 
-    geom, 
+    filename,
+    geom,
     comment=0,
     scale=1.0 #(1.0/units.ANGSTROM_TO_AU),
     ):
@@ -213,8 +211,8 @@ def write_xyz(
             ))
 
 def write_xyzs(
-    filename, 
-    geoms, 
+    filename,
+    geoms,
     scale=1.,
     #scale=(1.0/units.ANGSTROM_TO_AU),
     ):
@@ -277,7 +275,7 @@ def write_amber_xyz(
 
 
 def write_xyzs_w_comments(
-    filename, 
+    filename,
     geoms,
     comments,
     scale=1.0 #(1.0/units.ANGSTROM_TO_AU),
@@ -327,7 +325,7 @@ def xyz_to_np(
     return xyz2
 
 def np_to_xyz(
-    geom, 
+    geom,
     xyz2,
     ):
 
@@ -356,8 +354,8 @@ def combine_atom_xyz(
     atoms,
     xyz,
     ):
-    """ Combines atom list with xyz array 
-    
+    """ Combines atom list with xyz array
+
      Params:
         atom list
         geom ((natoms,3) np.ndarray) - system geometry (atom symbol, x,y,z)
@@ -378,7 +376,7 @@ def combine_atom_xyz(
 
 def write_fms90(
     filename,
-    geomx,  
+    geomx,
     geomp=None,
     ):
 

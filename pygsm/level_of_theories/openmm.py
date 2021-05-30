@@ -1,25 +1,24 @@
-# standard library imports
-import sys
-from os import path
-
 # third party
 import numpy as np
-import simtk.unit as openmm_units
-import simtk.openmm.app as openmm_app
-import simtk.openmm as openmm
-import json
 
+try:
+    import simtk.openmm as openmm
+    import simtk.openmm.app as openmm_app
+    import simtk.unit as openmm_units
+    from parmed import load_file
+    from parmed import unit as u
+except ModuleNotFoundError:
+    openmm_units = None
+    openmm_app = None
+    openmm = None
+    u = None
 
-from parmed import load_file, unit as u
+from pygsm import utilities
+from pygsm.coordinate_systems import Dihedral
 
 # local application imports
-sys.path.append(path.dirname( path.dirname( path.abspath(__file__))))
-try:
-    from .base_lot import Lot
-except:
-    from base_lot import Lot
-from utilities import *
-from coordinate_systems import Dihedral
+from .base_lot import Lot
+
 
 class OpenMM(Lot):
     def __init__(self,options):
@@ -49,7 +48,7 @@ class OpenMM(Lot):
             for key in self.file_options.ActiveOptions:
                 setattr(self, key, self.file_options.ActiveOptions[key])
 
-            nifty.printcool(" Options for OpenMM")
+            utilities.nifty.printcool(" Options for OpenMM")
             for val in [self.prmtopfile,self.inpcrdfile]:
                 assert val!=None,"Missing prmtop or inpcrdfile"
 
@@ -90,7 +89,7 @@ class OpenMM(Lot):
                     system = prmtop.createSystem(
                         nonbondedMethod=openmm_app.NoCutoff,
                         )
-   
+
                 # add restraints
                 self.add_restraints(system)
 
@@ -103,7 +102,7 @@ class OpenMM(Lot):
     def add_restraints(self,system):
         # Bond Restraints
         if self.restrain_bondfile is not None:
-            nifty.printcool(" Adding bonding restraints!")
+            utilities.nifty.printcool(" Adding bonding restraints!")
             # Harmonic constraint
 
             flat_bottom_force = openmm.CustomBondForce(
@@ -125,15 +124,15 @@ class OpenMM(Lot):
 
         # Torsion restraint
         if self.restrain_torfile is not None:
-            nifty.printcool(" Adding torsional restraints!")
+            utilities.nifty.printcool(" Adding torsional restraints!")
 
             # Harmonic constraint
             tforce = openmm.CustomTorsionForce("0.5*k*min(dtheta, 2*pi-dtheta)^2; dtheta = abs(theta-theta0); pi = 3.1415926535")
             tforce.addPerTorsionParameter("k")
             tforce.addPerTorsionParameter("theta0")
             system.addForce(tforce)
-            
-            xyz = manage_xyz.xyz_to_np(self.geom)
+
+            xyz = utilities.manage_xyz.xyz_to_np(self.geom)
             with open(self.restrain_torfile,'r') as input_file:
                 for line in input_file:
                     columns = line.split()
@@ -148,7 +147,7 @@ class OpenMM(Lot):
 
         # Translation restraint
         if self.restrain_tranfile is not None:
-            nifty.printcool(" Adding translational restraints!")
+            utilities.nifty.printcool(" Adding translational restraints!")
             trforce = openmm.CustomExternalForce("k*periodicdistance(x, y, z, x0, y0, z0)^2")
             trforce.addPerParticleParameter("k")
             trforce.addPerParticleParameter("x0")
@@ -156,15 +155,15 @@ class OpenMM(Lot):
             trforce.addPerParticleParameter("z0")
             system.addForce(trforce)
 
-            xyz = manage_xyz.xyz_to_np(self.geom)
+            xyz = utilities.manage_xyz.xyz_to_np(self.geom)
             with open(self.restrain_tranfile,'r') as input_file:
                 for line in input_file:
                     columns = line.split()
                     a = int(columns[0])
                     k = float(columns[1])
-                    x0=xyz[a,0]*0.1  # Units are in nm 
-                    y0=xyz[a,1]*0.1  # Units are in nm 
-                    z0=xyz[a,2]*0.1  # Units are in nm 
+                    x0=xyz[a,0]*0.1  # Units are in nm
+                    y0=xyz[a,1]*0.1  # Units are in nm
+                    z0=xyz[a,2]*0.1  # Units are in nm
                     trforce.addParticle(a,[k,x0,y0,z0])
 
     @property
@@ -174,15 +173,15 @@ class OpenMM(Lot):
     @simulation.setter
     def simulation(self,value):
         self.options['job_data']['simulation'] = value
-  
+
     def run(self,geom,mult,ad_idx,runtype='gradient'):
 
-        coords  = manage_xyz.xyz_to_np(geom)
+        coords  = utilities.manage_xyz.xyz_to_np(geom)
 
         # Update coordinates of simulation (shallow-copied object)
         xyz_nm = 0.1 * coords  # coords are in angstrom
         self.simulation.context.setPositions(xyz_nm)
-    
+
         # actually compute (only applicable to ground-states,singlet mult)
         if mult!=1 or ad_idx>1:
             raise RuntimeError('MM cant do excited states')
@@ -197,21 +196,22 @@ class OpenMM(Lot):
 
         F = s.getForces()
         G = -1.0 * np.asarray(F.value_in_unit(openmm_units.kilocalories/openmm_units.moles / openmm_units.angstroms))
-             
+
         self._Gradients[(mult,ad_idx)] = self.Gradient(G,'kcal/mol/Angstrom')
         self.hasRanForCurrentCoords=True
 
-        return 
+        return
 
 if __name__=="__main__":
     from openbabel import pybel as pb
+
     # Create and initialize System object from prmtop/inpcrd
     prmtopfile='../../data/solvated.prmtop'
     inpcrdfile='../../data/solvated.rst7'
     prmtop = openmm_app.AmberPrmtopFile(prmtopfile)
     inpcrd = openmm_app.AmberInpcrdFile(inpcrdfile)
     system = prmtop.createSystem(
-        rigidWater=False, 
+        rigidWater=False,
         removeCMMotion=False,
         nonbondedMethod=openmm_app.PME,
         nonbondedCutoff=1*openmm_units.nanometer  #10 ang
@@ -225,10 +225,10 @@ if __name__=="__main__":
         integrator,
         )
     mol=next(pb.readfile('pdb','../../data/solvated.pdb'))
-    coords = nifty.getAllCoords(mol)
-    atoms = nifty.getAtomicSymbols(mol)
+    coords = utilities.nifty.getAllCoords(mol)
+    atoms = utilities.nifty.getAtomicSymbols(mol)
     print(coords)
-    geom= manage_xyz.combine_atom_xyz(atoms,coords)
+    geom= utilities.manage_xyz.combine_atom_xyz(atoms, coords)
 
     lot = OpenMM.from_options(states=[(1,0)],job_data={'simulation':simulation},geom=geom)
 
@@ -236,5 +236,5 @@ if __name__=="__main__":
     print(E)
 
     G = lot.get_gradient(coords,1,0)
-    nifty.pmat2d(G)
+    utilities.nifty.pmat2d(G)
 

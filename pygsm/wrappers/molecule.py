@@ -3,30 +3,19 @@ This class is the combination of Martinez group and Lee Ping's molecule class.
 """
 
 # standard library imports
-import sys
 import os
-from os import path
 from time import time
 
 # third party
-import logging
 import numpy as np
-from collections import Counter
-#import openbabel as ob
-#import pybel as pb
 
 # local application imports
-sys.path.append(path.dirname( path.dirname( path.abspath(__file__))))
-from utilities import *
-import potential_energy_surfaces
-from potential_energy_surfaces import PES
-from potential_energy_surfaces import Avg_PES
-from potential_energy_surfaces import Penalty_PES
-from coordinate_systems import DelocalizedInternalCoordinates
-from coordinate_systems import CartesianCoordinates
+from pygsm import utilities
+from pygsm.coordinate_systems import CartesianCoordinates
+from pygsm.potential_energy_surfaces import PES
 
 #logger = logging.getLogger(__name__)
-ELEMENT_TABLE = elements.ElementData()
+ELEMENT_TABLE = utilities.elements.ElementData()
 
 # TOC:
 # constructors
@@ -37,11 +26,11 @@ ELEMENT_TABLE = elements.ElementData()
 and spin multiplicities.
 """
 class Molecule(object):
-    
+
     @staticmethod
     def default_options():
         if hasattr(Molecule, '_default_options'): return Molecule._default_options.copy()
-        opt = options.Options() 
+        opt = utilities.options.Options()
 
         opt.add_option(
                 key='fnm',
@@ -94,7 +83,7 @@ class Molecule(object):
                 required=True,
                 #allowed_types=[PES,Avg_PES,Penalty_PES,potential_energy_surfaces.pes.PES,potential_energy_surfaces.Penalty_PES,potential_energy_surfaces.Avg_PES],
                 doc='potential energy surface object to evaulate energies, gradients, etc. Pes is defined by charge, state, multiplicity,etc. '
-                       
+
                 )
         opt.add_option(
                 key='copy_wavefunction',
@@ -171,11 +160,11 @@ class Molecule(object):
         PES = type(MoleculeA.PES).create_pes_from(PES=MoleculeA.PES,options={'node_id': new_node_id})
 
         if xyz is not None:
-            new_geom = manage_xyz.np_to_xyz(MoleculeA.geometry,xyz)
+            new_geom = utilities.manage_xyz.np_to_xyz(MoleculeA.geometry,xyz)
             coord_obj = type(MoleculeA.coord_obj)(MoleculeA.coord_obj.options.copy().set_values({"xyz":xyz}))
         elif fnm is not None:
-            new_geom = manage_xyz.read_xyz(fnm,scale=1.)
-            xyz = manage_xyz.xyz_to_np(new_geom)
+            new_geom = utilities.manage_xyz.read_xyz(fnm,scale=1.)
+            xyz = utilities.manage_xyz.xyz_to_np(new_geom)
             coord_obj = type(MoleculeA.coord_obj)(MoleculeA.coord_obj.options.copy().set_values({"xyz":xyz}))
         else:
             new_geom = MoleculeA.geometry
@@ -203,8 +192,8 @@ class Molecule(object):
         t0 = time()
         if self.Data['geom'] is not None:
             print(" getting cartesian coordinates from geom")
-            atoms=manage_xyz.get_atoms(self.Data['geom'])
-            xyz=manage_xyz.xyz_to_np(self.Data['geom'])
+            atoms=utilities.manage_xyz.get_atoms(self.Data['geom'])
+            xyz=utilities.manage_xyz.xyz_to_np(self.Data['geom'])
         elif self.Data['fnm'] is not None:
             print(" reading cartesian coordinates from file")
             if self.Data['ftype'] is None:
@@ -215,9 +204,9 @@ class Molecule(object):
             #mol=next(pb.readfile(self.Data['ftype'],self.Data['fnm']))
             #xyz = nifty.getAllCoords(mol)
             #atoms =  nifty.getAtomicSymbols(mol)
-            geom = manage_xyz.read_xyz(self.Data['fnm'],scale=1.)
-            xyz = manage_xyz.xyz_to_np(geom)
-            atoms = manage_xyz.get_atoms(geom)
+            geom = utilities.manage_xyz.read_xyz(self.Data['fnm'],scale=1.)
+            xyz = utilities.manage_xyz.xyz_to_np(geom)
+            atoms = utilities.manage_xyz.get_atoms(geom)
 
         else:
             raise RuntimeError
@@ -275,12 +264,12 @@ class Molecule(object):
         #    print(" building coordinate object")
         #    self.coord_obj = DelocalizedInternalCoordinates.from_options(xyz=self.xyz,atoms=self.atoms,connect=True,extra_kwargs =self.Data['top_settings'])
         #elif self.Data['coordinate_type'] == "HDLC":
-        #    self.coord_obj = DelocalizedInternalCoordinates.from_options(xyz=self.xyz,atoms=self.atoms,addcart=True,extra_kwargs =self.Data['top_settings']) 
+        #    self.coord_obj = DelocalizedInternalCoordinates.from_options(xyz=self.xyz,atoms=self.atoms,addcart=True,extra_kwargs =self.Data['top_settings'])
         #elif self.Data['coordinate_type'] == "TRIC":
-        #    self.coord_obj = DelocalizedInternalCoordinates.from_options(xyz=self.xyz,atoms=self.atoms,addtr=True,extra_kwargs =self.Data['top_settings']) 
+        #    self.coord_obj = DelocalizedInternalCoordinates.from_options(xyz=self.xyz,atoms=self.atoms,addtr=True,extra_kwargs =self.Data['top_settings'])
         self.Data['coord_obj']=self.coord_obj
 
-        t2 = time() 
+        t2 = time()
         print(" Time  to build coordinate system= %.3f" % (t2-t1))
 
         #TODO
@@ -341,7 +330,7 @@ class Molecule(object):
 
     @property
     def atomic_mass(self):
-        return np.array([units.AMU_TO_AU * ele.mass_amu for ele in self.atoms])
+        return np.array([utilities.units.AMU_TO_AU * ele.mass_amu for ele in self.atoms])
 
     @property
     def mass_amu(self):
@@ -397,7 +386,7 @@ class Molecule(object):
 
     @property
     def geometry(self):
-        return manage_xyz.combine_atom_xyz(self.atom_symbols,self.xyz)
+        return utilities.manage_xyz.combine_atom_xyz(self.atom_symbols,self.xyz)
 
     @property
     def atom_symbols(self):
@@ -414,13 +403,13 @@ class Molecule(object):
 
     @property
     def gradient(self):
-        gradx = self.PES.get_gradient(self.xyz,frozen_atoms=self.frozen_atoms) 
+        gradx = self.PES.get_gradient(self.xyz,frozen_atoms=self.frozen_atoms)
         return self.coord_obj.calcGrad(self.xyz,gradx)  #CartesianCoordinate just returns gradx
 
     # for PES seams
     @property
     def avg_gradient(self):
-        gradx = self.PES.get_avg_gradient(self.xyz,frozen_atoms=self.frozen_atoms) 
+        gradx = self.PES.get_avg_gradient(self.xyz,frozen_atoms=self.frozen_atoms)
         return self.coord_obj.calcGrad(self.xyz,gradx)  #CartesianCoordinate just returns gradx
 
     @property
@@ -430,9 +419,9 @@ class Molecule(object):
 
     @property
     def difference_gradient(self):
-        dgradx = self.PES.get_dgrad(self.xyz,frozen_atoms=self.frozen_atoms) 
+        dgradx = self.PES.get_dgrad(self.xyz,frozen_atoms=self.frozen_atoms)
         return self.coord_obj.calcGrad(self.xyz,dgradx)
-    
+
     @property
     def difference_energy(self):
         self.energy
@@ -445,7 +434,7 @@ class Molecule(object):
     @property
     def Primitive_Hessian(self):
         return self.Data['Primitive_Hessian']
-    
+
     @Primitive_Hessian.setter
     def Primitive_Hessian(self,value):
         self.Data['Primitive_Hessian'] = value
@@ -454,7 +443,7 @@ class Molecule(object):
         print(" making primitive Hessian")
         self.Data['Primitive_Hessian'] = self.coord_obj.Prims.guess_hessian(self.xyz)
         self.newHess = 10
-    
+
     def update_Primitive_Hessian(self,change=None):
         print(" updating prim hess")
         if change is not None:
@@ -481,7 +470,7 @@ class Molecule(object):
 
     def form_Hessian_in_basis(self):
         #print " forming Hessian in current basis"
-        self.Hessian = block_matrix.dot( block_matrix.dot(block_matrix.transpose(self.coord_basis),self.Primitive_Hessian),self.coord_basis)
+        self.Hessian = utilities.block_matrix.dot( utilities.block_matrix.dot(utilities.block_matrix.transpose(self.coord_basis),self.Primitive_Hessian),self.coord_basis)
 
         #print(" Hessian")
         #print(self.Hessian)
@@ -525,7 +514,7 @@ class Molecule(object):
     @property
     def finiteDifferenceHessian(self):
         return self.PES.get_finite_difference_hessian(self.xyz)
-   
+
     @property
     def primitive_internal_coordinates(self):
         return self.coord_obj.Prims.Internals
@@ -576,7 +565,7 @@ class Molecule(object):
         return np.reshape(self.coord_obj.calculate(self.xyz),(-1,1))
 
     def mult_bm(self,left,right):
-        return block_matrix.dot(left,right)
+        return utilities.block_matrix.dot(left,right)
 
     @property
     def prim_CMatrix(self):
@@ -595,7 +584,7 @@ class Molecule(object):
         #for i in range(Der.shape[0]):
         #    Answer.append(Der[i].flatten())
         #return np.array(Answer)
-    
+
     @property
     def BMatrix(self):
         return self.coord_obj.Prims.wilsonB(self.xyz)
@@ -630,20 +619,20 @@ class Molecule(object):
     def node_id(self):
         return self.Data['node_id']
 
-    
+
     @node_id.setter
     def node_id(self,value):
         self.Data['node_id'] = value
         self.PES.lot.node_id = value
 
 if __name__=='__main__':
-    from level_of_theories import Molpro
+    from pygsm.level_of_theories import Molpro
     filepath='../../data/ethylene.xyz'
     molpro = Molpro.from_options(states=[(1,0)],fnm=filepath,lot_inp_file='../../data/ethylene_molpro.com')
 
     pes = PES.from_options(lot=molpro,ad_idx=0,multiplicity=1)
 
-    
+
     reactant = Molecule.from_options(fnm=filepath,PES=pes,coordinate_type="TRIC",Form_Hessian=False)
 
     print(reactant.coord_basis)

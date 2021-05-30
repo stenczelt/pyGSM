@@ -1,33 +1,30 @@
 # standard library imports
-import sys
+import glob
 import os
-from os import path
+
+# third party
 import numpy as np
 
-# third party 
-import pMolecule as pM
-import pCore     as pC
-from  pScientific.Geometry3 import Coordinates3
-import pBabel    as pB
-import glob
-#
-## local application imports
-#from Definitions import *
-
-import json
-
-sys.path.append(path.dirname( path.dirname( path.abspath(__file__))))
 try:
-    from .base_lot import Lot
-except:
-    from base_lot import Lot
+    import pBabel as pB
+    import pCore as pC
+    import pMolecule as pM
+    from pScientific.Geometry3 import Coordinates3
+except ModuleNotFoundError:
+    pM = None
+    pC = None
+    Coordinates3 = None
+    pB = None
 
-from utilities import *
+from pygsm import utilities
+
+# local application imports
+from .base_lot import Lot
 
 
 class pDynamo(Lot):
     """
-    Level of theory is a wrapper object to do QM/MM DFT  calculations 
+    Level of theory is a wrapper object to do QM/MM DFT  calculations
     Requires a system object. lot_inp_file must create  a pdynamo object
     called system
     """
@@ -41,7 +38,7 @@ class pDynamo(Lot):
 
         print(" making folder scratch/{}".format(self.node_id))
         os.system('mkdir -p scratch/{}'.format(self.node_id))
-        
+
         # if simulation doesn't exist create it
         if self.lot_inp_file is not None and self.simulation is None:
             # Now go through the logic of determining which FILE options are activated.
@@ -60,7 +57,7 @@ class pDynamo(Lot):
             self.file_options.set_active('scfconvtol','NormalSCF',str,"Convergence option for ORCA",allowed=['NormalSCF','TightSCF','ExtremeSCF'])
             self.file_options.set_active('d3',False,bool,"Use Grimme's D3 dispersion")
 
-            # QM/MM CHARMM 
+            # QM/MM CHARMM
             self.file_options.set_active('qmatom_file',None,str,'')
             self.file_options.set_active('use_charmm_qmmm',False,bool,'Use CHARMM molecular mechanics parameters to perform QMMM',
                     depend=(self.file_options.qmatom_file is not None),
@@ -83,7 +80,7 @@ class pDynamo(Lot):
 
 
             self.file_options.force_active('scratch','scratch/{}'.format(self.node_id),'Setting scratch folder')
-            nifty.printcool(" Options for pdynamo")
+            utilities.nifty.printcool(" Options for pdynamo")
 
             for line in self.file_options.record():
                 print(line)
@@ -96,9 +93,9 @@ class pDynamo(Lot):
             setattr(self, key, self.file_options.ActiveOptions[key])
 
     def build_system(self):
-        
+
         # save xyz file
-        manage_xyz.write_xyz('scratch/{}/tmp.xyz'.format(self.node_id),self.geom)
+        utilities.manage_xyz.write_xyz('scratch/{}/tmp.xyz'.format(self.node_id), self.geom)
 
         # ORCA
         if self.use_orca:
@@ -109,12 +106,12 @@ class pDynamo(Lot):
                     parsed_keywords.append(key)
             print(parsed_keywords)
 
-            qcmodel =  pM.QCModel.QCModelORCA.WithOptions ( keywords = parsed_keywords, 
-                    deleteJobFiles = False, 
+            qcmodel =  pM.QCModel.QCModelORCA.WithOptions ( keywords = parsed_keywords,
+                    deleteJobFiles = False,
                     command = self.command,
                     scratch = self.scratch,
                     )
-       
+
             # assuming only one state for now
             qcmodel.electronicState = pM.QCModel.ElectronicState.WithOptions ( charge = self.charge , multiplicity = self.states[0][0] )
             nbModel = pM.NBModel.NBModelORCA.WithDefaults ( )
@@ -141,10 +138,10 @@ class pDynamo(Lot):
                 with open(self.qmatom_file) as f:
                     qmatom_indices = f.read().splitlines()
                 qmatom_indices = [int(x) for x in qmatom_indices]
-                
+
                 system.DefineQCModel ( qcmodel, qcSelection = pC.Selection(qmatom_indices) )
                 system.DefineNBModel ( nbModel )
-            else:            
+            else:
                 # Define System
                 system = pB.XYZFile_ToSystem('scratch/{}/tmp.xyz'.format(self.node_id))
                 system.DefineQCModel ( qcmodel)
@@ -170,14 +167,14 @@ class pDynamo(Lot):
         self.E = []
         self.grada = []
         coordinates3 = Coordinates3.WithExtent ( len ( geom) )
-        xyz = manage_xyz.xyz_to_np(geom)
+        xyz = utilities.manage_xyz.xyz_to_np(geom)
         for ( i, ( x, y, z ) ) in enumerate ( xyz ):
             coordinates3[i,0] = x
             coordinates3[i,1] = y
             coordinates3[i,2] = z
         self.system.coordinates3 = coordinates3
         energy = self.system.Energy(doGradients = True)  #KJ
-        energy *= units.KJ_MOL_TO_AU * units.KCAL_MOL_PER_AU  #KCAL/MOL
+        energy *= utilities.units.KJ_MOL_TO_AU * utilities.units.KCAL_MOL_PER_AU  #KCAL/MOL
 
         self.E.append((multiplicity,energy))
         print(energy)
@@ -185,7 +182,7 @@ class pDynamo(Lot):
         gradient=[]
         for i in range(len(geom)):
             for j in range(3):
-                gradient.append(self.system.scratch.gradients3[i,j] * units.KJ_MOL_TO_AU /units.ANGSTROM_TO_AU)  #Ha/Bohr
+                gradient.append(self.system.scratch.gradients3[i,j] * utilities.units.KJ_MOL_TO_AU / utilities.units.ANGSTROM_TO_AU)  #Ha/Bohr
         gradient = np.asarray(gradient)
         #print(gradient)
         self.grada.append((multiplicity,gradient))
@@ -194,7 +191,7 @@ class pDynamo(Lot):
     def get_energy(self,coords,multiplicity,state):
         if self.hasRanForCurrentCoords==False or (coords != self.currentCoords).any():
             self.currentCoords = coords.copy()
-            geom = manage_xyz.np_to_xyz(self.geom,self.currentCoords)
+            geom = utilities.manage_xyz.np_to_xyz(self.geom, self.currentCoords)
             self.run(geom,multiplicity)
             self.hasRanForCurrentCoords=True
         #else:
@@ -205,7 +202,7 @@ class pDynamo(Lot):
     def get_gradient(self,coords,multiplicity,state):
         if self.hasRanForCurrentCoords==False or (coords != self.currentCoords).any():
             self.currentCoords = coords.copy()
-            geom = manage_xyz.np_to_xyz(self.geom,self.currentCoords)
+            geom = utilities.manage_xyz.np_to_xyz(self.geom, self.currentCoords)
             self.run(geom,multiplicity)
         tmp = self.search_tuple(self.grada,multiplicity)
         return np.asarray(tmp[state][1])  #Ha/Bohr
@@ -231,6 +228,6 @@ if __name__=="__main__":
 
     # DFTB
     filepath='../../data/ethylene.xyz'
-    geom = manage_xyz.read_xyz(filepath)
+    geom = utilities.manage_xyz.read_xyz(filepath)
     lot = pDynamo.from_options(states=[(1,0)],charge=0,nproc=16,fnm=filepath,lot_inp_file='pdynamo_options_dftb.txt')
     lot.run(geom)

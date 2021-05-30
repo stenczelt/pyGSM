@@ -6,10 +6,9 @@ Written by Tamas K. Stenczel in 2021
 """
 import importlib
 
-from ase import Atoms
+from ase import Atoms, units
 from ase.calculators.calculator import Calculator
 from ase.data import atomic_numbers
-from ase import units
 
 from .base_lot import Lot, LoTError
 

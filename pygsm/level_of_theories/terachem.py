@@ -1,22 +1,15 @@
 # standard library imports
-import sys
 import os
-from os import path
 import re
 
 # third party
 import numpy as np
 
 # local application imports
-sys.path.append(path.dirname( path.dirname( path.abspath(__file__))))
+from pygsm import utilities
 
-try:
-    from .base_lot import Lot,copy_file
-    from .file_options import File_Options
-except:
-    from base_lot import Lot,copy_file
-    from file_options import File_Options
-from utilities import *
+from .base_lot import Lot, copy_file
+from .file_options import File_Options
 
 '''
 Unfortunately TC calculates one gradient at time. THis makes it difficult to calculate multiple states since two calculations need to be done per state. 
@@ -34,7 +27,7 @@ class TeraChem(Lot):
     def __init__(self,options):
         super(TeraChem,self).__init__(options)
 
-    
+
         # Now go through the logic of determining which FILE options are activated.
         # DO NOT DUPLICATE OPTIONS WHICH ARE ALREADY PART OF LOT OPTIONS (e.g. charge)
 
@@ -140,14 +133,14 @@ class TeraChem(Lot):
         self.file_options.set_active('gpus',1,int,'')
         self.file_options.set_active('gpumem',None,int,'')
 
-   
+
         self.file_options.set_active('scrdir','scratch/{:03}/{}/scr/'.format(self.ID,self.node_id),str,doc='')
         self.file_options.force_active('scrdir','scratch/{:03}/{}/scr/'.format(self.ID,self.node_id))
         self.file_options.set_active('coordinates','scratch/{:03}/{}/tmp.xyz'.format(self.ID,self.node_id),str,doc='',)
         self.file_options.force_active('coordinates','scratch/{:03}/{}/tmp.xyz'.format(self.ID,self.node_id))
         self.file_options.set_active('charge',0,int,doc='')
-       
-        # Deactivate useless keys 
+
+        # Deactivate useless keys
         #casscf
         keys_to_del=[]
         for key,value in self.file_options.ActiveOptions.items():
@@ -156,7 +149,7 @@ class TeraChem(Lot):
         for key in keys_to_del:
             self.file_options.deactivate(key)
 
-        # TODO can make all these "None" and then 
+        # TODO can make all these "None" and then
         # deactivate all Nones
         if self.file_options.nalpha==0:
             self.file_options.deactivate('nalpha')
@@ -211,14 +204,14 @@ class TeraChem(Lot):
                     msg=' deactivating guess for CASSCF and FOMO')
 
         ## DONE setting values ##
-        
+
 
         self.link_atoms=None
 
         if self.node_id==0:
             for line in self.file_options.record():
                 print(line)
-    
+
     @classmethod
     def copy(cls,lot,options,copy_wavefunction=True):
 
@@ -290,12 +283,12 @@ class TeraChem(Lot):
 
         # Write the temporary geometry files
         if "prmtop" in self.file_options.ActiveOptions:
-            manage_xyz.write_amber_xyz('scratch/{:03}/{}/tmp.inpcrd'.format(self.ID,self.node_id),geom)
+            utilities.manage_xyz.write_amber_xyz('scratch/{:03}/{}/tmp.inpcrd'.format(self.ID, self.node_id), geom)
         else:
-            manage_xyz.write_xyz('scratch/{:03}/{}/tmp.xyz'.format(self.ID,self.node_id),geom,scale=1.0)
+            utilities.manage_xyz.write_xyz('scratch/{:03}/{}/tmp.xyz'.format(self.ID, self.node_id), geom, scale=1.0)
 
         return
-    
+
     def run(self,geom,mult,ad_idx,runtype='gradient'):
         ''' compute an individual gradient or NACME '''
 
@@ -379,7 +372,7 @@ class TeraChem(Lot):
         tempfileout='scratch/{:03}/{}/output.dat'.format(self.ID,self.node_id)
         if not self.gradient_states and not self.coupling_states or runtype=="energy":
             print(" only calculating energies")
-            # TODO what about multiple multiplicities? 
+            # TODO what about multiple multiplicities?
             tup = self.states[0]
             self.run(geom,tup[0],None,'energy')
             # make grada all None
@@ -396,16 +389,16 @@ class TeraChem(Lot):
                 else:  # not in gradient states
                     self._Gradients[tup] = self.Gradient(None,None)
 
-        if self.coupling_states: 
+        if self.coupling_states:
             #TODO  Warning only allowing one coupling state, with singlet multiplicities
             self.run(geom,1,None,runtype="coupling")
             self.parse_coup()
         #### FINALLY DONE WITH RUN Energy/Gradients ###
 
-        self.parse_E()       
+        self.parse_E()
         self.hasRanForCurrentCoords=True
         return
-        
+
     def parse_E(self):
         # parse the output for Energies  --> This can be done on any of the files since they should be the same
 
@@ -447,15 +440,15 @@ class TeraChem(Lot):
             for i,line in enumerate(open(tempfileout)):
                 for match in re.finditer(pattern,line):
                     tmp.append(float(match.group(1)))
-        
+
 
         for E,state in zip(tmp,self.states):
             self._Energies[state] = self.Energy(E,'Hartree')
 
         self.write_E_to_file()
-                
+
         return
-    
+
     def parse_grad(self,
             state,
             tempfileout=None,
@@ -482,7 +475,7 @@ class TeraChem(Lot):
                             next(f)
                         # read two lines seperating the QM and MM regions
                         next(f)
-                        next(f) 
+                        next(f)
                         for i in range(self.MM_atoms):
                             findline = next(f,'').strip()
                             mobj = re.match(r'(\S+)\s+(\S+)\s+(\S+)\s*$', findline)
@@ -496,11 +489,11 @@ class TeraChem(Lot):
             grad = np.zeros_like(tmpgrad)
             grad[self.qmindices] = tmpgrad[:len(self.qmindices)]
             grad[self.mm_indices] = tmpgrad[len(self.qmindices):]
-        else:  
+        else:
             # getting gradient of non-prmtop job
             gradfile='scratch/{:03}/{}/grad_{}_{}.xyz'.format(self.ID,self.node_id,state[0],state[1])
-            grad = manage_xyz.read_xyz(gradfile,scale=1.0)
-            grad = manage_xyz.xyz_to_np(grad)
+            grad = utilities.manage_xyz.read_xyz(gradfile, scale=1.0)
+            grad = utilities.manage_xyz.xyz_to_np(grad)
         self._Gradients[state] = self.Gradient(grad,"Hartree/Bohr")
 
     def parse_coup(self):
@@ -537,23 +530,23 @@ class TeraChem(Lot):
             coup[self.mm_indices] = tmpcoup[len(self.qmindices):]
         else:
             coupfile='scratch/{:03}/{}/coup_{}_{}.xyz'.format(self.ID,self.node_id,self.coupling_states[0],self.coupling_states[1])
-            coup = manage_xyz.read_xyz(coupfile,scale=1.0)
-            coup = manage_xyz.xyz_to_np(coup)
-        self.Couplings[self.coupling_states] = self.Coupling(coup,'Hartree/Bohr') 
-    
+            coup = utilities.manage_xyz.read_xyz(coupfile, scale=1.0)
+            coup = utilities.manage_xyz.xyz_to_np(coup)
+        self.Couplings[self.coupling_states] = self.Coupling(coup,'Hartree/Bohr')
+
 
 if __name__=="__main__":
 
     filepath="../../data/ethylene.xyz"
     #filepath='tmp.inpcrd'
-    geom=manage_xyz.read_xyz(filepath)
+    geom=utilities.manage_xyz.read_xyz(filepath)
     #TC = TeraChem.from_options(states=[(1,1)],fnm=filepath,lot_inp_file='tc_options.txt')
     #TC = TeraChem.from_options(states=[(1,0),(1,1)],fnm=filepath,lot_inp_file='tc_options.txt')
     TC = TeraChem.from_options(states=[(1,0),(1,1)],gradient_states=[(1,1)],geom=geom,lot_inp_file='tc_options.txt',node_id=0)
 
     #for line in TC.file_options.record():
     #    print(line)
-    
+
     #print(TC.casscf)
     #print(TC.rc_w)
 
@@ -568,7 +561,7 @@ if __name__=="__main__":
     #print(id(TC2))
 
     #geom=manage_xyz.read_xyz(filepath)
-    xyz = manage_xyz.xyz_to_np(geom)
+    xyz = utilities.manage_xyz.xyz_to_np(geom)
     print("getting energy")
     print(TC.get_energy(xyz,1,0))
     print(TC.get_energy(xyz,1,1))

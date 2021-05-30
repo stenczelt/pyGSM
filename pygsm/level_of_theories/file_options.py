@@ -1,7 +1,8 @@
-from collections import namedtuple, defaultdict, OrderedDict
-from re import sub
 from ast import literal_eval as leval
+from collections import OrderedDict
 from copy import deepcopy
+from re import sub
+
 
 class File_Options(object):
     """ Class file_options allows parsing of an input file
@@ -31,7 +32,7 @@ class File_Options(object):
 
     @staticmethod
     def copy(file_options):
-        new = File_Options() 
+        new = File_Options()
         new.Documentation = deepcopy(file_options.Documentation)
         new.UserOptions = deepcopy(file_options.UserOptions)
         new.ActiveOptions = deepcopy(file_options.ActiveOptions)
@@ -185,7 +186,7 @@ class File_Options(object):
             out += Unrecognized
         return out
 
-        
+
 
 if __name__ == '__main__':
 
@@ -200,7 +201,7 @@ if __name__ == '__main__':
     print(fo)
     for line in fo.record():
         print(line)
-    
+
     class tmp2(object):
         def __init__():
             return

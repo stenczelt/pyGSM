@@ -1,21 +1,16 @@
 # standard library imports
-import sys
 import os
-from os import path
-import subprocess
 import re
+import subprocess
 
-# third party 
+# third party
 import numpy as np
 
 # local application imports
-sys.path.append(path.dirname( path.dirname( path.abspath(__file__))))
-try:
-    from .base_lot import Lot 
-except:
-    from base_lot import Lot 
+from pygsm import utilities
 
-from utilities import *
+from .base_lot import Lot
+
 
 class DFTB(Lot):
 
@@ -28,7 +23,7 @@ class DFTB(Lot):
 
     def run(self,geom):
         owd = os.getcwd()
-        manage_xyz.write_xyz('scratch/{}/tmp.xyz'.format(self.node_id),geom,scale=1.0)
+        utilities.manage_xyz.write_xyz('scratch/{}/tmp.xyz'.format(self.node_id), geom, scale=1.0)
         os.system('./xyz2gen scratch/{}/tmp.xyz'.format(self.node_id))
         os.chdir('scratch/{}'.format(self.node_id))
         os.system('pwd')
@@ -49,12 +44,12 @@ class DFTB(Lot):
         self.E = []
         temp = 0
         tmpgrada=[]
-        tmpgrad=[]  
+        tmpgrad=[]
         pattern=re.compile(r"Total energy:                     [-+]?[0-9]*\.?[0-9]+ H")
         for line in olines:
             for match in re.finditer(pattern,line):
                 tmpline = line.split()
-                self.E.append((1,0,float(tmpline[2])))  
+                self.E.append((1,0,float(tmpline[2])))
             if line==" Total Forces\n":
                 temp+=1
             elif temp>0:
@@ -79,24 +74,24 @@ class DFTB(Lot):
     def get_energy(self,coords,multiplicity,state):
         if self.hasRanForCurrentCoords==False or (coords != self.currentCoords).any():
             self.currentCoords = coords.copy()
-            geom = manage_xyz.np_to_xyz(self.geom,self.currentCoords)
+            geom = utilities.manage_xyz.np_to_xyz(self.geom, self.currentCoords)
             self.run(geom)
         tmp = self.search_PES_tuple(self.E,multiplicity,state)[0][2]
-        return self.search_PES_tuple(self.E,multiplicity,state)[0][2]*units.KCAL_MOL_PER_AU
+        return self.search_PES_tuple(self.E,multiplicity,state)[0][2] * utilities.units.KCAL_MOL_PER_AU
 
     def get_gradient(self,coords,multiplicity,state):
         if self.hasRanForCurrentCoords==False or (coords != self.currentCoords).any():
             self.currentCoords = coords.copy()
-            geom = manage_xyz.np_to_xyz(self.geom,self.currentCoords)
+            geom = utilities.manage_xyz.np_to_xyz(self.geom, self.currentCoords)
             self.run(geom)
         tmp = self.search_PES_tuple(self.grada,multiplicity,state)[0][2]
-        return np.asarray(tmp)*-1.*units.ANGSTROM_TO_AU
+        return np.asarray(tmp) * -1. * utilities.units.ANGSTROM_TO_AU
 
 if __name__=='__main__':
     filepath="../../data/ethylene.xyz"
     dftb = DFTB.from_options(states=[(1,0)],fnm=filepath,lot_inp_file='../../data/dftb_in.hsd')
-    geom=manage_xyz.read_xyz(filepath)
-    xyz = manage_xyz.xyz_to_np(geom)
+    geom=utilities.manage_xyz.read_xyz(filepath)
+    xyz = utilities.manage_xyz.xyz_to_np(geom)
     print(dftb.get_energy(xyz,1,0))
     print(dftb.get_gradient(xyz,1,0))
 

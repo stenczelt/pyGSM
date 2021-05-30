@@ -1,20 +1,10 @@
-
-# standard library imports
-import sys
-import os
-from os import path
-
 # third party
 import numpy as np
 
 # local application imports
-sys.path.append(path.dirname( path.dirname( path.abspath(__file__))))
-from utilities import nifty,math_utils
+from pygsm.utilities import math_utils, nifty
 
-try:
-    from .rotate import get_expmap, get_expmap_der, is_linear, calc_rot_vec_diff
-except:
-    from rotate import get_expmap, get_expmap_der, is_linear, calc_rot_vec_diff
+from .rotate import calc_rot_vec_diff, get_expmap, get_expmap_der, is_linear
 
 
 class PrimitiveCoordinate(object):
@@ -74,7 +64,7 @@ class CartesianX(PrimitiveCoordinate):
     @property
     def atoms(self):
         return [self.a]
-        
+
     def __eq__(self, other):
         if type(self) is not type(other): return False
         eq = self.a == other.a
@@ -84,15 +74,15 @@ class CartesianX(PrimitiveCoordinate):
 
     def __ne__(self, other):
         return not self.__eq__(other)
-        
+
     def value(self, xyz):
         xyz = xyz.reshape(-1,3)
         a = self.a
         return xyz[a][0]*self.w
-        
+
     def derivative(self, xyz, start_idx=0):
         '''
-        start idx is used for fragments, in that case pass in only the xyz of the fragment 
+        start idx is used for fragments, in that case pass in only the xyz of the fragment
         Expecting shape of xyz to be (N,3)
         '''
         xyz = xyz.reshape(-1,3)
@@ -121,7 +111,7 @@ class CartesianY(PrimitiveCoordinate):
     @property
     def atoms(self):
         return [self.a]
-        
+
     def __eq__(self, other):
         if type(self) is not type(other): return False
         eq = self.a == other.a
@@ -131,15 +121,15 @@ class CartesianY(PrimitiveCoordinate):
 
     def __ne__(self, other):
         return not self.__eq__(other)
-        
+
     def value(self, xyz):
         xyz = xyz.reshape(-1,3)
         a = self.a
         return xyz[a][1]*self.w
-        
+
     def derivative(self, xyz, start_idx=0):
         '''
-        start idx is used for fragments, in that case pass in only the xyz of the fragment 
+        start idx is used for fragments, in that case pass in only the xyz of the fragment
         Expecting shape of xyz to be (N,3)
         '''
         xyz = xyz.reshape(-1,3)
@@ -172,7 +162,7 @@ class CartesianZ(PrimitiveCoordinate):
     @property
     def atoms(self):
         return [self.a]
-        
+
     def __eq__(self, other):
         if type(self) is not type(other): return False
         eq = self.a == other.a
@@ -182,15 +172,15 @@ class CartesianZ(PrimitiveCoordinate):
 
     def __ne__(self, other):
         return not self.__eq__(other)
-        
+
     def value(self, xyz):
         xyz = xyz.reshape(-1,3)
         a = self.a
         return xyz[a][2]*self.w
-        
+
     def derivative(self, xyz, start_idx=0):
         '''
-        start idx is used for fragments, in that case pass in only the xyz of the fragment 
+        start idx is used for fragments, in that case pass in only the xyz of the fragment
         Expecting shape of xyz to be (N,3)
         '''
         xyz = xyz.reshape(-1,3)
@@ -220,7 +210,7 @@ class TranslationX(PrimitiveCoordinate):
     def __repr__(self):
         # return "Translation-X %s : Weights %s" % (' '.join([str(i+1) for i in self.a]), ' '.join(['%.2e' % i for i in self.w]))
         return "Translation-X %s" % (nifty.commadash(self.a))
-        
+
     @property
     def atoms(self):
         return list(self.a)
@@ -235,7 +225,7 @@ class TranslationX(PrimitiveCoordinate):
 
     def __ne__(self, other):
         return not self.__eq__(other)
-        
+
     def value(self, xyz):
         xyz = xyz.reshape(-1,3)
         a = np.array(self.a)
@@ -252,7 +242,7 @@ class TranslationX(PrimitiveCoordinate):
             val2 = self.value(xyz2)
         diff = self.value(xyz1) - val2
         return diff
-        
+
     def derivative(self, xyz, start_idx=0):
         xyz = xyz.reshape(-1,3)
         derivatives = np.zeros_like(xyz)
@@ -282,7 +272,7 @@ class TranslationY(PrimitiveCoordinate):
     @property
     def atoms(self):
         return list(self.a)
-        
+
     def __eq__(self, other):
         if type(self) is not type(other): return False
         eq = set(self.a) == set(other.a)
@@ -293,7 +283,7 @@ class TranslationY(PrimitiveCoordinate):
 
     def __ne__(self, other):
         return not self.__eq__(other)
-        
+
     def value(self, xyz):
         xyz = xyz.reshape(-1,3)
         a = np.array(self.a)
@@ -310,7 +300,7 @@ class TranslationY(PrimitiveCoordinate):
             val2 = self.value(xyz2)
         diff = self.value(xyz1) - val2
         return diff
-        
+
     def derivative(self, xyz,start_idx=0):
         xyz = xyz.reshape(-1,3)
         derivatives = np.zeros_like(xyz)
@@ -340,7 +330,7 @@ class TranslationZ(PrimitiveCoordinate):
     @property
     def atoms(self):
         return list(self.a)
-        
+
     def __eq__(self, other):
         if type(self) is not type(other): return False
         eq = set(self.a) == set(other.a)
@@ -351,7 +341,7 @@ class TranslationZ(PrimitiveCoordinate):
 
     def __ne__(self, other):
         return not self.__eq__(other)
-        
+
     def value(self, xyz):
         xyz = xyz.reshape(-1,3)
         a = np.array(self.a)
@@ -368,7 +358,7 @@ class TranslationZ(PrimitiveCoordinate):
             val2 = self.value(xyz2)
         diff = self.value(xyz1) - val2
         return diff
-        
+
     def derivative(self, xyz,start_idx=0):
         xyz = xyz.reshape(-1,3)
         derivatives = np.zeros_like(xyz)
@@ -436,7 +426,7 @@ class Rotator(object):
 
     def calc_e0(self):
         """
-        Compute the reference axis for adding dummy atoms. 
+        Compute the reference axis for adding dummy atoms.
         Only used in the case of linear molecules.
 
         We first find the Cartesian axis that is "most perpendicular" to the molecular axis.
@@ -524,7 +514,7 @@ class Rotator(object):
             return self.stored_deriv[relative_a]
 
         xsel = xyz #[relative_a, :]
-        # x0 is the full size. . . 
+        # x0 is the full size. . .
         # need absolute indices of fragment
         absolute_a = list(range(start_idx,start_idx+len(relative_a)))
         ysel = self.x0[absolute_a, :]
@@ -796,13 +786,13 @@ class RotationA(PrimitiveCoordinate):
 
     def __ne__(self, other):
         return not self.__eq__(other)
-        
+
     def value(self, xyz):
         return self.Rotator.value(xyz)[0]*self.w
 
     def calcDiff(self, xyz1, xyz2=None, val2=None):
         return self.Rotator.calcDiff(xyz1, xyz2, val2)[0]*self.w
-        
+
     def derivative(self, xyz,start_idx=0):
         der_all = self.Rotator.derivative(xyz,start_idx)
         derivatives = der_all[:, :, 0]*self.w
@@ -844,13 +834,13 @@ class RotationB(PrimitiveCoordinate):
 
     def __ne__(self, other):
         return not self.__eq__(other)
-        
+
     def value(self, xyz):
         return self.Rotator.value(xyz)[1]*self.w
 
     def calcDiff(self, xyz1, xyz2=None, val2=None):
         return self.Rotator.calcDiff(xyz1, xyz2, val2)[1]*self.w
-        
+
     def derivative(self, xyz,start_idx=0):
         der_all = self.Rotator.derivative(xyz,start_idx)
         derivatives = der_all[:, :, 1]*self.w
@@ -892,13 +882,13 @@ class RotationC(PrimitiveCoordinate):
 
     def __ne__(self, other):
         return not self.__eq__(other)
-        
+
     def value(self, xyz):
         return self.Rotator.value(xyz)[2]*self.w
 
     def calcDiff(self, xyz1, xyz2=None, val2=None):
         return self.Rotator.calcDiff(xyz1, xyz2, val2)[2]*self.w
-        
+
     def derivative(self, xyz,start_idx=0):
         der_all = self.Rotator.derivative(xyz,start_idx)
         derivatives = der_all[:, :, 2]*self.w
@@ -938,13 +928,13 @@ class Distance(PrimitiveCoordinate):
 
     def __ne__(self, other):
         return not self.__eq__(other)
-        
+
     def value(self, xyz):
         xyz = xyz.reshape(-1,3)
         a = self.a
         b = self.b
         return np.sqrt(np.sum((xyz[a]-xyz[b])**2))
-        
+
     def derivative(self, xyz,start_idx=0):
         xyz = xyz.reshape(-1,3)
         derivatives = np.zeros_like(xyz)
@@ -1002,7 +992,7 @@ class Angle(PrimitiveCoordinate):
 
     def __ne__(self, other):
         return not self.__eq__(other)
-        
+
     def value(self, xyz):
         xyz = xyz.reshape(-1,3)
         a = self.a
@@ -1042,7 +1032,7 @@ class Angle(PrimitiveCoordinate):
         crs = np.cross(vector1, vector2)
         crs /= np.linalg.norm(crs)
         return crs
-        
+
     def derivative(self, xyz,start_idx=0):
         xyz = xyz.reshape(-1,3)
         derivatives = np.zeros_like(xyz)
@@ -1145,9 +1135,9 @@ class LinearAngle(PrimitiveCoordinate):
             b = self.b-start_idx
             c = self.c-start_idx
         else:
-            a = self.a 
-            b = self.b 
-            c = self.c 
+            a = self.a
+            b = self.b
+            c = self.c
         # Unit vector pointing from a to c.
         v = xyz[c] - xyz[a]
         ev = v / np.linalg.norm(v)
@@ -1284,7 +1274,7 @@ class LinearAngle(PrimitiveCoordinate):
                  fderiv = (FPlus-FMinus)/(2*h)
                  deriv2[ii, j, :, :] = fderiv
          return deriv2
-    
+
 class MultiAngle(PrimitiveCoordinate):
     __slots__=['a','b','c','isAngular','isPeriodic']
     def __init__(self, a, b, c):
@@ -1318,7 +1308,7 @@ class MultiAngle(PrimitiveCoordinate):
 
     def __ne__(self, other):
         return not self.__eq__(other)
-        
+
     def value(self, xyz):
         xyz = xyz.reshape(-1,3)
         a = np.array(self.a)
@@ -1358,7 +1348,7 @@ class MultiAngle(PrimitiveCoordinate):
         crs = np.cross(vector1, vector2)
         crs /= np.linalg.norm(crs)
         return crs
-        
+
     def derivative(self, xyz):
         xyz = xyz.reshape(-1,3)
         derivatives = np.zeros_like(xyz)
@@ -1398,7 +1388,7 @@ class MultiAngle(PrimitiveCoordinate):
 
     def second_derivative(self, xyz,start_idx):
         raise NotImplementedError("Second derivatives have not been implemented for IC type %s" % self.__name__)
-    
+
 class Dihedral(PrimitiveCoordinate):
     __slots__=['a','b','c','d','isAngular','isPeriodic']
     def __init__(self, a, b, c, d):
@@ -1434,7 +1424,7 @@ class Dihedral(PrimitiveCoordinate):
 
     def __ne__(self, other):
         return not self.__eq__(other)
-        
+
     def value(self, xyz):
         xyz = xyz.reshape(-1,3)
         a = self.a
@@ -1451,7 +1441,7 @@ class Dihedral(PrimitiveCoordinate):
         arg2 = np.sum(np.multiply(cross1, cross2))
         answer = np.arctan2(arg1, arg2)
         return answer
-        
+
     def derivative(self, xyz, start_idx=0):
         xyz = xyz.reshape(-1,3)
         derivatives = np.zeros_like(xyz)
@@ -1517,7 +1507,7 @@ class Dihedral(PrimitiveCoordinate):
         sv = (1 - np.dot(v, w)**2)**0.5
         sv4 = sv**4
         if su < 1e-6 or sv < 1e-6 : return deriv2
-        
+
         uxw = np.cross(u, w)
         vxw = np.cross(v, w)
 
@@ -1597,7 +1587,7 @@ class MultiDihedral(PrimitiveCoordinate):
 
     def __ne__(self, other):
         return not self.__eq__(other)
-        
+
     def value(self, xyz):
         xyz = xyz.reshape(-1,3)
         a = np.array(self.a)
@@ -1606,7 +1596,7 @@ class MultiDihedral(PrimitiveCoordinate):
         d = np.array(self.d)
         xyza = np.mean(xyz[a], axis=0)
         xyzd = np.mean(xyz[d], axis=0)
-        
+
         vec1 = xyz[b] - xyza
         vec2 = xyz[c] - xyz[b]
         vec3 = xyzd - xyz[c]
@@ -1617,7 +1607,7 @@ class MultiDihedral(PrimitiveCoordinate):
         arg2 = np.sum(np.multiply(cross1, cross2))
         answer = np.arctan2(arg1, arg2)
         return answer
-        
+
     def derivative(self, xyz):
         xyz = xyz.reshape(-1,3)
         derivatives = np.zeros_like(xyz)
@@ -1627,7 +1617,7 @@ class MultiDihedral(PrimitiveCoordinate):
         n = np.array(self.d)
         xyzm = np.mean(xyz[m], axis=0)
         xyzn = np.mean(xyz[n], axis=0)
-        
+
         u_prime = (xyzm - xyz[o])
         w_prime = (xyz[p] - xyz[o])
         v_prime = (xyzn - xyz[p])
@@ -1663,7 +1653,7 @@ class MultiDihedral(PrimitiveCoordinate):
 
     def second_derivative(self, xyz,start_idx=0):
         raise NotImplementedError("Second derivatives have not been implemented for IC type %s" % self.__name__)
-    
+
 class OutOfPlane(PrimitiveCoordinate):
     __slots__=['a','b','c','d','isAngular','isPeriodic']
     def __init__(self, a, b, c, d):
@@ -1703,7 +1693,7 @@ class OutOfPlane(PrimitiveCoordinate):
 
     def __ne__(self, other):
         return not self.__eq__(other)
-        
+
     def value(self, xyz,start_idx=0):
         xyz = xyz.reshape(-1,3)
         a = self.a-start_idx
@@ -1720,7 +1710,7 @@ class OutOfPlane(PrimitiveCoordinate):
         arg2 = np.sum(np.multiply(cross1, cross2))
         answer = np.arctan2(arg1, arg2)
         return answer
-        
+
     def derivative(self, xyz,start_idx=0):
         xyz = xyz.reshape(-1,3)
         derivatives = np.zeros_like(xyz)

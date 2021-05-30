@@ -1,20 +1,18 @@
-from __future__ import print_function
+
 
 # standard library imports
-import sys
 import os
-try:
-    from io import StringIO
-except:
-    from StringIO import StringIO
+import sys
+from io import StringIO
 
 # third party
 import numpy as np
 
 # local application imports
-from ._linesearch import backtrack,NoLineSearch,golden_section
+from pygsm import utilities
+
 from .base_optimizer import base_optimizer
-from utilities import *
+
 
 class eigenvector_follow(base_optimizer):
 
@@ -72,10 +70,10 @@ class eigenvector_follow(base_optimizer):
             n = molecule.num_coordinates
         else:
             n_actual = molecule.num_coordinates
-            n =  n_actual - nconstraints 
+            n =  n_actual - nconstraints
             self.x_prim=np.zeros((molecule.num_primitives,1),dtype=float)
             self.g_prim=np.zeros((molecule.num_primitives,1),dtype=float)
-        
+
         # Evaluate the function value and its gradient.
         fx = molecule.energy
         g = molecule.gradient.copy()
@@ -100,7 +98,7 @@ class eigenvector_follow(base_optimizer):
                 else:
                     self.update_Hessian(molecule,'BOFILL')
             update_hess = True
-        
+
             # => Form eigenvector step <= #
             if molecule.coord_obj.__class__.__name__=='CartesianCoordinates':
                 raise NotImplementedError
@@ -122,7 +120,7 @@ class eigenvector_follow(base_optimizer):
                 #print(" reducing step, new step = %1.2f" %step)
             else:
                 step=actual_step
-        
+
             # store values
             xp = x.copy()
             gp = g.copy()
@@ -135,7 +133,7 @@ class eigenvector_follow(base_optimizer):
 
             # => calculate constraint step <= #
             constraint_steps = self.get_constraint_steps(molecule,opt_type,g)
-        
+
             #print(" ### Starting  line search ###")
             ls = self.Linesearch(nconstraints, x, fx, g, dq, step, xp,constraint_steps,self.linesearch_parameters,molecule,verbose)
 
@@ -146,7 +144,7 @@ class eigenvector_follow(base_optimizer):
             fx = ls['fx']
             g  = ls['g']
 
-            if ls['status'] ==-2:  
+            if ls['status'] ==-2:
                 print('[ERROR] the point return to the privious point')
                 x = xp.copy()
                 molecule.xyz = xyzp
@@ -174,9 +172,9 @@ class eigenvector_follow(base_optimizer):
             scaled_dq = dq*step
             dEtemp = np.dot(self.Hessian,scaled_dq)
             dEpre = np.dot(np.transpose(scaled_dq),gc) + 0.5*np.dot(np.transpose(dEtemp),scaled_dq)
-            dEpre *=units.KCAL_MOL_PER_AU
+            dEpre *=utilities.units.KCAL_MOL_PER_AU
             #print(constraint_steps.T)
-            constraint_energy = np.dot(gp.T,constraint_steps)*units.KCAL_MOL_PER_AU  
+            constraint_energy = np.dot(gp.T,constraint_steps) * utilities.units.KCAL_MOL_PER_AU
             #print("constraint_energy: %1.4f" % constraint_energy)
             dEpre += constraint_energy
             #if abs(dEpre)<0.01:
@@ -187,12 +185,12 @@ class eigenvector_follow(base_optimizer):
             for c in molecule.constraints.T:
                 gc -= np.dot(gc.T,c[:,np.newaxis])*c[:,np.newaxis]
 
-            # control step size 
+            # control step size
             dEstep = fx - fxp
             print(" dEstep=%5.4f" %dEstep)
             ratio = dEstep/dEpre
             molecule.gradrms = np.sqrt(np.dot(gc.T,gc)/n)
-            if ls['status'] !=-2:  
+            if ls['status'] !=-2:
                 self.step_controller(actual_step,ratio,molecule.gradrms,pgradrms,dEpre,opt_type,dEstep)
 
             # update molecule xyz
@@ -200,18 +198,18 @@ class eigenvector_follow(base_optimizer):
             if ostep % xyzframerate==0:
                 geoms.append(molecule.geometry)
                 energies.append(molecule.energy-refE)
-                manage_xyz.write_xyzs_w_comments('{}/opt_{}.xyz'.format(path,molecule.node_id),geoms,energies,scale=1.)
+                utilities.manage_xyz.write_xyzs_w_comments('{}/opt_{}.xyz'.format(path, molecule.node_id), geoms, energies, scale=1.)
 
-            # save variables for update Hessian! 
+            # save variables for update Hessian!
             if not molecule.coord_obj.__class__.__name__=='CartesianCoordinates':
-                # only form g_prim for non-constrained 
-                self.g_prim = block_matrix.dot(molecule.coord_basis,gc)
+                # only form g_prim for non-constrained
+                self.g_prim = utilities.block_matrix.dot(molecule.coord_basis, gc)
                 self.dx = x-xp
                 self.dg = g - gp
 
                 self.dx_prim_actual = molecule.coord_obj.Prims.calcDiff(xyz,xyzp)
                 self.dx_prim_actual = np.reshape(self.dx_prim_actual,(-1,1))
-                self.dx_prim = block_matrix.dot(molecule.coord_basis,scaled_dq)
+                self.dx_prim = utilities.block_matrix.dot(molecule.coord_basis, scaled_dq)
                 self.dg_prim = self.g_prim - gp_prim
 
             else:
@@ -229,7 +227,7 @@ class eigenvector_follow(base_optimizer):
             gmax = float(np.max(np.absolute(gc)))
             disp = float(np.linalg.norm((xyz-xyzp).flatten()))
             xnorm = np.sqrt(np.dot(x.T, x))
-            gnorm = np.sqrt(np.dot(g.T, g)) 
+            gnorm = np.sqrt(np.dot(g.T, g))
             if xnorm < 1.0:
             	xnorm = 1.0
 
@@ -260,7 +258,7 @@ class eigenvector_follow(base_optimizer):
                 if ostep % xyzframerate!=0:
                     geoms.append(molecule.geometry)
                     energies.append(molecule.energy-refE)
-                    manage_xyz.write_xyzs_w_comments('{}/opt_{}.xyz'.format(path,molecule.node_id),geoms,energies,scale=1.)
+                    utilities.manage_xyz.write_xyzs_w_comments('{}/opt_{}.xyz'.format(path, molecule.node_id), geoms, energies, scale=1.)
                 break
 
             #update DLC  --> this changes q, g, Hint
@@ -276,7 +274,7 @@ class eigenvector_follow(base_optimizer):
                         gc -= np.dot(gc.T,c[:,np.newaxis])*c[:,np.newaxis]
             print()
             sys.stdout.flush()
-       
+
         print(" opt-summary {}".format(molecule.node_id))
         print(self.buf.getvalue())
         return geoms,energies
@@ -284,11 +282,11 @@ class eigenvector_follow(base_optimizer):
 
 
 if __name__=='__main__':
-    from qchem import QChem
-    from pes import PES
-    from molecule import Molecule
     from _linesearch import NoLineSearch
-    from slots import Distance
+    from pygsm.wrappers.molecule import Molecule
+    from pygsm.potential_energy_surfaces import PES
+    from qchem import QChem
+    from pygsm.coordinate_systems.slots import Distance
 
     basis="6-31G*"
     nproc=8
@@ -299,12 +297,12 @@ if __name__=='__main__':
     M = Molecule.from_options(fnm=filepath,PES=pes,coordinate_type="DLC")
     distance = Distance(5,8)  #Not 1 based!!
     print(distance)
-   
+
     ef = eigenvector_follow.from_options() #Linesearch=NoLineSearch)
     geoms = ef.optimize(molecule=M,refE=M.energy,opt_steps=5)
     #geoms = ef.optimize(molecule=M,refE=M.energy,opt_steps=1)
     print(M.primitive_internal_coordinates)
 
-    manage_xyz.write_xyzs('opt.xyz',geoms,scale=1.) 
+    utilities.manage_xyz.write_xyzs('opt.xyz', geoms, scale=1.)
 
 

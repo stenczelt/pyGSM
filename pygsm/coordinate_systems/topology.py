@@ -1,24 +1,15 @@
-from __future__ import print_function
+
 
 # standard library imports
-import time
-import sys
-from os import path
-
-# i don't know what this is doing
-sys.path.append(path.dirname( path.dirname( path.abspath(__file__))))
-
-import numpy as np
 import itertools
+from collections import OrderedDict
+
+import networkx as nx
+import numpy as np
 from pkg_resources import parse_version
-from collections import OrderedDict, defaultdict
 
-try:
-    import networkx as nx
-except ImportError:
-    nifty.logger.warning("NetworkX cannot be imported (topology tools won't work).  Most functionality should still work though.")
+from pygsm import utilities
 
-from utilities import *
 
 #===========================#
 #|   Connectivity graph    |#
@@ -157,7 +148,7 @@ class Topology():
 
         # can do an assert for xyz here CRA TODO
         if natoms > 100000:
-            nifty.logger.warning("Warning: Large number of atoms (%i), topology building may take a long time" % natoms)
+            utilities.nifty.logger.warning("Warning: Large number of atoms (%i), topology building may take a long time" % natoms)
 
         # Get hybrid indices
         hybrid_indices=hybrid_indices
@@ -187,12 +178,12 @@ class Topology():
                         hybrid_idx_start_stop.append((start,end))
 
         if not bondlistfile:
-            nifty.printcool(" building bonds")
+            utilities.nifty.printcool(" building bonds")
             print(prim_idx_start_stop)
             bonds = Topology.build_bonds(xyz,atoms,primitive_indices,prim_idx_start_stop)
             #print(" done")
             assert bondlistfile is None
-        else: 
+        else:
             #bondlistfile:
             #prim_idx_start_stop = kwargs.get('prim_idx_start_stop',None)
             try:
@@ -226,7 +217,7 @@ class Topology():
         topology = G
         fragments = [G.subgraph(c).copy() for c in nx.connected_components(G)]
         for g in fragments: g.__class__ = MyG
-        
+
         #print(len(fragments))
         #for frag in fragments:
         #    print(frag.L())
@@ -271,7 +262,7 @@ class Topology():
         for bond in bonds:
             atoms = bond.atoms
             G.add_edge(atoms[0],atoms[1])
-        
+
         # The Topology is simply the NetworkX graph object.
         topology = G
         fragments = [G.subgraph(c).copy() for c in nx.connected_components(G)]
@@ -315,7 +306,7 @@ class Topology():
             ymax = boxes[sn].b
             zmax = boxes[sn].c
             if any([i != 90.0 for i in [boxes[sn].alpha, boxes[sn].beta, boxes[sn].gamma]]):
-                nifty.logger.warning("Warning: Topology building will not work with broken molecules in nonorthogonal cells.")
+                utilities.nifty.logger.warning("Warning: Topology building will not work with broken molecules in nonorthogonal cells.")
                 toppbc = False
         else:
             xmin = mins[0]
@@ -407,7 +398,7 @@ class Topology():
             AtomIterator = []
             for i in gasn:
                 for j in gngh[i]:
-                    apairs = nifty.cartesian_product2([gasn[i], gasn[j]])
+                    apairs = utilities.nifty.cartesian_product2([gasn[i], gasn[j]])
                     if len(apairs) > 0: AtomIterator.append(apairs[apairs[:,0]>apairs[:,1]])
             AtomIterator = np.ascontiguousarray(np.vstack(AtomIterator))
         else:
@@ -472,7 +463,7 @@ class Topology():
                             np.fromiter(itertools.chain(*second_list),dtype=np.int32)
                             )).T
                     )
-                    #np.fromiter(itertools.chain(*[[i]*(natoms-i-1) for i in primitive_indices]),dtype=np.int32), 
+                    #np.fromiter(itertools.chain(*[[i]*(natoms-i-1) for i in primitive_indices]),dtype=np.int32),
 
 
         # Create a list of thresholds for determining whether a certain interatomic distance is considered to be a bond.
@@ -529,7 +520,7 @@ class Topology():
     def read_bonds_from_file(filename):
         print("reading bonds")
         bondlist = np.loadtxt(filename)
-        
+
         bonds=[]
         for b in bondlist:
             i = int(b[0])
@@ -538,7 +529,7 @@ class Topology():
                 bonds.append((i,j))
             else:
                 bonds.append((j,i))
-        
+
         sorted_bonds = sorted(list(set(bonds)))
         built_bonds = True
         print(sorted_bonds[:10])
@@ -559,7 +550,7 @@ class Topology():
         dxij.append(dxij_i)
         return AtomIterator, drij, dxij
 
-    # these aren't used 
+    # these aren't used
     def find_angles(self):
 
         """ Return a list of 3-tuples corresponding to all of the
@@ -585,7 +576,7 @@ class Topology():
                         angidx.append((a1, a2, a3))
         return angidx
 
-    # these aren't used 
+    # these aren't used
     def find_dihedrals(self):
 
         """ Return a list of 4-tuples corresponding to all of the
@@ -625,21 +616,19 @@ class Topology():
         return AtomIterator, drij
 
 if __name__ =='__main__' and __package__ is None:
-    from os import sys, path
-    sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 
     #filepath='../../data/butadiene_ethene.xyz'
     #filepath='crystal.xyz'
     filepath1='multi1.xyz'
     filepath2='multi2.xyz'
 
-    geom1 = manage_xyz.read_xyz(filepath1)
-    geom2 = manage_xyz.read_xyz(filepath2)
-    atom_symbols  = manage_xyz.get_atoms(geom1)
-    xyz1 = manage_xyz.xyz_to_np(geom1)
-    xyz2 = manage_xyz.xyz_to_np(geom2)
+    geom1 = utilities.manage_xyz.read_xyz(filepath1)
+    geom2 = utilities.manage_xyz.read_xyz(filepath2)
+    atom_symbols  = utilities.manage_xyz.get_atoms(geom1)
+    xyz1 = utilities.manage_xyz.xyz_to_np(geom1)
+    xyz2 = utilities.manage_xyz.xyz_to_np(geom2)
 
-    ELEMENT_TABLE = elements.ElementData()
+    ELEMENT_TABLE = utilities.elements.ElementData()
     atoms = [ELEMENT_TABLE.from_symbol(atom) for atom in atom_symbols]
     #print(atoms)
 
@@ -668,7 +657,7 @@ if __name__ =='__main__' and __package__ is None:
 
     #fragments = [G.subgraph(c).copy() for c in nx.connected_components(G)]
     #for g in fragments: g.__class__ = MyG
-   
+
     #print(" fragments")
     #for frag in fragments:
     #    print(frag.L())

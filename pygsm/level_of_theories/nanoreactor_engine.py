@@ -1,23 +1,7 @@
-
-# standard library imports
-import sys
-import os
-from os import path
-import re
-
-# third party
-import numpy as np
-
 # local application imports
-sys.path.append(path.dirname( path.dirname( path.abspath(__file__))))
+from pygsm import utilities
 
-try:
-    from .base_lot import Lot
-    from .file_options import File_Options
-except:
-    from base_lot import Lot
-    from file_options import File_Options
-from utilities import *
+from .base_lot import Lot
 
 '''
 '''
@@ -35,7 +19,7 @@ class nanoreactor_engine(Lot):
         self.Gradients={}
         self.Energies = {}
 
-        xyz = manage_xyz.xyz_to_np(geom)*units.ANGSTROM_TO_AU
+        xyz = utilities.manage_xyz.xyz_to_np(geom) * utilities.units.ANGSTROM_TO_AU
 
         # Call the engine
         try:
@@ -45,12 +29,12 @@ class nanoreactor_engine(Lot):
             # set energy to a large number so the optimizer attempts to slow down
             print(" SCF FAILURE")
             self.nscffail+=1
-            energy,gradient = 999, 0 
+            energy,gradient = 999, 0
 
             if self.nscffail>25:
                 raise RuntimeError
-  
-        # Store the values in memory 
+
+        # Store the values in memory
         self._Energies[(mult,ad_idx)] = self.Energy(energy,'Hartree')
         self._Gradients[(mult,ad_idx)] = self.Gradient(gradient,'Hartree/Bohr')
 
@@ -66,11 +50,11 @@ if __name__=="__main__":
     engine_type=settings['engine'].pop('type')
     engine = get_engine(r.mol, engine_type=engine_type, **settings['engine'])
 
-    
+
     # read in a geometry
-    geom = manage_xyz.read_xyz('../../data/ethylene.xyz')
-    xyz = manage_xyz.xyz_to_np(geom)
-    
+    geom = utilities.manage_xyz.read_xyz('../../data/ethylene.xyz')
+    xyz = utilities.manage_xyz.xyz_to_np(geom)
+
     # create the pygsm level of theory object
     test_lot = nanoreactor_engine(geom,job_data = {'engine',test_engine})
 
@@ -82,4 +66,4 @@ if __name__=="__main__":
     print(test_lot.get_gradient(xyz,1,0))
 
 
-    
+

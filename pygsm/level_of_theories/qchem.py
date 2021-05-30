@@ -1,16 +1,13 @@
 # standard library imports
-import sys
 import os
-from os import path
+import subprocess
 
 # third party
 import numpy as np
 
 # local application imports
-sys.path.append(path.dirname( path.dirname( path.abspath(__file__))))
 from .base_lot import Lot
-from utilities import *
-import subprocess 
+
 
 class QChem(Lot):
     def __init__(self,options):
@@ -71,7 +68,7 @@ class QChem(Lot):
                 tempfile.write('\n')
         tempfile.write('$end')
         tempfile.close()
-    
+
     def run(self,geom,multiplicity,ad_idx,runtype='gradient'):
 
         assert ad_idx == 0,"pyGSM Q-Chem doesn't currently support ad_idx!=0"
@@ -83,7 +80,7 @@ class QChem(Lot):
            self.write_preamble(geom,multiplicity,tempfilename)
         else:
            self.write_preamble(geom,multiplicity,tempfilename,jobtype='SP')
-        
+
         cmd = ['qchem']
         args = ['-nt',str(self.nproc),
                 '-save',
@@ -97,8 +94,8 @@ class QChem(Lot):
         output = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr = subprocess.PIPE).communicate()[0]
 
         self.parse()
-       
-        return 
+
+        return
 
     def parse(self):
         # PARSE OUTPUT #
@@ -106,7 +103,7 @@ class QChem(Lot):
             efilepath = qcscratch + '/string_{:03d}/{}.{}/GRAD'.format(self.ID,self.node_id,multiplicity)
             with open(efilepath) as efile:
                 elines = efile.readlines()
-            
+
             temp = 0
             for lines in elines:
                 if temp == 1:

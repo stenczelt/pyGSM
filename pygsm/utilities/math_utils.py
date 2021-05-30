@@ -1,5 +1,6 @@
 import numpy as np
 
+
 ## Some vector calculus functions
 def unit_vector(a):
     """

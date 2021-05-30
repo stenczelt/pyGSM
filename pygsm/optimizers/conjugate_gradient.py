@@ -1,20 +1,16 @@
-from __future__ import print_function
+
 
 # standard library imports
-import sys
-from os import path
-try:
-    from io import StringIO
-except:
-    from StringIO import StringIO
+from io import StringIO
 
 # third party
 import numpy as np
 
 # local application imports
-from ._linesearch import backtrack,NoLineSearch
+from pygsm import utilities
+
 from .base_optimizer import base_optimizer
-from utilities import *
+
 
 class conjugate_gradient(base_optimizer):
 
@@ -48,8 +44,8 @@ class conjugate_gradient(base_optimizer):
             n = molecule.num_coordinates
         else:
             n_actual = molecule.num_coordinates
-            n =  n_actual - nconstraints 
-        
+            n =  n_actual - nconstraints
+
         # Evaluate the function value and its gradient.
         fx = molecule.energy
         g = molecule.gradient.copy()
@@ -69,9 +65,9 @@ class conjugate_gradient(base_optimizer):
                 d_prim = -g_prim
                 # set initial step to false
                 self.initial_step=False
-            else:   
+            else:
                 # Fletcher-Reeves formula for Beta
-                # http://en.wikipedia.org/wiki/Nonlinear_conjugate_gradient_method       
+                # http://en.wikipedia.org/wiki/Nonlinear_conjugate_gradient_method
                 dnew = -g_prim  #
                 deltanew = np.dot(dnew.T,dnew)
                 deltaold=np.dot(-gp_prim.T,-gp_prim)
@@ -106,7 +102,7 @@ class conjugate_gradient(base_optimizer):
             print(" Linesearch")
             ls = self.Linesearch(n, x, fx, g, d, step, xp, gp,constraint_steps,self.linesearch_parameters,molecule)
             print(" Done linesearch")
-            
+
             # revert to the previous point
             if ls['status'] < 0:
                 x = xp.copy()
@@ -122,7 +118,7 @@ class conjugate_gradient(base_optimizer):
             g_prim = np.dot(molecule.coord_basis,g)
 
             #control step size
-            if step < p_step: 
+            if step < p_step:
                 self.options['DMAX']  /= 2.
             elif step > p_step:
                 self.options['DMAX'] *= 2.
@@ -131,7 +127,7 @@ class conjugate_gradient(base_optimizer):
             elif self.options['DMAX'] >0.25:
                 self.options['DMAX'] = 0.25
 
-            # dE 
+            # dE
             dEstep = fx - fxp
             print(" dEstep=%5.4f" %dEstep)
 
@@ -146,8 +142,8 @@ class conjugate_gradient(base_optimizer):
 
             #gmax = np.max(g)/units.ANGSTROM_TO_AU/KCAL_MOL_PER_AU
             #print "current gradrms= %r au" % gradrms
-            gmax = np.max(g)/units.ANGSTROM_TO_AU
-            self.disp = np.max(x - xp)/units.ANGSTROM_TO_AU
+            gmax = np.max(g) / utilities.units.ANGSTROM_TO_AU
+            self.disp = np.max(x - xp) / utilities.units.ANGSTROM_TO_AU
             self.Ediff = fx -fxp / KCAL_MOL_PER_AU
             print(" maximum displacement component %1.2f (au)" % self.disp)
             print(" maximum gradient component %1.2f (au)" % gmax)

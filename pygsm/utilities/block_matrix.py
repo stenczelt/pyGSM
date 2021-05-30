@@ -1,8 +1,7 @@
 import numpy as np
 from scipy.linalg import block_diag
-from .nifty import printcool,pvec1d
-import sys
-from .math_utils import orthogonalize,conjugate_orthogonalize
+
+from .math_utils import conjugate_orthogonalize, orthogonalize
 
 
 class block_matrix(object):
@@ -32,7 +31,7 @@ class block_matrix(object):
     def num_blocks(self):
         return len(self.matlist)
 
-    # IDEA: everywhere a dot product of DLC is done, use the conjugate 
+    # IDEA: everywhere a dot product of DLC is done, use the conjugate
     # dot product, also use the conjugate_orthogonalize to orthogonalize
     @staticmethod
     def project_conjugate_constraint(BM,constraints,G):
@@ -60,7 +59,7 @@ class block_matrix(object):
         #print('constraints after renormalizing')
         #print(constraints.T)
 
-        # (c) need to save the magnitude of the constraints in each segment since they 
+        # (c) need to save the magnitude of the constraints in each segment since they
         # will be renormalized for each block
         cnorms = np.zeros((BM.shape[1],constraints.shape[1]))
         sr=0
@@ -80,7 +79,7 @@ class block_matrix(object):
                 mag = np.sqrt(np.linalg.multi_dot([constraint[sr:er],G[sr:er,sr:er],constraint[sr:er]]))
 
                 # concatenating the block to each constraint if the constraint is greater than parameter
-                if mag>1.e-3: 
+                if mag>1.e-3:
                     cnorms[sc+count,count]=mag
                     tmpc.append(constraint[sr:er]/mag)
                     flag=True
@@ -142,8 +141,8 @@ class block_matrix(object):
         #print('norms')
         #print(norms)
         constraints = constraints/norms
-        
-        # (c) need to save the magnitude of the constraints in each segment since they 
+
+        # (c) need to save the magnitude of the constraints in each segment since they
         # will be renormalized for each block
         cnorms = np.zeros((BM.shape[1],constraints.shape[1]))
         sr=0
@@ -159,7 +158,7 @@ class block_matrix(object):
             for count,constraint in enumerate(constraints.T):
                 mag = np.linalg.norm(constraint[sr:er])
                 # (d) concatenating the block to each constraint if the constraint is greater than parameter
-                if mag>1.e-2: 
+                if mag>1.e-2:
                     cnorms[sc+count,count]=mag
                     tmpc.append(constraint[sr:er]/mag)
                     flag=True
@@ -223,7 +222,7 @@ class block_matrix(object):
         #    sc=ec
         #    count+=1
         #print(" done")
-       
+
         assert len(newblocks) == len(BM.matlist), "not proper lengths for zipping"
 
         #print(" len of nb = {}".format(len(newblocks)))
@@ -279,7 +278,7 @@ class block_matrix(object):
             sc=ec
             count+=1
 
-            
+
         return block_matrix(ans,cnorms)
 
 
@@ -345,7 +344,7 @@ class block_matrix(object):
     def diagonal(BM):
         la = [ np.diagonal(A) for A in BM.matlist ]
         return np.concatenate(la)
-    
+
     @staticmethod
     def gram_schmidt(BM):
         ans=[]
@@ -376,9 +375,9 @@ class block_matrix(object):
 
     @staticmethod
     def zeros_like(BM):
-        return block_matrix( [ np.zeros_like(A) for A in BM.matlist ] ) 
+        return block_matrix( [ np.zeros_like(A) for A in BM.matlist ] )
 
-    
+
     def __add__(self,rhs):
         print("adding")
         if isinstance(rhs, self.__class__):
@@ -387,7 +386,7 @@ class block_matrix(object):
             return block_matrix( [A+B for A,B in zip(self.matlist,rhs.matlist) ] )
         elif isinstance(rhs,float) or isinstance(rhs,int):
             return block_matrix( [A+rhs for A in self.matlist ])
-        else: 
+        else:
             raise NotImplementedError
 
     def __radd__(self,lhs):
@@ -399,7 +398,7 @@ class block_matrix(object):
             return block_matrix( [A*B for A,B in zip(self.matlist,rhs.matlist)] )
         elif isinstance(rhs,float) or isinstance(rhs,int):
             return block_matrix( [A*rhs for A in self.matlist ])
-        else: 
+        else:
             raise NotImplementedError
 
     def __rmul__(self,lhs):
@@ -422,7 +421,7 @@ class block_matrix(object):
                 answer.append(block/rhs[s:e])
                 s=e
             return block_matrix(answer)
-        else: 
+        else:
             raise NotImplementedError
 
 
@@ -472,8 +471,8 @@ class block_matrix(object):
         elif isinstance(right,np.ndarray) and (right.ndim==1 or right.shape[1]==1) and isinstance(left,block_matrix):
             return block_vec_dot(left,right)
         # (4) l/r is a matrix
-        elif isinstance(left,np.ndarray) and left.ndim==2: 
-            #           
+        elif isinstance(left,np.ndarray) and left.ndim==2:
+            #
             # [ A | B ] [ C 0 ] = [ AC BD ]
             #           [ 0 D ]
             sc=0
@@ -486,7 +485,7 @@ class block_matrix(object):
             return dot_product
 
         elif isinstance(right,np.ndarray) and right.ndim==2:
-            #           
+            #
             # [ A | 0 ] [ C ] = [ AC ]
             # [ 0 | B ] [ D ]   [ BD ]
             sc=0
@@ -497,7 +496,7 @@ class block_matrix(object):
                 sc=ec
             dot_product=np.vstack(tmp_ans)
             return dot_product
-        else: 
+        else:
             raise NotImplementedError
 
 

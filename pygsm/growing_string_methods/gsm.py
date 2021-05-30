@@ -1,25 +1,21 @@
-from __future__ import print_function
-# standard library imports
-import sys
-import os
-from os import path
 
-# third party
-import numpy as np
+
+# standard library imports
 import multiprocessing as mp
+import os
 from collections import Counter
 from copy import copy
 from itertools import chain
 
+# third party
+import numpy as np
+
 # local application imports
-sys.path.append(path.dirname( path.dirname( path.abspath(__file__))))
-from utilities import nifty,options,manage_xyz
-from utilities.manage_xyz import write_molden_geoms
-from wrappers import Molecule
-from coordinate_systems import DelocalizedInternalCoordinates
-from optimizers._linesearch import double_golden_section
-from coordinate_systems import Distance,Angle,Dihedral,OutOfPlane,TranslationX,TranslationY,TranslationZ,RotationA,RotationB,RotationC
-from coordinate_systems.rotate import get_quat,calc_fac_dfac
+from pygsm.coordinate_systems import Angle, Dihedral, Distance, OutOfPlane
+from pygsm.utilities import nifty, options
+from pygsm.utilities.manage_xyz import write_molden_geoms
+from pygsm.wrappers import Molecule
+
 
 def worker(arg):
    obj, methname = arg[:2]
@@ -31,21 +27,19 @@ def worker(arg):
 #######################################################################################
 
 
-# TODO interpolate is still sloppy. It shouldn't create a new molecule node itself 
+# TODO interpolate is still sloppy. It shouldn't create a new molecule node itself
 # but should create the xyz. GSM should create the new molecule based off that xyz.
 # TODO nconstraints in ic_reparam and write_iters is irrelevant
 
 
 class GSM(object):
-    
-    from utilities import units
 
     @staticmethod
     def default_options():
         if hasattr(GSM, '_default_options'): return GSM._default_options.copy()
 
-        opt = options.Options() 
-        
+        opt = options.Options()
+
         opt.add_option(
             key='reactant',
             required=True,
@@ -239,11 +233,11 @@ class GSM(object):
         self.print_level = options['print_level']
 
         # Set initial values
-        self.current_nnodes = 2  
+        self.current_nnodes = 2
         self.nR = 1
-        self.nP = 1        
-        self.climb = False 
-        self.find = False 
+        self.nP = 1
+        self.climb = False
+        self.find = False
         self.ts_exsteps = 3 # multiplier for ts node
         self.n0 = 1 # something to do with added nodes? "first node along current block"
         self.end_early=False
@@ -258,11 +252,11 @@ class GSM(object):
         self.finder=False   # is this string a finder?
         self.done_growing = False
         self.nclimb=0
-        self.nhessreset=10  # are these used??? TODO 
+        self.nhessreset=10  # are these used??? TODO
         self.hessrcount=0   # are these used?!  TODO
         self.hess_counter = 0   # it is probably good to reset the hessian
         self.newclimbscale=2.
-        self.TS_E_0 = None 
+        self.TS_E_0 = None
         self.dE_iter = 100.  # change in max TS node
 
 
@@ -280,7 +274,7 @@ class GSM(object):
         '''
         The current node with maximum energy
         '''
-        # Treat GSM with penalty a little different since penalty will increase energy based on energy 
+        # Treat GSM with penalty a little different since penalty will increase energy based on energy
         # differences, which might not be great for Climbing Image
         if self.__class__.__name__ != "SE_Cross" and self.nodes[0].PES.__class__.__name__ =="Penalty_PES":
             energies = np.asarray([0.]*self.nnodes)
@@ -383,7 +377,7 @@ class GSM(object):
         return new_xyz
 
 
-    @staticmethod 
+    @staticmethod
     def add_node(
             nodeR,
             nodeP,
@@ -394,20 +388,20 @@ class GSM(object):
         '''
         Add a node between  nodeR and nodeP or if nodeP is none use driving coordinate to add new node
         '''
-    
+
         #get driving coord
         driving_coords  = kwargs.get('driving_coords',None)
         DQMAG_MAX       =kwargs.get('DQMAG_MAX',0.8)
         DQMAG_MIN       =kwargs.get('DQMAG_MIN',0.2)
-    
+
         if nodeP is None:
-    
+
             if driving_coords is None:
                 raise RuntimeError("You didn't supply a driving coordinate and product node is None!")
-    
+
             BDISTMIN=0.05
             ictan,bdist =  GSM.get_tangent(nodeR,None,driving_coords=driving_coords)
-    
+
             if bdist<BDISTMIN:
                 print("bdist too small %.3f" % bdist)
                 return None
@@ -415,7 +409,7 @@ class GSM(object):
             Vecs = new_node.update_coordinate_basis(constraints=ictan)
             constraint = new_node.constraints[:,0]
             sign=-1.
-    
+
             dqmag_scale=1.5
             minmax = DQMAG_MAX - DQMAG_MIN
             a = bdist/dqmag_scale
@@ -425,13 +419,13 @@ class GSM(object):
             if dqmag > DQMAG_MAX:
                 dqmag = DQMAG_MAX
             print(" dqmag: %4.3f from bdist: %4.3f" %(dqmag,bdist))
-    
+
             dq0 = dqmag*constraint
             print(" dq0[constraint]: %1.3f" % dqmag)
-    
+
             new_node.update_xyz(dq0)
             new_node.bdist = bdist
-    
+
         else:
             ictan,_ =  GSM.get_tangent(nodeR,nodeP)
             Vecs = nodeR.update_coordinate_basis(constraints=ictan)
@@ -442,14 +436,14 @@ class GSM(object):
             sign=1.
             dqmag *= (sign*stepsize)
             print(" scaled dqmag: %1.3f"%dqmag)
-    
+
             dq0 = dqmag*constraint
             old_xyz = nodeR.xyz.copy()
             new_xyz = nodeR.coord_obj.newCartesian(old_xyz,dq0)
             new_node = Molecule.copy_from_options(MoleculeA=nodeR,xyz=new_xyz,new_node_id=node_id)
-    
+
         return new_node
-  
+
 
     @staticmethod
     def interpolate_xyz(nodeR,nodeP,stepsize):
@@ -466,20 +460,20 @@ class GSM(object):
         sign=1.
         dqmag *= (sign*stepsize)
         print(" scaled dqmag: %1.3f"%dqmag)
-    
+
         dq0 = dqmag*constraint
         old_xyz = nodeR.xyz.copy()
         new_xyz = nodeR.coord_obj.newCartesian(old_xyz,dq0)
-    
-        return new_xyz 
-    
+
+        return new_xyz
+
     @staticmethod
     def interpolate(start_node,end_node,num_interp):
         '''
-    
+
         '''
         nifty.printcool(" interpolate")
-       
+
         num_nodes = num_interp + 2
         nodes = [None]*(num_nodes)
         nodes[0] = start_node
@@ -488,7 +482,7 @@ class GSM(object):
         nR = 1
         nP = 1
         nn = nR + nP
-    
+
         for n in range(num_interp):
             if num_nodes - nn > 1:
                 stepsize = 1./float(num_nodes - nn)
@@ -501,11 +495,11 @@ class GSM(object):
                 nodes[nR] = GSM.add_node(nodes[iR],nodes[iP],stepsize,iN)
                 if nodes[nR] == None:
                     raise RuntimeError
-    
+
                 #print(" Energy of node {} is {:5.4}".format(nR,nodes[nR].energy-E0))
-                nR +=1 
+                nR +=1
                 nn += 1
-    
+
             else:
                 n1 = num_nodes - nP
                 n2 = n1 -1
@@ -514,12 +508,12 @@ class GSM(object):
                 if nodes[n2] == None:
                     raise RuntimeError
                 #print(" Energy of node {} is {:5.4}".format(nR,nodes[nR].energy-E0))
-                nP +=1 
+                nP +=1
                 nn += 1
             sign *= -1
-    
+
         return nodes
-   
+
 
 
     @staticmethod
@@ -538,47 +532,47 @@ class GSM(object):
         '''
         Get internal coordinate tangent between two nodes, assumes they have unique IDs
         '''
-    
-    
+
+
         if node2 is not None and node1.node_id!=node2.node_id:
             print(" getting tangent from between %i %i pointing towards %i"%(node2.node_id,node1.node_id,node2.node_id))
             assert node2!=None,'node n2 is None'
-           
+
             PMDiff = np.zeros(node2.num_primitives)
             for k,prim in enumerate(node2.primitive_internal_coordinates):
                 if type(prim) is Distance:
                     PMDiff[k] = 2.5 *prim.calcDiff(node2.xyz,node1.xyz)
                 else:
                     PMDiff[k] = prim.calcDiff(node2.xyz,node1.xyz)
-    
+
             return np.reshape(PMDiff,(-1,1)),None
         else:
             print(" getting tangent from node ",node1.node_id)
-    
+
             driving_coords = kwargs.get('driving_coords',None)
             assert driving_coords is not None, " Driving coord is None!"
-    
+
             c = Counter(elem[0] for elem in driving_coords)
             nadds = c['ADD']
             nbreaks = c['BREAK']
             nangles = c['nangles']
             ntorsions = c['ntorsions']
-    
+
             ictan = np.zeros((node1.num_primitives,1),dtype=float)
             breakdq = 0.3
             bdist=0.0
             atoms = node1.atoms
             xyz = node1.xyz.copy()
-    
+
             for i in driving_coords:
                 if "ADD" in i:
-    
+
                     #order indices to avoid duplicate bonds
                     if i[1]<i[2]:
                         index = [i[1]-1, i[2]-1]
                     else:
                         index = [i[2]-1, i[1]-1]
-    
+
                     bond = Distance(index[0],index[1])
                     prim_idx = node1.coord_obj.Prims.dof_index(bond)
                     if len(i)==3:
@@ -587,7 +581,7 @@ class GSM(object):
                     elif len(i)==4:
                         d0=i[3]
                     current_d =  bond.value(xyz)
-    
+
                     #TODO don't set tangent if value is too small
                     ictan[prim_idx] = -1*(d0-current_d)
                     #if nbreaks>0:
@@ -597,7 +591,7 @@ class GSM(object):
                         bdist += np.dot(ictan[prim_idx],ictan[prim_idx])
                     if print_level>0:
                         print(" bond %s target (less than): %4.3f current d: %4.3f diff: %4.3f " % ((i[1],i[2]),d0,current_d,ictan[prim_idx]))
-    
+
                 elif "BREAK" in i:
                     #order indices to avoid duplicate bonds
                     if i[1]<i[2]:
@@ -610,18 +604,18 @@ class GSM(object):
                         d0 = (atoms[index[0]].vdw_radius + atoms[index[1]].vdw_radius)
                     elif len(i)==4:
                         d0=i[3]
-    
+
                     current_d =  bond.value(xyz)
-                    ictan[prim_idx] = -1*(d0-current_d) 
-    
+                    ictan[prim_idx] = -1*(d0-current_d)
+
                     # => calc bdist <=
                     if current_d<d0:
                         bdist += np.dot(ictan[prim_idx],ictan[prim_idx])
-    
+
                     if print_level>0:
                         print(" bond %s target (greater than): %4.3f, current d: %4.3f diff: %4.3f " % ((i[1],i[2]),d0,current_d,ictan[prim_idx]))
                 elif "ANGLE" in i:
-    
+
                     if i[1]<i[3]:
                         index = [i[1]-1, i[2]-1,i[3]-1]
                     else:
@@ -639,7 +633,7 @@ class GSM(object):
                     #if abs(ang_diff)>0.1:
                     #    bdist+=ictan[ICoord1.BObj.nbonds+ang_idx]*ictan[ICoord1.BObj.nbonds+ang_idx]
                 elif "TORSION" in i:
-    
+
                     if i[1]<i[4]:
                         index = [i[1]-1,i[2]-1,i[3]-1,i[4]-1]
                     else:
@@ -654,12 +648,12 @@ class GSM(object):
                     elif tor_diff<-180.:
                         tor_diff+=360.
                     ictan[prim_idx] = -tor_diff*np.pi/180.
-    
+
                     if tor_diff*np.pi/180.>0.1 or tor_diff*np.pi/180.<0.1:
                         bdist += np.dot(ictan[prim_idx],ictan[prim_idx])
                     if print_level>0:
                         print((" current torv: %4.3f align to %4.3f diff(deg): %4.3f" %(torv*180./np.pi,tort,tor_diff)))
-    
+
                 elif "OOP" in i:
                     index = [i[1]-1,i[2]-1,i[3]-1,i[4]-1]
                     oop = OutOfPlane(index[0],index[1],index[2],index[3])
@@ -672,12 +666,12 @@ class GSM(object):
                     elif oop_diff<-180.:
                         oop_diff+=360.
                     ictan[prim_idx] = -oop_diff*np.pi/180.
-    
+
                     if oop_diff*np.pi/180.>0.1 or oop_diff*np.pi/180.<0.1:
                         bdist += np.dot(ictan[prim_idx],ictan[prim_idx])
                     if print_level>0:
                         print((" current oopv: %4.3f align to %4.3f diff(deg): %4.3f" %(oopv*180./np.pi,oopt,oop_diff)))
-    
+
             bdist = np.sqrt(bdist)
             if np.all(ictan==0.0):
                 raise RuntimeError(" All elements are zero")
@@ -688,47 +682,47 @@ class GSM(object):
         '''
         Get internal coordinate tangent between two nodes, assumes they have unique IDs
         '''
-    
-    
+
+
         if node2 is not None and node1.node_id!=node2.node_id:
             print(" getting tangent from between %i %i pointing towards %i"%(node2.node_id,node1.node_id,node2.node_id))
             assert node2!=None,'node n2 is None'
-           
+
             PMDiff = np.zeros(node2.num_primitives)
             for k,prim in enumerate(node2.primitive_internal_coordinates):
                 if type(prim) is Distance:
                     PMDiff[k] = 2.5 *prim.calcDiff(node2.xyz,node1.xyz)
                 else:
                     PMDiff[k] = prim.calcDiff(node2.xyz,node1.xyz)
-    
+
             return np.reshape(PMDiff,(-1,1)),None
         else:
             print(" getting tangent from node ",node1.node_id)
-    
+
             driving_coords = kwargs.get('driving_coords',None)
             assert driving_coords is not None, " Driving coord is None!"
-    
+
             c = Counter(elem[0] for elem in driving_coords)
             nadds = c['ADD']
             nbreaks = c['BREAK']
             nangles = c['nangles']
             ntorsions = c['ntorsions']
-    
+
             ictan = np.zeros((node1.num_primitives,1),dtype=float)
             breakdq = 0.3
             bdist=0.0
             atoms = node1.atoms
             xyz = node1.xyz.copy()
-    
+
             for i in driving_coords:
                 if "ADD" in i:
-    
+
                     #order indices to avoid duplicate bonds
                     if i[1]<i[2]:
                         index = [i[1]-1, i[2]-1]
                     else:
                         index = [i[2]-1, i[1]-1]
-    
+
                     bond = Distance(index[0],index[1])
                     prim_idx = node1.coord_obj.Prims.dof_index(bond)
                     if len(i)==3:
@@ -737,7 +731,7 @@ class GSM(object):
                     elif len(i)==4:
                         d0=i[3]
                     current_d =  bond.value(xyz)
-    
+
                     #TODO don't set tangent if value is too small
                     ictan[prim_idx] = -1*(d0-current_d)
                     #if nbreaks>0:
@@ -747,7 +741,7 @@ class GSM(object):
                         bdist += np.dot(ictan[prim_idx],ictan[prim_idx])
                     if print_level>0:
                         print(" bond %s target (less than): %4.3f current d: %4.3f diff: %4.3f " % ((i[1],i[2]),d0,current_d,ictan[prim_idx]))
-    
+
                 elif "BREAK" in i:
                     #order indices to avoid duplicate bonds
                     if i[1]<i[2]:
@@ -760,18 +754,18 @@ class GSM(object):
                         d0 = (atoms[index[0]].vdw_radius + atoms[index[1]].vdw_radius)
                     elif len(i)==4:
                         d0=i[3]
-    
+
                     current_d =  bond.value(xyz)
-                    ictan[prim_idx] = -1*(d0-current_d) 
-    
+                    ictan[prim_idx] = -1*(d0-current_d)
+
                     # => calc bdist <=
                     if current_d<d0:
                         bdist += np.dot(ictan[prim_idx],ictan[prim_idx])
-    
+
                     if print_level>0:
                         print(" bond %s target (greater than): %4.3f, current d: %4.3f diff: %4.3f " % ((i[1],i[2]),d0,current_d,ictan[prim_idx]))
                 elif "ANGLE" in i:
-    
+
                     if i[1]<i[3]:
                         index = [i[1]-1, i[2]-1,i[3]-1]
                     else:
@@ -789,7 +783,7 @@ class GSM(object):
                     #if abs(ang_diff)>0.1:
                     #    bdist+=ictan[ICoord1.BObj.nbonds+ang_idx]*ictan[ICoord1.BObj.nbonds+ang_idx]
                 elif "TORSION" in i:
-    
+
                     if i[1]<i[4]:
                         index = [i[1]-1,i[2]-1,i[3]-1,i[4]-1]
                     else:
@@ -804,12 +798,12 @@ class GSM(object):
                     elif tor_diff<-180.:
                         tor_diff+=360.
                     ictan[prim_idx] = -tor_diff*np.pi/180.
-    
+
                     if tor_diff*np.pi/180.>0.1 or tor_diff*np.pi/180.<0.1:
                         bdist += np.dot(ictan[prim_idx],ictan[prim_idx])
                     if print_level>0:
                         print((" current torv: %4.3f align to %4.3f diff(deg): %4.3f" %(torv*180./np.pi,tort,tor_diff)))
-    
+
                 elif "OOP" in i:
                     index = [i[1]-1,i[2]-1,i[3]-1,i[4]-1]
                     oop = OutOfPlane(index[0],index[1],index[2],index[3])
@@ -822,18 +816,18 @@ class GSM(object):
                     elif oop_diff<-180.:
                         oop_diff+=360.
                     ictan[prim_idx] = -oop_diff*np.pi/180.
-    
+
                     if oop_diff*np.pi/180.>0.1 or oop_diff*np.pi/180.<0.1:
                         bdist += np.dot(ictan[prim_idx],ictan[prim_idx])
                     if print_level>0:
                         print((" current oopv: %4.3f align to %4.3f diff(deg): %4.3f" %(oopv*180./np.pi,oopt,oop_diff)))
-    
+
             bdist = np.sqrt(bdist)
             if np.all(ictan==0.0):
                 raise RuntimeError(" All elements are zero")
             return ictan,bdist
-    
-   
+
+
     @staticmethod
     def get_tangents(nodes,n0=0,print_level=0):
         '''
@@ -842,19 +836,19 @@ class GSM(object):
         nnodes = len(nodes)
         dqmaga = [0.]*nnodes
         ictan = [[]]*nnodes
-        
+
         for n in range(n0+1,nnodes):
             #print "getting tangent between %i %i" % (n,n-1)
             assert nodes[n]!=None,"n is bad"
             assert nodes[n-1]!=None,"n-1 is bad"
             ictan[n] = GSM.get_tangent_xyz(nodes[n-1].xyz,nodes[n].xyz,nodes[0].primitive_internal_coordinates)
-        
+
             dqmaga[n] = 0.
             #ictan0= np.copy(ictan[n])
             dqmaga[n] = np.linalg.norm(ictan[n])
-           
+
             ictan[n] /= dqmaga[n]
-                
+
             # NOTE:
             # vanilla GSM has a strange metric for distance
             # no longer following 7/1/2020
@@ -869,12 +863,12 @@ class GSM(object):
             #dqmaga[n] = float(np.sqrt(dqmaga[n]))
             if dqmaga[n]<0.:
                 raise RuntimeError
-    
-        # TEMPORORARY parallel idea 
+
+        # TEMPORORARY parallel idea
         #ictan = [0.]
         #ictan += [ Process(target=get_tangent,args=(n,)) for n in range(n0+1,self.nnodes)]
         #dqmaga = [ Process(target=get_dqmag,args=(n,ictan[n])) for n in range(n0+1,self.nnodes)]
-    
+
         if print_level>1:
             print('------------printing ictan[:]-------------')
             for n in range(n0+1,nnodes):
@@ -888,7 +882,7 @@ class GSM(object):
                     print()
             print()
         return ictan,dqmaga
-   
+
 
     @staticmethod
     def get_three_way_tangents(nodes,energies,find=True,n0=0,print_level=0):
@@ -907,7 +901,7 @@ class GSM(object):
             print("*********** This will cause a range error in the following for loop *********")
             print("** Setting the middle of the string to be TS node to get proper directions **")
             TSnode = nnodes//2
-    
+
         for n in range(n0,nnodes):
             do3 = False
             print('getting tan[{' + str(n) + '}]')
@@ -947,40 +941,40 @@ class GSM(object):
                         f1 = dEmax/(dEmax+dEmin+0.00000001)
                     else:
                         f1 = 1 - dEmax/(dEmax+dEmin+0.00000001)
-    
+
                     print(' 3 way tangent ({}): f1:{:3.2}'.format(n,f1))
-    
+
                     t1,_ = GSM.get_tangent(nodes[intic_n],nodes[newic_n])
                     t2,_ = GSM.get_tangent(nodes[newic_n],nodes[int2ic_n])
                     print(" done 3 way tangent")
                     ictan0 = f1*t1 +(1.-f1)*t2
             else:
                 ictan0,_ = GSM.get_tangent(nodes[newic_n],nodes[intic_n])
-    
+
             ictan[n] = ictan0/np.linalg.norm(ictan0)
             dqmaga[n]=np.linalg.norm(ictan0)
-    
+
         return ictan,dqmaga
-    
-   
+
+
     @staticmethod
     def ic_reparam(nodes,energies,climbing=False,ic_reparam_steps=8,print_level=1,NUM_CORE=1):
         '''
         Reparameterizes the string using Delocalizedin internal coordinatesusing three-way tangents at the TS node
         Only pushes nodes outwards during reparameterization because otherwise too many things change.
-    
-        Be careful, however, if the path is allup or alldown then this can cause 
-    
+
+        Be careful, however, if the path is allup or alldown then this can cause
+
         Parameters
         ----------
         nodes : list of molecule objects
         energies : list of energies in kcal/mol
         ic_reparam_steps : int max number of reparameterization steps
         print_level : int verbosity
-    
+
         '''
         nifty.printcool("reparametrizing string nodes")
-    
+
         nnodes=len(nodes)
         rpart = np.zeros(nnodes)
         for n in range(1,nnodes):
@@ -991,7 +985,7 @@ class GSM(object):
         disprms=100
         if ((TSnode==nnodes-1) or (TSnode==0)) and climbing:
             raise RuntimeError(" TS node shouldn't be the first or last node")
-    
+
         ideal_progress_gained = np.zeros(nnodes)
         if climbing:
             for n in range(1,TSnode):
@@ -1002,12 +996,12 @@ class GSM(object):
         else:
             for n in range(1,nnodes):
                 ideal_progress_gained[n] = 1./(nnodes-1)
-    
+
         for i in range(ic_reparam_steps):
-    
+
             ictan,dqmaga = GSM.get_tangents(nodes)
             totaldqmag = np.sum(dqmaga)
-    
+
             if climbing:
                 progress = np.zeros(nnodes)
                 progress_gained=np.zeros(nnodes)
@@ -1022,11 +1016,11 @@ class GSM(object):
             else:
                 progress = np.cumsum(dqmaga)/totaldqmag
                 progress_gained = dqmaga/totaldqmag
-    
+
             if i==0:
                 orig_dqmaga = copy(dqmaga)
                 orig_progress_gained = copy(progress_gained)
-    
+
             if climbing:
                 difference=np.zeros(nnodes)
                 for n in range(TSnode):
@@ -1036,10 +1030,10 @@ class GSM(object):
                     difference[n] =  ideal_progress_gained[n] - progress_gained[n]
                     deltadqs[n] = difference[n]*h2dqmag
             else:
-                difference = ideal_progress_gained - progress_gained 
+                difference = ideal_progress_gained - progress_gained
                 deltadqs = difference*totaldqmag
-    
-    
+
+
             if print_level>1:
                 print(" ideal progress gained per step",end=' ')
                 for n in range(nnodes):
@@ -1057,19 +1051,19 @@ class GSM(object):
                 for n in range(nnodes):
                     print(" step [{}]: {:1.3f}".format(n,deltadqs[n]), end=' ')
                 print()
-    
-    
+
+
             #disprms = np.linalg.norm(deltadqs)/np.sqrt(nnodes-1)
             lastdisprms=disprms
             disprms = np.linalg.norm(deltadqs)/np.sqrt(nnodes-1)
             print(" disprms: {:1.3}\n".format(disprms))
-    
+
             if disprms < 0.02:
                 break
             #elif lastdisprms < disprms:
             #    print("structures might be kinked, breaking early")
             #    break
-    
+
             # Move nodes
             if climbing:
                 deltadqs[TSnode-2] -= deltadqs[TSnode-1]
@@ -1093,7 +1087,7 @@ class GSM(object):
                     pool.join()
                     for n,node in enumerate(nodes[1:TSnode] + nodes[TSnode+1:nnodes-1]):
                         node.coord_basis = Vecs[n]
-            
+
                     # move the positions
                     dqs = [deltadqs[n]*nodes[n].constraints[:,0] for n in chain(range(1,TSnode),range(TSnode+1,nnodes-1))]
                     pool = mp.Pool(NUM_CORE)
@@ -1118,7 +1112,7 @@ class GSM(object):
                             dq = deltadqs[n]*constraint
                             nodes[n].update_xyz(dq,verbose=(print_level>1))
             else:
-                # e.g 11-2 = 9, deltadq[9] -= deltadqs[10]  
+                # e.g 11-2 = 9, deltadq[9] -= deltadqs[10]
                 deltadqs[nnodes-2] -= deltadqs[nnodes-1]
                 for n in range(1,nnodes-1):
                     if abs(deltadqs[n])>MAXRE:
@@ -1128,7 +1122,7 @@ class GSM(object):
                 for n in range(1,nnodes-1):
                     if abs(deltadqs[n]) > MAXRE:
                         deltadqs[n] = np.sign(deltadqs[n])*MAXRE
-               
+
 
                 if NUM_CORE>1:
                     # Update the coordinate basis
@@ -1163,7 +1157,7 @@ class GSM(object):
                             dq = deltadqs[n]*constraint
                             nodes[n].update_xyz(dq,verbose=(print_level>1))
 
-    
+
         if climbing:
             ictan,dqmaga = GSM.get_tangents(nodes)
             h1dqmag = np.sum(dqmaga[:TSnode+1])
@@ -1193,7 +1187,7 @@ class GSM(object):
             for n in range(nnodes):
                 print(" step [{}]: {:1.3f}".format(n,progress_gained[n]), end=' ')
             print()
-    
+
         print(" spacings (begin ic_reparam, steps", end=' ')
         for n in range(nnodes):
             print(" {:1.2}".format(orig_dqmaga[n]), end=' ')
@@ -1202,7 +1196,7 @@ class GSM(object):
         for n in range(nnodes):
             print(" {:1.2}".format(dqmaga[n]), end=' ')
         print("\n  disprms: {:1.3}".format(disprms))
-    
+
         return
 
     # TODO move to string utils or delete altogether
@@ -1218,7 +1212,7 @@ class GSM(object):
     #    # Haven't added any nodes yet
     #    if self.nR==1:
     #        return theta
-   
+
     #    for n in range(1,self.nR):
     #        xyz_frag = self.nodes[n].xyz[sa:ea].copy()
     #        axis = self.nodes[n].xyz[a2] - self.nodes[n].xyz[a1]
@@ -1230,7 +1224,7 @@ class GSM(object):
     #        # Turn off
     #        ref_axis = reference_xyz[a2] - reference_xyz[a1]
     #        ref_axis /= np.linalg.norm(ref_axis)
-   
+
     #        # ALIGN previous and current node to get rotation around axis of rotation
     #        #print(' Rotating reference axis to current axis')
     #        I = np.eye(3)
@@ -1247,8 +1241,8 @@ class GSM(object):
     #        #print(' overlap of ref-axis and axis (should be 1.) %1.2f' % np.dot(new_ref_axis,axis))
     #        new_ref_xyz = np.dot(reference_xyz,R.T)
 
-    #        
-    #        # Calculate dtheta 
+    #
+    #        # Calculate dtheta
     #        ca = self.nodes[n].primitive_internal_coordinates[sp+3]
     #        cb = self.nodes[n].primitive_internal_coordinates[sp+4]
     #        cc = self.nodes[n].primitive_internal_coordinates[sp+5]
@@ -1258,17 +1252,17 @@ class GSM(object):
     #        dv12 = np.array([dv12_a,dv12_b,dv12_c])
     #        #print(dv12)
     #        dtheta = np.linalg.norm(dv12)  #?
-    #    
+    #
     #        dtheta = dtheta + np.pi % (2*np.pi) - np.pi
     #        theta += dtheta
-   
+
     #    theta = theta/ca.w
     #    angle = theta * 180./np.pi
-    #    print(angle) 
+    #    print(angle)
 
     #    return theta
 
-    
+
 
     @staticmethod
     def calc_optimization_metrics(nodes):

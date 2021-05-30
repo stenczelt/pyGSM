@@ -1,4 +1,4 @@
-from __future__ import division
+
 
 # standard library imports
 import sys
@@ -8,8 +8,7 @@ import numpy as np
 from numpy.linalg import multi_dot
 
 # local application imports
-from utilities import nifty,manage_xyz
-
+from pygsm.utilities import manage_xyz, nifty
 
 """
 References
@@ -18,10 +17,10 @@ References
 """
 
 # def invert_svd(X,thresh=1e-12):
-    
-#     """ 
 
-#     Invert a matrix using singular value decomposition. 
+#     """
+
+#     Invert a matrix using singular value decomposition.
 #     @param[in] X The matrix to be inverted
 #     @param[in] thresh The SVD threshold; eigenvalues below this are not inverted but set to zero
 #     @return Xt The inverted matrix
@@ -47,7 +46,7 @@ def build_correlation(x, y):
     """
     Build the 3x3 correlation matrix given by the sum over all atoms k:
     xk_i * yk_j
-    
+
     Parameters
     ----------
     x : numpy.ndarray
@@ -71,7 +70,7 @@ def build_F(x, y):
     """
     Build the 4x4 F-matrix used in constructing the rotation quaternion
     given by Equation 10 of Reference 1
-    
+
     Parameters
     ----------
     x : numpy.ndarray
@@ -113,12 +112,12 @@ def al(p):
     Given a quaternion p, return the 4x4 matrix A_L(p)
     which when multiplied with a column vector q gives
     the quaternion product pq.
-    
+
     Parameters
     ----------
     p : numpy.ndarray
         4 elements, represents quaternion
-    
+
     Returns
     -------
     numpy.ndarray
@@ -132,18 +131,18 @@ def al(p):
                      [ p[1],  p[0], -p[3],  p[2]],
                      [ p[2],  p[3],  p[0], -p[1]],
                      [ p[3], -p[2],  p[1],  p[0]]])
-     
+
 def ar(p):
     """
     Given a quaternion p, return the 4x4 matrix A_R(p)
     which when multiplied with a column vector q gives
     the quaternion product qp.
-    
+
     Parameters
     ----------
     p : numpy.ndarray
         4 elements, represents quaternion
-    
+
     Returns
     -------
     numpy.ndarray
@@ -159,12 +158,12 @@ def conj(q):
     """
     Given a quaternion p, return its conjugate, simply the second
     through fourth elements changed in sign.
-    
+
     Parameters
     ----------
     q : numpy.ndarray
         4 elements, represents quaternion
-    
+
     Returns
     -------
     numpy.ndarray
@@ -182,12 +181,12 @@ def conj(q):
 def form_rot(q):
     """
     Given a quaternion p, form a rotation matrix from it.
-    
+
     Parameters
     ----------
     q : numpy.ndarray
         4 elements, represents quaternion
-    
+
     Returns
     -------
     numpy.array
@@ -206,7 +205,7 @@ def sorted_eigh(mat, b=None, asc=False):
     if asc:
         idx = L.argsort()
     else:
-        idx = L.argsort()[::-1]   
+        idx = L.argsort()[::-1]
     L = L[idx]
     Q = Q[:,idx]
     return L, Q
@@ -215,7 +214,7 @@ def calc_rmsd(x, y):
     """
     Calculate the minimal RMSD between two structures x and y following
     the algorithm in Reference 1.
-    
+
     Parameters
     ----------
     x : numpy.ndarray
@@ -232,7 +231,7 @@ def calc_rmsd(x, y):
     y = y - np.mean(y,axis=0)
     N = x.shape[0]
     L, Q = sorted_eigh(build_F(x, y))
-    idx = L.argsort()[::-1]   
+    idx = L.argsort()[::-1]
     L = L[idx]
     Q = Q[:,idx]
 
@@ -243,7 +242,7 @@ def calc_rmsd(x, y):
 
 def is_linear(x, y):
     """
-    Returns True if molecule is linear 
+    Returns True if molecule is linear
     (largest eigenvalue almost equivalent to second largest)
     """
     x = x - np.mean(x,axis=0)
@@ -259,7 +258,7 @@ def get_quat(x, y, eig=False):
     """
     Calculate the quaternion that rotates x into maximal coincidence with y
     to minimize the RMSD, following the algorithm in Reference 1.
-    
+
     Parameters
     ----------
     x : numpy.ndarray
@@ -290,7 +289,7 @@ def get_rot(x, y):
     Calculate the rotation matrix that brings x into maximal coincidence with y
     to minimize the RMSD, following the algorithm in Reference 1.  Mainly
     used to check the correctness of the quaternion.
-    
+
     Parameters
     ----------
     x : numpy.ndarray
@@ -320,7 +319,7 @@ def get_R_der(x, y):
     """
     Calculate the derivatives of the correlation matrix with respect
     to the Cartesian coordinates.
-    
+
     Parameters
     ----------
     x : numpy.ndarray
@@ -331,7 +330,7 @@ def get_R_der(x, y):
     Returns
     -------
     numpy.ndarray
-        u, w, i, j : 
+        u, w, i, j :
         First two dimensions are (n_atoms, 3), the variables being differentiated
         Second two dimensions are (3, 3), the elements of the R-matrix derivatives with respect to atom u, dimension w
     """
@@ -364,7 +363,7 @@ def get_F_der(x, y):
     """
     Calculate the derivatives of the F-matrix with respect
     to the Cartesian coordinates.
-    
+
     Parameters
     ----------
     x : numpy.ndarray
@@ -375,7 +374,7 @@ def get_F_der(x, y):
     Returns
     -------
     numpy.ndarray
-        u, w, i, j : 
+        u, w, i, j :
         First two dimensions are (n_atoms, 3), the variables being differentiated
         Second two dimensions are (4, 4), the elements of the R-matrix derivatives with respect to atom u, dimension w
     """
@@ -429,7 +428,7 @@ def get_q_der(x, y, second=False, fdcheck=False, use_loops=False):
     """
     Calculate the derivatives of the quaternion with respect
     to the Cartesian coordinates.
-    
+
     Parameters
     ----------
     x : numpy.ndarray
@@ -446,11 +445,11 @@ def get_q_der(x, y, second=False, fdcheck=False, use_loops=False):
     Returns
     -------
     numpy.ndarray
-        u, w, i: 
+        u, w, i:
         First two dimensions are (n_atoms, 3), the variables being differentiated
         Third dimension is 4, the elements of the quaternion derivatives with respect to atom u, dimension w
     numpy.ndarray (if second=True)
-        u, w, a, b, i: 
+        u, w, a, b, i:
         First four dimensions are (n_atoms, 3, n_atoms, 3), the variables being differentiated
         Fifth dimension is 4, the elements of the quaternion second derivatives with respect to atom u, dimension w, atom a, dimension b
     """
@@ -499,7 +498,7 @@ def get_q_der(x, y, second=False, fdcheck=False, use_loops=False):
             dq2 = np.einsum('uwpr,abrs,s->uwabp', dinv, dF, q, optimize=True)
             dq2 += np.einsum('pr,abrs,uws->uwabp', Minv, dF, dq, optimize=True)
             # print(time.time()-t0)
-            
+
     if fdcheck:
         # If fdcheck = True, then return finite difference derivatives
         h = 1e-6
@@ -587,7 +586,7 @@ def get_expmap(x, y):
     """
     Calculate the exponential map that rotates x into maximal coincidence with y
     to minimize the RMSD.
-    
+
     Parameters
     ----------
     x : numpy.ndarray
@@ -608,7 +607,7 @@ def get_expmap(x, y):
 
 def get_expmap_der(x, y, second=False, fdcheck=False, use_loops=False):
     """
-    Given trial coordinates x and target coordinates y, 
+    Given trial coordinates x and target coordinates y,
     return the derivatives of the exponential map that brings
     x into maximal coincidence (minimum RMSD) with y, with
     respect to the coordinates of x.
@@ -629,11 +628,11 @@ def get_expmap_der(x, y, second=False, fdcheck=False, use_loops=False):
     Returns
     -------
     numpy.ndarray
-        u, w, i: 
+        u, w, i:
         First two dimensions are (n_atoms, 3), the variables being differentiated
         Third dimension is 3, the elements of the exponential map derivatives with respect to atom u, dimension w
     numpy.ndarray (if second=True)
-        u, w, a, b, i: 
+        u, w, a, b, i:
         First four dimensions are (n_atoms, 3, n_atoms, 3), the variables being differentiated
         Fifth dimension is 3, the elements of the exponential map second derivatives with respect to atom u, dimension w, atom a, dimension b
     """
@@ -700,7 +699,7 @@ def get_expmap_der(x, y, second=False, fdcheck=False, use_loops=False):
                     if maxerr > 1e-7:
                         logger.info("q %3i %3i : maxerr = %.3e %s\n" % (p, r, maxerr, 'X' if maxerr > 1e-5 else ''))
                     # logger.info("q %3i %3i : analytic %s numerical %s maxerr = %.3e %s" % (i, j, str(dvdq2[i, j]), str(FDiffV2), maxerr, 'X' if maxerr > 1e-4 else ''))
-                
+
     # Dimensionality: Number of atoms, number of dimensions (3), number of elements in q (4)
     if second:
         dqdx, dqdx2 = get_q_der(x, y, second=True)
@@ -784,7 +783,7 @@ def get_expmap_der(x, y, second=False, fdcheck=False, use_loops=False):
                             if maxerr > 1e-8:
                                 logger.info("atom %3i %s, %3i %s : maxerr = %.3e %s\n" % (u, 'xyz'[w], a, 'xyz'[b], maxerr, 'X' if maxerr > 1e-6 else ''))
             dvdx2 = FDiffV2
-            
+
     if second:
         return dvdx, dvdx2
     else:
@@ -815,7 +814,7 @@ def eckart_frame(
     COM = np.sum(manage_xyz.xyz_to_np(geom) * np.outer(masses, [1.0]*3), 0) / np.sum(masses)
     # Inertial tensor
     I = np.zeros((3,3))
-    for atom, mass in zip(geom, masses): 
+    for atom, mass in zip(geom, masses):
         I[0,0] += mass * (atom[1] - COM[0]) * (atom[1] - COM[0])
         I[0,1] += mass * (atom[1] - COM[0]) * (atom[2] - COM[1])
         I[0,2] += mass * (atom[1] - COM[0]) * (atom[3] - COM[2])
@@ -828,7 +827,7 @@ def eckart_frame(
     I /= np.sum(masses)
     # Principal moments/Principle axes of inertial tensor
     L, O = np.linalg.eigh(I)
-    
+
     # Eckart geometry
     geom2 = manage_xyz.np_to_xyz(geom, np.dot((manage_xyz.xyz_to_np(geom) - np.outer(np.ones((len(masses),)), COM)), O))
 
@@ -894,7 +893,7 @@ def eckart_align(geom1,geom2,masses,rfrac,max_iter=200):
 
         if gradmag<tol and all(hess_evals>0.):
             break
-        
+
         temp=0.
         vec_index=0
         for j in range(3):
@@ -948,13 +947,13 @@ def vibrational_basis(
 
     """ Compute the vibrational basis in mass-weighted Cartesian coordinates.
     This is the null-space of the translations and rotations in the Eckart frame.
-    
-    Params: 
+
+    Params:
         geom (geometry struct) - minimimum geometry structure
         masses (list of float) - masses for the geometry
 
     Returns:
-        B ((3*natom, 3*natom-6) np.ndarray) - orthonormal basis for vibrations. Mass-weighted cartesians in rows, mass-weighted vibrations in columns. 
+        B ((3*natom, 3*natom-6) np.ndarray) - orthonormal basis for vibrations. Mass-weighted cartesians in rows, mass-weighted vibrations in columns.
 
     """
 
@@ -974,11 +973,11 @@ def vibrational_basis(
     for A, mass in enumerate(masses):
         mass_12 = np.sqrt(mass)
         for j in range(3):
-            TR[3*A+j,3] = + mass_12 * (G[A,1] * O[j,2] - G[A,2] * O[j,1]) # + Gy Oz - Gz Oy 
-            TR[3*A+j,4] = - mass_12 * (G[A,0] * O[j,2] - G[A,2] * O[j,0]) # - Gx Oz + Gz Ox 
-            TR[3*A+j,5] = + mass_12 * (G[A,0] * O[j,1] - G[A,1] * O[j,0]) # + Gx Oy - Gy Ox 
+            TR[3*A+j,3] = + mass_12 * (G[A,1] * O[j,2] - G[A,2] * O[j,1]) # + Gy Oz - Gz Oy
+            TR[3*A+j,4] = - mass_12 * (G[A,0] * O[j,2] - G[A,2] * O[j,0]) # - Gx Oz + Gz Ox
+            TR[3*A+j,5] = + mass_12 * (G[A,0] * O[j,1] - G[A,1] * O[j,0]) # + Gx Oy - Gy Ox
 
-    # Single Value Decomposition (review)        
+    # Single Value Decomposition (review)
     U, s, V = np.linalg.svd(TR, full_matrices=True)
 
     # The null-space of TR

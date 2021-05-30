@@ -1,19 +1,19 @@
-from __future__ import print_function
+
+
 # standard library imports
-import sys
 import os
-from os import path
+import sys
+from collections import Counter
 
 # third party
 import numpy as np
-from collections import Counter
 
 # local application imports
-sys.path.append(path.dirname( path.dirname( path.abspath(__file__))))
-from utilities import *
-from wrappers import Molecule
+from pygsm import utilities
+from pygsm.coordinate_systems import Angle, Dihedral, Distance, OutOfPlane
+from pygsm.wrappers import Molecule
+
 from .main_gsm import MainGSM
-from coordinate_systems import Distance,Angle,Dihedral,OutOfPlane,TranslationX,TranslationY,TranslationZ,RotationA,RotationB,RotationC
 
 
 class SE_GSM(MainGSM):
@@ -37,7 +37,7 @@ class SE_GSM(MainGSM):
         print('Driving Coordinates')
         print(self.driving_coords)
         sys.stdout.flush()
-        
+
         # stash bdist for node 0
         ictan,self.nodes[0].bdist = self.get_tangent(
                 self.nodes[0],
@@ -54,7 +54,7 @@ class SE_GSM(MainGSM):
 
     def isomer_init(self):
         '''
-        The purpose of this function is to add to the primitives the driving coordinate prims if 
+        The purpose of this function is to add to the primitives the driving coordinate prims if
         they dont exist.
         This is depracated because it's better to build the topology properly before initializing
         GSM. See main.py
@@ -67,7 +67,7 @@ class SE_GSM(MainGSM):
 
         for i in self.driving_coords:
             if "ADD" in i or "BREAK" in i:
-                # order 
+                # order
                 if i[1]<i[2]:
                     bond = Distance(i[1]-1,i[2]-1)
                 else:
@@ -102,7 +102,7 @@ class SE_GSM(MainGSM):
     def go_gsm(self,max_iters=50,opt_steps=10,rtype=2):
         """
         rtype=2 Find and Climb TS,
-        1 Climb with no exact find, 
+        1 Climb with no exact find,
         0 turning of climbing image and TS search
         """
         self.set_V0()
@@ -165,7 +165,7 @@ class SE_GSM(MainGSM):
         filename="opt_converged_{:03d}.xyz".format(self.ID)
         print(" Printing string to " + filename)
         self.xyz_writer(filename,self.geometries,self.energies,self.gradrms,self.dEs)
-        print("Finished GSM!")  
+        print("Finished GSM!")
 
 
     def add_last_node(self,rtype):
@@ -214,7 +214,7 @@ class SE_GSM(MainGSM):
                         path=path,
                         )
         #print(" Aligning")
-        #self.nodes[self.nR-1].xyz = self.com_rotate_move(self.nR-2,self.nR,self.nR-1) 
+        #self.nodes[self.nR-1].xyz = self.com_rotate_move(self.nR-2,self.nR,self.nR-1)
         return
 
     def grow_nodes(self):
@@ -225,7 +225,7 @@ class SE_GSM(MainGSM):
             if self.nodes[self.nR] == None:
                 self.add_GSM_nodeR()
                 print(" getting energy for node %d: %5.4f" %(self.nR-1,self.nodes[self.nR-1].energy - self.nodes[0].V0))
-        return 
+        return
 
     def add_GSM_nodes(self,newnodes=1):
         if self.nn+newnodes > self.nnodes:
@@ -240,7 +240,7 @@ class SE_GSM(MainGSM):
         return
 
     def set_frontier_convergence(self,nR):
-        # set 
+        # set
         self.optimizer[nR].conv_grms = self.options['ADD_NODE_TOL']
         self.optimizer[nR].conv_gmax = 100. #self.options['ADD_NODE_TOL'] # could use some multiplier times CONV_GMAX...
         self.optimizer[nR].conv_Ediff = 1000. # 2.5
@@ -365,7 +365,7 @@ class SE_GSM(MainGSM):
     def check_if_grown(self):
         '''
         Check if the string is grown
-        Returns True if grown 
+        Returns True if grown
         '''
 
         self.pastts = self.past_ts()
@@ -381,7 +381,7 @@ class SE_GSM(MainGSM):
                 print(" The highest energy node is the last")
                 print(" not continuing with TS optimization.")
                 self.tscontinue=False
-            nifty.printcool("Over the hill")
+            utilities.nifty.printcool("Over the hill")
             isDone=True
         elif fp==-1 and self.energies[self.nR-1]>200. and self.nodes[self.nR-1].gradrms>self.options['CONV_TOL']*5:
             print("growth_iters over: all uphill and high energy")
@@ -485,7 +485,7 @@ class SE_GSM(MainGSM):
         if (nadds+nbreaks) <1:
             return False
         nadded=0
-        nbroken=0 
+        nbroken=0
         nnR = self.nR-1
         xyz = self.nodes[nnR].xyz
         atoms = self.nodes[nnR].atoms
@@ -506,7 +506,7 @@ class SE_GSM(MainGSM):
                 if d>d0:
                     nbroken+=1
         if rtype==1:
-            if (nadded+nbroken)>=(nadds+nbreaks): 
+            if (nadded+nbroken)>=(nadds+nbreaks):
                 isrxn=True
                 #isrxn=nadded+nbroken
         else:
@@ -534,16 +534,14 @@ class SE_GSM(MainGSM):
         #        isDone=True
         #        #print(" Number of imaginary frequencies %i" % self.optimizer[self.TSnode].nneg)
         #if rtype==1 and self.climb:
-        #    if self.nodes[self.TSnode].gradrms<TS_conv and ts_cgradq < self.options['CONV_TOL']: 
+        #    if self.nodes[self.TSnode].gradrms<TS_conv and ts_cgradq < self.options['CONV_TOL']:
         #        isDone=True
 
 if __name__=='__main__':
-    from .qchem import QChem
-    from .pes import PES
-    from .dlc_new import DelocalizedInternalCoordinates
     from .eigenvector_follow import eigenvector_follow
-    from ._linesearch import backtrack,NoLineSearch
     from .molecule import Molecule
+    from .pes import PES
+    from .qchem import QChem
 
     basis='6-31G'
     nproc=8

@@ -1,18 +1,15 @@
 # standard library imports
-import sys
 import os
-from os import path
 
-# third party 
+# third party
 import numpy as np
 
 # local application imports
-sys.path.append(path.dirname( path.dirname( path.abspath(__file__))))
 from .base_lot import Lot
-from utilities import *
+
 
 class Orca(Lot):
-   
+
     def write_input_file(self, geom, multiplicity):
         if self.lot_inp_file == False:
             inpstring = '!'
@@ -46,7 +43,7 @@ class Orca(Lot):
     def run(self,geom,multiplicity,ad_idx,runtype='gradient'):
 
         assert ad_idx == 0,"pyGSM ORCA doesn't currently support ad_idx!=0"
-        
+
         # Write input file
         tempfilename = self.write_input_file(geom, multiplicity)
 
@@ -77,7 +74,7 @@ class Orca(Lot):
         return
 
     def parse(self, multiplicity, runscr, tempfilename):
-        engradpath = runscr+'/{}.engrad'.format(tempfilename) 
+        engradpath = runscr+'/{}.engrad'.format(tempfilename)
         with open(engradpath) as engradfile:
             engradlines = engradfile.readlines()
 

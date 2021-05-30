@@ -1,21 +1,16 @@
-from __future__ import print_function
+
 
 # standard library imports
 import sys
-from os import path
-try:
-    from io import StringIO
-except:
-    from StringIO import StringIO
+from io import StringIO
 
 # third party
 import numpy as np
 
 # local application imports
-from ._linesearch import backtrack,NoLineSearch,double_golden_section
+from pygsm import utilities
+
 from .base_optimizer import base_optimizer
-from utilities import *
-from .eigenvector_follow import eigenvector_follow
 
 
 class beales_cg(base_optimizer):
@@ -54,7 +49,7 @@ class beales_cg(base_optimizer):
 
         # number of coordinates
         n = molecule.num_coordinates
-        
+
         # Evaluate the function value and its gradient.
         fx = molecule.energy
         g = molecule.gradient
@@ -67,9 +62,9 @@ class beales_cg(base_optimizer):
         #    g = g - np.dot(g.T,molecule.constraints)*molecule.constraints
         #else:
         #    s0_prim = block_matrix.dot(molecule.coord_basis,s0)
-        
+
         molecule.gradrms = np.sqrt(np.dot(g.T,g)/n)
-        g_prim = block_matrix.dot(molecule.coord_basis,g)
+        g_prim = utilities.block_matrix.dot(molecule.coord_basis, g)
 
         update_hess=False
 
@@ -93,14 +88,14 @@ class beales_cg(base_optimizer):
                     h = 0.*g_prim
                 d_prim = -g_prim + np.dot(h.T,g_prim)*s0_prim   # the search direction
             else:
-                dnew = g_prim  
+                dnew = g_prim
                 deltanew = np.dot(dnew.T,dnew)
                 deltaold=np.dot(gp_prim.T,gp_prim)
                 beta = deltanew/deltaold
                 d_prim = -g_prim + np.dot(h.T,g_prim)*s0_prim +beta*d_prim
 
             # form in DLC basis (does nothing if cartesian)
-            d = block_matrix.dot(block_matrix.transpose(molecule.coord_basis),d_prim)
+            d = utilities.block_matrix.dot(utilities.block_matrix.transpose(molecule.coord_basis), d_prim)
 
             # normalize the direction
             stepsize = np.linalg.norm(d)
@@ -113,7 +108,7 @@ class beales_cg(base_optimizer):
             # store
             xp = x.copy()
             gp = g.copy()
-            gp_prim = block_matrix.dot(molecule.coord_basis,gp)
+            gp_prim = utilities.block_matrix.dot(molecule.coord_basis, gp)
             xyzp = xyz.copy()
             fxp = fx
 
@@ -150,8 +145,8 @@ class beales_cg(base_optimizer):
                 elif ls['step']<=self.DMIN:
                     self.options['DMAX'] = self.DMIN
                     print(" Decreasing DMAX to {}".format(self.DMIN))
-           
-            # dE 
+
+            # dE
             dEstep = fx - fxp
             print(" dEstep=%5.4f" %dEstep)
 
@@ -176,19 +171,19 @@ class beales_cg(base_optimizer):
                     for c in molecule.constraints.T:
                         g -= np.dot(g.T,c[:,np.newaxis])*c[:,np.newaxis]
                     step=0.
-                    g_prim = block_matrix.dot(molecule.coord_basis,g)
+                    g_prim = utilities.block_matrix.dot(molecule.coord_basis, g)
                     h = 0.*g_prim
             else:
                 # update molecule xyz
                 xyz = molecule.update_xyz(x-xp)
-                g_prim = block_matrix.dot(molecule.coord_basis,g)
+                g_prim = utilities.block_matrix.dot(molecule.coord_basis, g)
 
             if ostep % xyzframerate==0:
                 geoms.append(molecule.geometry)
                 energies.append(molecule.energy-refE)
-                manage_xyz.write_xyzs_w_comments('opt_{}.xyz'.format(molecule.node_id),geoms,energies,scale=1.)
+                utilities.manage_xyz.write_xyzs_w_comments('opt_{}.xyz'.format(molecule.node_id), geoms, energies, scale=1.)
 
-            # save variables for update Hessian! 
+            # save variables for update Hessian!
             if not molecule.coord_obj.__class__.__name__=='CartesianCoordinates' or self.options['update_hess_in_bg']:
                 self.dx_prim = molecule.coord_obj.Prims.calcDiff(xyz,xyzp)
                 self.dx_prim = np.reshape(self.dx_prim,(-1,1))
@@ -225,13 +220,13 @@ class beales_cg(base_optimizer):
                 if ostep % xyzframerate!=0:
                     geoms.append(molecule.geometry)
                     energies.append(molecule.energy-refE)
-                    manage_xyz.write_xyzs_w_comments('opt_{}.xyz'.format(molecule.node_id),geoms,energies,scale=1.)
+                    utilities.manage_xyz.write_xyzs_w_comments('opt_{}.xyz'.format(molecule.node_id), geoms, energies, scale=1.)
                 break
 
             #update DLC  --> this changes q, g, Hint
             if not molecule.coord_obj.__class__.__name__=='CartesianCoordinates':
                 if opt_type == 'SEAM' or opt_type=="MECI":
-                    print(" updating DLC") 
+                    print(" updating DLC")
                     sys.stdout.flush()
                     #if opt_type=="ICTAN":
                     constraints = self.get_constraint_vectors(molecule,opt_type,ictan)
@@ -246,7 +241,7 @@ class beales_cg(base_optimizer):
                     g = molecule.gradient.copy()
                     if nconstraints>0:
                         g = g - np.dot(g.T,molecule.constraints)*molecule.constraints
-                    g_prim = block_matrix.dot(molecule.coord_basis,g)
+                    g_prim = utilities.block_matrix.dot(molecule.coord_basis, g)
                     print(" Done update")
             sys.stdout.flush()
 

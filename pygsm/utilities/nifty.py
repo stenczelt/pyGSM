@@ -14,12 +14,11 @@ Named after the mighty Sniffy Handy Nifty (King Sniffy)
 @author Lee-Ping Wang
 @date 2018-03-10
 """
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+
 
 import filecmp
 import itertools
+import logging
 import os
 import re
 import shutil
@@ -34,24 +33,28 @@ try:
     from itertools import zip_longest as zip_longest
 except ImportError:
     from itertools import izip_longest as zip_longest
-import threading
-from pickle import Pickler, Unpickler
-import tarfile
-import time
-import subprocess
+
+import io
 import math
-import six # For six.string_types
-from subprocess import PIPE
+import subprocess
+import tarfile
+import threading
+import time
 from collections import OrderedDict, defaultdict
+from contextlib import contextmanager
+from pickle import Pickler, Unpickler
+from subprocess import PIPE
+
+import six  # For six.string_types
+
+#local
+from . import elements
+
 #import pybel as pb
 #import openbabel as ob
 
-#local 
-from . import elements
 
 
-from contextlib import contextmanager
-import io
 @contextmanager
 def custom_redirection(fileobj):
     old = sys.stdout
@@ -72,20 +75,18 @@ if not logging_initialized:
         from .output import *
     elif "geometric" in __name__:
         # This ensures logging behavior is consistent with the rest of geomeTRIC
-        from logging import *
-        logger = getLogger(__name__)
-        logger.setLevel(INFO)
+        logger = logging.getLogger(__name__)
+        logger.setLevel(logging.INFO)
     else:
         # Previous default behavior if FB package level loggers could not be imported
-        from logging import *
-        class RawStreamHandler(StreamHandler):
+        class RawStreamHandler(logging.StreamHandler):
             """Exactly like output.StreamHandler except it does no extra formatting
             before sending logging messages to the stream. This is more compatible with
             how output has been displayed in ForceBalance. Default stream has also been
             changed from stderr to stdout"""
             def __init__(self, stream = sys.stdout):
                 super(RawStreamHandler, self).__init__(stream)
-    
+
             def emit(self, record):
                 message = record.getMessage()
                 self.stream.write(message)
@@ -93,8 +94,8 @@ if not logging_initialized:
         # logger=getLogger()
         # logger.handlers = [RawStreamHandler(sys.stdout)]
         # LPW: Daniel Smith suggested these changes to improve logger behavior
-        logger = getLogger("NiftyLogger")
-        logger.setLevel(INFO)
+        logger = logging.getLogger("NiftyLogger")
+        logger.setLevel(logging.INFO)
         if not logger.handlers:
             handler = RawStreamHandler()
             logger.addHandler(handler)
@@ -146,7 +147,7 @@ except ImportError:
 #             copyfileobj(input, output)
 #     os.remove(input)
 
-def pvec1d(vec1d, precision=1, format="e", loglevel=INFO):
+def pvec1d(vec1d, precision=1, format="e", loglevel=logging.INFO):
     """Printout of a 1-D vector.
 
     @param[in] vec1d a 1-D vector
@@ -160,7 +161,7 @@ def astr(vec1d, precision=4):
     """ Write an array to a string so we can use it to key a dictionary. """
     return ' '.join([("%% .%ie " % precision % i) for i in vec1d])
 
-def pmat2d(mat2d, precision=1, format="e", loglevel=INFO):
+def pmat2d(mat2d, precision=1, format="e", loglevel=logging.INFO):
     """Printout of a 2-D array.
 
     @param[in] mat2d a 2-D array
@@ -1528,7 +1529,7 @@ def getAllCoords(mol):
 #def getAtomicSymbols(mol):
 #    natoms = mol.OBMol.NumAtoms()
 #    atomic_nums = [ getAtomicNum(mol,i+1) for i in range(natoms) ]
-#    atomic_symbols = [ ELEMENT_TABLE.from_atomic_number(i).symbol for i in atomic_nums ] 
+#    atomic_symbols = [ ELEMENT_TABLE.from_atomic_number(i).symbol for i in atomic_nums ]
 #    return atomic_symbols
 #
 #def make_mol_from_coords(coords,atomic_symbols):

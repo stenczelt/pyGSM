@@ -1,16 +1,11 @@
-# standard library imports
-import sys
-from os import path
-
 # third party
 import numpy as np
 
 # local application imports
-sys.path.append(path.dirname( path.dirname( path.abspath(__file__))))
-from utilities import *
-from coordinate_systems import rotate
+from pygsm import utilities
+from pygsm.coordinate_systems import rotate
 
-ELEMENT_TABLE = elements.ElementData()
+ELEMENT_TABLE = utilities.elements.ElementData()
 
 class PES(object):
     """ PES object """
@@ -19,7 +14,7 @@ class PES(object):
     def default_options():
 
         if hasattr(PES, '_default_options'): return PES._default_options.copy()
-        opt = options.Options() 
+        opt = utilities.options.Options()
 
         opt.add_option(
                 key='lot',
@@ -156,7 +151,7 @@ class PES(object):
                 energies[rc,cc] = self.lot.get_energy(xyz,self.multiplicity,self.ad_idx,runtype='energy')
                 cc+=1
             rc+=1
-         
+
         return energies
 
     def get_energy(self,xyz):
@@ -165,8 +160,8 @@ class PES(object):
             for i in self.FORCE:
                 force=i[2]
                 diff = (xyz[i[0]]- xyz[i[1]])
-                d = np.linalg.norm(diff)*units.ANGSTROM_TO_AU  # AU
-                fdE +=  force*d*units.KCAL_MOL_PER_AU   
+                d = np.linalg.norm(diff) * utilities.units.ANGSTROM_TO_AU  # AU
+                fdE += force * d * utilities.units.KCAL_MOL_PER_AU
                 #print(" Force energy: {} kcal/mol".format(fdE))
         kdE=0.
         if self.RESTRAINTS is not None:
@@ -185,7 +180,7 @@ class PES(object):
             qm_region list of QM atoms in a QMMM simulation to obtain environment perturbed Hessian with the size of the QM region
 
         Returns:
-            Hessian (N1,N1) np.ndarray 
+            Hessian (N1,N1) np.ndarray
 
         '''
         if qm_region is None:
@@ -206,7 +201,7 @@ class PES(object):
             vec = np.zeros(coords.shape[0]*3)
             vec[n] = 1.
             return vec
-       
+
         n_actual = 0
         for n in range(len(coords)*3):
             if n in n1_region:
@@ -230,36 +225,36 @@ class PES(object):
         bwd_coords = coords-fdstep
 
         # calculate grad fwd and bwd in a.u. (Bohr/Ha)
-        grad_fwd = self.get_gradient(fwd_coords)/units.ANGSTROM_TO_AU
-        grad_bwd = self.get_gradient(bwd_coords)/units.ANGSTROM_TO_AU
-    
+        grad_fwd = self.get_gradient(fwd_coords) / utilities.units.ANGSTROM_TO_AU
+        grad_bwd = self.get_gradient(bwd_coords) / utilities.units.ANGSTROM_TO_AU
+
         return (grad_fwd-grad_bwd)/(FD_STEP_LENGTH*2)
 
     @staticmethod
     def normal_modes(
             geom,       # Optimized geometry in au
             hess,       # Hessian matrix in au
-            masses,     # Masses in au 
+            masses,     # Masses in au
             ):
-    
+
         """
         Params:
             geom ((natoms,4) np.ndarray) - atoms symbols and xyz coordinates
             hess ((natoms*3,natoms*3) np.ndarray) - molecule hessian
             masses ((natoms) np.ndarray) - masses
-    
+
         Returns:
             w ((natoms*3 - 6) np.ndarray)  - normal frequencies
             Q ((natoms*3, natoms*3 - 6) np.ndarray)  - normal modes
-    
+
         """
-    
+
         # masses repeated 3x for each atom (unravels)
         m = np.ravel(np.outer(masses,[1.0]*3))
-    
+
         # mass-weight hessian
         hess2 = hess / np.sqrt(np.outer(m,m))
-    
+
         # Find normal modes (project translation/rotations before)
         #B = 3N,3N-6
         B = rotate.vibrational_basis(geom, masses)
@@ -267,7 +262,7 @@ class PES(object):
         # U3 = (3N-6,3N)(3N,3N)(3N-6,3N) = 3N-6,3N
         U = np.dot(B, U3)
         # U = (3N,3N-6),(3N-6,3N)
-    
+
         ## TEST: Find normal modes (without projection translations/rotations)
         ## RMP: Matches TC output for PYP - same differences before/after projection
         #h2, U2 = np.linalg.eigh(hess2)
@@ -283,17 +278,17 @@ class PES(object):
         #    #wval2 = np.sqrt(hval2) / units['au_per_cminv']
         #    wval2 = np.sqrt(hval2) *units.INV_CM_PER_AU
         #    print('%10.6E %10.6E %11.3E' % (wval, wval2, np.abs(wval - wval2)))
-    
+
         # Normal frequencies
         w = np.sqrt(h)
         # Imaginary frequencies
-        w[h < 0.0] = -np.sqrt(-h[h < 0.0]) 
-    
+        w[h < 0.0] = -np.sqrt(-h[h < 0.0])
+
         # Normal modes
         Q = U / np.outer(np.sqrt(m), np.ones((U.shape[1],)))
-    
-        return w, Q 
-    
+
+        return w, Q
+
     def get_gradient(self,xyz,frozen_atoms=None):
 
         grad = self.lot.get_gradient(xyz,self.multiplicity,self.ad_idx,frozen_atoms=frozen_atoms)
@@ -302,12 +297,12 @@ class PES(object):
                 atoms=[i[0],i[1]]
                 force=i[2]
                 diff = (xyz[i[0]]- xyz[i[1]])
-                d = np.linalg.norm(diff)*units.ANGSTROM_TO_AU  # Bohr
+                d = np.linalg.norm(diff) * utilities.units.ANGSTROM_TO_AU  # Bohr
 
-                # Constant force  
+                # Constant force
                 # grad=\nabla E + FORCE
                 t = (force/d/2.)  # Hartree/bohr
-                t*= units.ANGSTROM_TO_AU   # Ha/bohr * bohr/ang = Ha/ang
+                t*= utilities.units.ANGSTROM_TO_AU   # Ha/bohr * bohr/ang = Ha/ang
                 sign=1
                 for a in atoms:
                     grad[a] += sign*t*diff.T
@@ -322,7 +317,7 @@ class PES(object):
         return grad  #Ha/ang
 
     def check_input(self,geom):
-        atoms = manage_xyz.get_atoms(self.geom)
+        atoms = utilities.manage_xyz.get_atoms(self.geom)
         elements = [ELEMENT_TABLE.from_symbol(atom) for atom in atoms]
         atomic_num = [ele.atomic_num for ele in elements]
         self.checked_input =True
@@ -335,12 +330,12 @@ if __name__ == '__main__':
         #from .qchem import QChem
         from level_of_theories.qchem import QChem
     elif PYTC:
-        from level_of_theories.pytc import PyTC 
-        import psiw
         import lightspeed as ls
+        import psiw
+        from level_of_theories.pytc import PyTC
 
     filepath='../../data/ethylene.xyz'
-    geom=manage_xyz.read_xyz(filepath,scale=1)   
+    geom=utilities.manage_xyz.read_xyz(filepath, scale=1)
     if QCHEM:
         lot=QChem.from_options(states=[(1,0),(1,1)],charge=0,basis='6-31g(d)',functional='B3LYP',fnm=filepath)
     elif PYTC:
@@ -352,20 +347,20 @@ if __name__ == '__main__':
         basis='6-31gs'
 
         #### => PSIW Obj <= ######
-        nifty.printcool("Build resources")
+        utilities.nifty.printcool("Build resources")
         resources = ls.ResourceList.build()
-        nifty.printcool('{}'.format(resources))
-        
+        utilities.nifty.printcool('{}'.format(resources))
+
         molecule = ls.Molecule.from_xyz_file(filepath)
         geom = psiw.geometry.Geometry.build(
             resources=resources,
             molecule=molecule,
             basisname=basis,
             )
-        nifty.printcool('{}'.format(geom))
-        
+        utilities.nifty.printcool('{}'.format(geom))
+
         ref = psiw.RHF.from_options(
-             geometry= geom, 
+             geometry= geom,
              g_convergence=1.0E-6,
              fomo=True,
              fomo_method='gaussian',
@@ -394,12 +389,12 @@ if __name__ == '__main__':
             state_coincidence='full',
             )
 
-        nifty.printcool("Build the pyGSM Level of Theory object (LOT)")
-        lot=PyTC.from_options(states=[(1,0),(1,1)],job_data={'psiw':psiw},do_coupling=False,fnm=filepath) 
+        utilities.nifty.printcool("Build the pyGSM Level of Theory object (LOT)")
+        lot=PyTC.from_options(states=[(1,0),(1,1)],job_data={'psiw':psiw},do_coupling=False,fnm=filepath)
 
     pes = PES.from_options(lot=lot,ad_idx=0,multiplicity=1)
-    geom=manage_xyz.read_xyz(filepath,scale=1)   
-    coords= manage_xyz.xyz_to_np(geom)
+    geom=utilities.manage_xyz.read_xyz(filepath, scale=1)
+    coords= utilities.manage_xyz.xyz_to_np(geom)
     print(pes.get_energy(coords))
     print(pes.get_gradient(coords))
 

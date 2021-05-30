@@ -1,18 +1,15 @@
-from __future__ import print_function
-# standard library imports
-import sys
-import os
-from os import path
 
-# third party
-import numpy as np
+
+# standard library imports
+import os
+import sys
 
 # local application imports
-sys.path.append(path.dirname( path.dirname( path.abspath(__file__))))
-from utilities import *
-from wrappers import Molecule
+from pygsm import utilities
+from pygsm.potential_energy_surfaces import PES, Avg_PES
+from pygsm.wrappers import Molecule
+
 from .se_gsm import SE_GSM
-from potential_energy_surfaces import Avg_PES,PES
 
 
 class SE_Cross(SE_GSM):
@@ -23,9 +20,9 @@ class SE_Cross(SE_GSM):
         """
         assert rtype in [0,1], "rtype not defined"
         if rtype==0:
-            nifty.printcool("Doing SE-MECI search")
+            utilities.nifty.printcool("Doing SE-MECI search")
         else:
-            nifty.printcool("Doing SE-MESX search")
+            utilities.nifty.printcool("Doing SE-MESX search")
 
         self.nodes[0].gradrms=0.
         self.nodes[0].V0 = self.nodes[0].energy
@@ -83,7 +80,7 @@ class SE_Cross(SE_GSM):
 
         self.xyz_writer('after_penalty_{:03}.xyz'.format(self.ID),self.geometries,self.energies,self.gradrmss,self.dEs)
         self.optimizer[self.nR].opt_cross=True
-        self.nodes[0].V0 = self.nodes[0].PES.PES2.energy 
+        self.nodes[0].V0 = self.nodes[0].PES.PES2.energy
         if rtype==0:
             # MECI optimization
             self.nodes[self.nR] = Molecule.copy_from_options(self.nodes[self.nR-1],new_node_id=self.nR)
@@ -104,7 +101,7 @@ class SE_Cross(SE_GSM):
                     )
             if not self.optimizer[self.nR].converged:
                 print("doing extra optimization in hopes that the MECI will converge.")
-                if self.nodes[self.nR].PES.PES2.energy - self.nodes[0].V0 <20: 
+                if self.nodes[self.nR].PES.PES2.energy - self.nodes[0].V0 <20:
                     self.optimizer[self.nR].optimize(
                             molecule=self.nodes[self.nR],
                             refE=self.nodes[0].V0,
@@ -157,7 +154,7 @@ class SE_Cross(SE_GSM):
                 print(" {:7.3f}".format(float(energies[n])), end=' ')
             print()
             self.xyz_writer('grown_string1_{:03}.xyz'.format(self.ID),self.geometries,self.energies,self.gradrmss,self.dEs)
-   
+
             deltaE = energies[-1] - energies[0]
             if deltaE>20:
                 print(" MECI energy is too high %5.4f. Don't try to optimize pathway" % deltaE)
@@ -202,7 +199,7 @@ class SE_Cross(SE_GSM):
         super(SE_Cross,self).restart_string(xyzfile)
         self.done_growing=False
         self.nnodes=20
-        self.nR -=1 
+        self.nR -=1
         # stash bdist for node 0
         _,self.nodes[0].bdist = self.get_tangent(self.nodes[0],None,driving_coords=self.driving_coords)
 
