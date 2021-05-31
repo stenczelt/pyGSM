@@ -4,9 +4,12 @@ from collections import OrderedDict
 
 import networkx as nx
 import numpy as np
+from ase import Atoms
+from ase.neighborlist import NeighborList
 from pkg_resources import parse_version
 
 from pygsm import utilities
+from pygsm.utilities.elements import ElementData
 
 
 # ===========================#
@@ -68,9 +71,12 @@ class MolecularGraph(nx.Graph):
         return np.array([coors[i] for i in self.L()])
 
 
-def AtomContact(xyz, pairs, box=None, displace=False):
+def atom_contact(xyz, pairs, box=None, displace=False):
     """
     Compute distances between pairs of atoms.
+
+    Supports orthogonal periodic cells given by `box`,
+    but this is not used in the current code as it seems.
 
     Parameters
     ----------
@@ -92,7 +98,7 @@ def AtomContact(xyz, pairs, box=None, displace=False):
     parray = np.array(pairs)
     sel1 = parray[:, 0]
     sel2 = parray[:, 1]
-    xyzpbc = xyz.copy()
+    xyzpbc = np.array(xyz).copy()
     # Minimum image convention: Place all atoms in the box
     # [-xbox/2, +xbox/2); [-ybox/2, +ybox/2); [-zbox/2, +zbox/2)
     if box is not None:
@@ -177,14 +183,14 @@ class Topology:
         # can do an assert for xyz here CRA TODO
         if natoms > 100000:
             utilities.nifty.logger.warning(
-                "Warning: Large number of atoms (%i), topology building may take a long time"
-                % natoms
+                "Warning: Large number of atoms ({}), topology building may take a long time".format(
+                    natoms
+                )
             )
 
         # Get hybrid indices
-        hybrid_indices = hybrid_indices
         hybrid_idx_start_stop = []
-        if hybrid_indices == None:
+        if hybrid_indices is None:
             primitive_indices = range(len(atoms))
         else:
             # specify Hybrid TRIC we need to specify which atoms to build topology for
@@ -199,11 +205,11 @@ class Topology:
             new = True
             for i in range(natoms + 1):
                 if i in hybrid_indices:
-                    if new == True:
+                    if new:
                         start = i
                         new = False
                 else:
-                    if new == False:
+                    if not new:
                         end = i - 1
                         new = True
                         hybrid_idx_start_stop.append((start, end))
@@ -391,7 +397,7 @@ class Topology:
                     list(range(len(zgrd))),
                 )
             )
-            # 3) Build a dictionary which maps a grid cell to itplus its neighboring grid cells.
+            # 3) Build a dictionary which maps a grid cell to it plus its neighboring grid cells.
             # Two grid cells are defined to be neighbors if the differences between their x, y, z indices are at most 1.
             gngh = OrderedDict()
             amax = np.array(gidx[-1])
@@ -532,11 +538,11 @@ class Topology:
         # if hasattr( 'boxes') and toppbc:
         if toppbc:
             raise NotImplementedError
-            dxij = AtomContact(
+            dxij = atom_contact(
                 xyz, AtomIterator, box=np.array([boxes[sn].a, boxes[sn].b, boxes[sn].c])
             )
         else:
-            dxij = AtomContact(xyz, AtomIterator)
+            dxij = atom_contact(xyz, AtomIterator)
 
         # Update topology settings with what we learned
         top_settings["toppbc"] = toppbc
@@ -599,98 +605,6 @@ class Topology:
 
         return sorted_bonds
 
-    def distance_displacement(xyz, self):
-        """ Obtain distance matrix and displacement vectors between all pairs of atoms. """
-        AtomIterator = np.ascontiguousarray(
-            np.vstack(
-                (
-                    np.fromiter(
-                        itertools.chain(
-                            *[[i] * (self.natoms - i - 1) for i in range(self.natoms)]
-                        ),
-                        dtype=np.int32,
-                    ),
-                    np.fromiter(
-                        itertools.chain(
-                            *[
-                                list(range(i + 1, self.natoms))
-                                for i in range(self.natoms)
-                            ]
-                        ),
-                        dtype=np.int32,
-                    ),
-                )
-            ).T
-        )
-        drij = []
-        dxij = []
-        if hasattr(self, "boxes") and pbc:
-            drij_i, dxij_i = AtomContact(
-                xyz,
-                AtomIterator,
-                box=np.array([self.boxes[sn].a, self.boxes[sn].b, self.boxes[sn].c]),
-                displace=True,
-            )
-        else:
-            drij_i, dxij_i = AtomContact(xyz, AtomIterator, box=None, displace=True)
-        drij.append(drij_i)
-        dxij.append(dxij_i)
-        return AtomIterator, drij, dxij
-
-    # these aren't used
-    def find_angles(self):
-
-        """ Return a list of 3-tuples corresponding to all of the
-        angles in the system.  Verified for lysine and tryptophan
-        dipeptide when comparing to TINKER's analyze program. """
-
-        if not hasattr(self, "topology"):
-            logger.error("Need to have built a topology to find angles\n")
-            raise RuntimeError
-
-        angidx = []
-        # Iterate over separate molecules
-        for mol in self.fragments:
-            # Iterate over atoms in the molecule
-            for a2 in list(mol.nodes()):
-                # Find all bonded neighbors to this atom
-                friends = sorted(list(nx.neighbors(mol, a2)))
-                if len(friends) < 2:
-                    continue
-                # Double loop over bonded neighbors
-                for i, a1 in enumerate(friends):
-                    for a3 in friends[i + 1 :]:
-                        # Add bonded atoms in the correct order
-                        angidx.append((a1, a2, a3))
-        return angidx
-
-    # these aren't used
-    def find_dihedrals(self):
-
-        """ Return a list of 4-tuples corresponding to all of the
-        dihedral angles in the system.  Verified for alanine and
-        tryptophan dipeptide when comparing to TINKER's analyze
-        program. """
-
-        if not hasattr(self, "topology"):
-            logger.error("Need to have built a topology to find dihedrals\n")
-            raise RuntimeError
-
-        dihidx = []
-        # Iterate over separate molecules
-        for mol in self.fragments:
-            # Iterate over bonds in the molecule
-            for edge in list(mol.edges()):
-                # Determine correct ordering of atoms (middle atoms are ordered by convention)
-                a2 = edge[0] if edge[0] < edge[1] else edge[1]
-                a3 = edge[1] if edge[0] < edge[1] else edge[0]
-                for a1 in sorted(list(nx.neighbors(mol, a2))):
-                    if a1 != a3:
-                        for a4 in sorted(list(nx.neighbors(mol, a3))):
-                            if a4 != a2 and len({a1, a2, a3, a4}) == 4:
-                                dihidx.append((a1, a2, a3, a4))
-        return dihidx
-
     @staticmethod
     def distance_matrix(xyz, pbc=True):
         """ Obtain distance matrix between all pairs of atoms. """
@@ -717,90 +631,41 @@ class Topology:
         # if hasattr(self, 'boxes') and pbc:
         #    drij.append(AtomContact(xyz,AtomIterator,box=np.array([self.boxes[sn].a, self.boxes[sn].b, self.boxes[sn].c])))
         # else:
-        drij.append(AtomContact(xyz, AtomIterator))
+        drij.append(atom_contact(xyz, AtomIterator))
         return AtomIterator, drij
 
 
-if __name__ == "__main__" and __package__ is None:
-
-    # filepath='../../data/butadiene_ethene.xyz'
-    # filepath='crystal.xyz'
-    filepath1 = "multi1.xyz"
-    filepath2 = "multi2.xyz"
-
-    geom1 = utilities.manage_xyz.read_xyz(filepath1)
-    geom2 = utilities.manage_xyz.read_xyz(filepath2)
-    atom_symbols = utilities.manage_xyz.get_atoms(geom1)
-    xyz1 = utilities.manage_xyz.xyz_to_np(geom1)
-    xyz2 = utilities.manage_xyz.xyz_to_np(geom2)
-
-    ELEMENT_TABLE = utilities.elements.ElementData()
-    atoms = [ELEMENT_TABLE.from_symbol(atom) for atom in atom_symbols]
-    # print(atoms)
-
-    # hybrid_indices = list(range(0,10)) + list(range(21,26))
-    hybrid_indices = list(range(16, 26))
-
-    G1 = Topology.build_topology(xyz1, atoms, hybrid_indices=hybrid_indices)
-    G2 = Topology.build_topology(xyz2, atoms, hybrid_indices=hybrid_indices)
-
-    for bond in G2.edges():
-        if bond in G1.edges:
-            pass
-        elif (bond[1], bond[0]) in G1.edges():
-            pass
-        else:
-            print(" Adding bond {} to top1".format(bond))
-            if bond[0] > bond[1]:
-                G1.add_edge(bond[0], bond[1])
-            else:
-                G1.add_edge(bond[1], bond[0])
-
-    # print(" G")
-    # print(G.L())
-
-    # fragments = [G.subgraph(c).copy() for c in nx.connected_components(G)]
-    # for g in fragments: g.__class__ = MolecularGraph
-
-    # print(" fragments")
-    # for frag in fragments:
-    #    print(frag.L())
-    ##print(len(mytop.fragments))
-    ##print(mytop.fragments)
-
-    ## need the primitive start and stop indices
-    # prim_idx_start_stop=[]
-    # new=True
-    # for frag in fragments:
-    #    nodes=frag.L()
-    #    prim_idx_start_stop.append((nodes[0],nodes[-1]))
-    # print("prim start stop")
-    # print(prim_idx_start_stop)
-
-    # prim_idx =[]
-    # for info in prim_idx_start_stop:
-    #    prim_idx += list(range(info[0],info[1]+1))
-    # print('prim_idx')
-    # print(prim_idx)
-
-    # new_hybrid_indices=list(range(len(atoms)))
-    # for elem in prim_idx:
-    #    new_hybrid_indices.remove(elem)
-    # print('hybr')
-    # print(new_hybrid_indices)
-
-    # hybrid_idx_start_stop=[]
-    ## get the hybrid start and stop indices
-    # new=True
-    # for i in range(len(atoms)+1):
-    #    if i in new_hybrid_indices:
-    #        print(i)
-    #        if new==True:
-    #            start=i
-    #            new=False
-    #    else:
-    #        if new==False:
-    #            end=i-1
-    #            new=True
-    #            hybrid_idx_start_stop.append((start,end))
-    # print(hybrid_idx_start_stop)
+# if __name__ == "__main__" and __package__ is None:
+#
+#     # filepath='../../data/butadiene_ethene.xyz'
+#     # filepath='crystal.xyz'
+#     filepath1 = "multi1.xyz"
+#     filepath2 = "multi2.xyz"
+#
+#     geom1 = utilities.manage_xyz.read_xyz(filepath1)
+#     geom2 = utilities.manage_xyz.read_xyz(filepath2)
+#     atom_symbols = utilities.manage_xyz.get_atoms(geom1)
+#     xyz1 = utilities.manage_xyz.xyz_to_np(geom1)
+#     xyz2 = utilities.manage_xyz.xyz_to_np(geom2)
+#
+#     ELEMENT_TABLE = utilities.elements.ElementData()
+#     atoms = [ELEMENT_TABLE.from_symbol(atom) for atom in atom_symbols]
+#     # print(atoms)
+#
+#     # hybrid_indices = list(range(0,10)) + list(range(21,26))
+#     hybrid_indices = list(range(16, 26))
+#
+#     G1 = Topology.build_topology(xyz1, atoms, hybrid_indices=hybrid_indices)
+#     G2 = Topology.build_topology(xyz2, atoms, hybrid_indices=hybrid_indices)
+#
+#     for bond in G2.edges():
+#         if bond in G1.edges:
+#             pass
+#         elif (bond[1], bond[0]) in G1.edges():
+#             pass
+#         else:
+#             print(" Adding bond {} to top1".format(bond))
+#             if bond[0] > bond[1]:
+#                 G1.add_edge(bond[0], bond[1])
+#             else:
+#                 G1.add_edge(bond[1], bond[0])
