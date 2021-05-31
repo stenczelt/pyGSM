@@ -1,7 +1,7 @@
 # standard library imports
-import itertools
 from collections import OrderedDict
 
+import itertools
 import networkx as nx
 import numpy as np
 from ase import Atoms
@@ -141,6 +141,40 @@ def atom_contact(xyz, pairs, box=None, displace=False):
         return dr, dxyz
     else:
         return dr
+
+
+def atoms_pair_iterator(num):
+    """return all i,j < num with i<j
+
+    the pairs of atoms up to `num`, counting only once with no self-interaction
+
+    This is potentially the fastest non-compiled solution, however a
+    simple double loop jit-compiled with numba outperforms this. Overall
+    this is not an issue, scaling is the same only the prefactor is different.
+
+    Parameters
+    ----------
+    num
+
+    Returns
+    -------
+    pairs_ij: np.adarray
+
+    """
+    return np.ascontiguousarray(
+        np.vstack(
+            (
+                np.fromiter(
+                    itertools.chain(*[[i] * (num - i - 1) for i in range(num)]),
+                    dtype=np.int32,
+                ),
+                np.fromiter(
+                    itertools.chain(*[list(range(i + 1, num)) for i in range(num)]),
+                    dtype=np.int32,
+                ),
+            )
+        ).T
+    )
 
 
 class Topology:
@@ -686,32 +720,46 @@ class Topology:
         return sorted_bonds
 
     @staticmethod
+    def distance_matrix_ase(xyz, cell=None, pbc=True):
+        """Distance of all pairs of atoms. O(N^2)
+
+        Obeys minimal image convention
+
+        Parameters
+        ----------
+        xyz: np.ndarray, shape=(N, 3)
+            positions
+        cell
+            ASE-compatible cell
+        pbc
+            ASE-compatible PBC
+
+        Returns
+        -------
+        atoms_pairs: np.ndarray
+            indices of atom pairs,
+            order: (i, j) where i,j < N and i < j
+        distances: np.ndarray
+            distances, obeying minimal image convention
+        """
+
+        # create ASE atoms
+        ase_atoms = Atoms(positions=xyz, cell=cell, pbc=pbc)
+
+        # find all distances, WITH mic.
+        atoms_pairs = atoms_pair_iterator(len(ase_atoms))
+        distances = np.array(
+            [ase_atoms.get_distance(pair[0], pair[1], mic=True) for pair in atoms_pairs]
+        )
+
+        return atoms_pairs, distances
+
+    @staticmethod
     def distance_matrix(xyz, pbc=True):
         """ Obtain distance matrix between all pairs of atoms. """
         natoms = len(xyz)
-        AtomIterator = np.ascontiguousarray(
-            np.vstack(
-                (
-                    np.fromiter(
-                        itertools.chain(
-                            *[[i] * (natoms - i - 1) for i in range(natoms)]
-                        ),
-                        dtype=np.int32,
-                    ),
-                    np.fromiter(
-                        itertools.chain(
-                            *[list(range(i + 1, natoms)) for i in range(natoms)]
-                        ),
-                        dtype=np.int32,
-                    ),
-                )
-            ).T
-        )
-        drij = []
-        # if hasattr(self, 'boxes') and pbc:
-        #    drij.append(AtomContact(xyz,AtomIterator,box=np.array([self.boxes[sn].a, self.boxes[sn].b, self.boxes[sn].c])))
-        # else:
-        drij.append(atom_contact(xyz, AtomIterator))
+        AtomIterator = atoms_pair_iterator(natoms)
+        drij = atom_contact(xyz, AtomIterator)
         return AtomIterator, drij
 
 

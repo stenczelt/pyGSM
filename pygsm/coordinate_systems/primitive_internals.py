@@ -120,7 +120,7 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
             # Make a distance matrix mapping atom pairs to interatomic distances
             AtomIterator, dxij = Topology.distance_matrix(xyz, pbc=False)
             D = {}
-            for i, j in zip(AtomIterator, dxij[0]):
+            for i, j in zip(AtomIterator, dxij):
                 assert i[0] < i[1]
                 D[tuple(i)] = j
             dgraph = nx.Graph()
@@ -837,7 +837,7 @@ class PrimitiveInternalCoordinates(InternalCoordinates):
                     # Make a distance matrix mapping atom pairs to interatomic distances
                     AtomIterator, dxij = Topology.distance_matrix(xyz, pbc=False)
                     D = {}
-                    for i, j in zip(AtomIterator, dxij[0]):
+                    for i, j in zip(AtomIterator, dxij):
                         assert i[0] < i[1]
                         D[tuple(i)] = j
                     dgraph = nx.Graph()

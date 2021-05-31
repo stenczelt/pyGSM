@@ -4,7 +4,9 @@ in order to have a reference behaviour that we can compare
 to with an updated version of it.
 """
 
+import numpy as np
 from ase.build import molecule
+from pytest import approx
 
 from pygsm.coordinate_systems.topology import Topology
 from pygsm.utilities.elements import ElementData
@@ -31,3 +33,20 @@ def test_ase_bonds():
 
     for i in range(1, 5):
         assert (0, i) in bonds
+
+
+def test_distance_matrix():
+    at = molecule("C60")
+    ase_dij = at.get_all_distances()
+
+    # old implementation
+    xyz = at.get_positions().tolist()
+    pairs, distances = Topology.distance_matrix(xyz)
+
+    for i, pair in enumerate(pairs):
+        assert ase_dij[pair[0], pair[1]] == approx(distances[i])
+
+    # new implementation
+    new_pairs, new_distances = Topology.distance_matrix_ase(xyz)
+    assert np.all(new_pairs == pairs)
+    assert np.all(new_distances == distances)
