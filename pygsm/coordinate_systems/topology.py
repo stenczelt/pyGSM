@@ -312,6 +312,86 @@ class Topology:
             g.__class__ = MolecularGraph
 
     @staticmethod
+    def build_bonds_fast(
+        xyz, atoms, primitive_indices=None, factor=1.2, cell=None, pbc=False
+    ):
+        """
+
+        Parameters
+        ----------
+        xyz: np.ndarray
+        atoms
+        primitive_indices
+        factor: 1.2
+        cell
+        pbc
+
+        Returns
+        -------
+        bonds: np.ndarray
+
+        """
+        # create an ASE atoms and use that
+        ase_atoms = Atoms(
+            symbols=[atom.symbol for atom in atoms], positions=xyz, cell=cell, pbc=pbc
+        )
+
+        # just use the ASE neighbour list interface
+        return Topology.build_bonds_ase(ase_atoms, primitive_indices, factor)
+
+    @staticmethod
+    def build_bonds_ase(atoms: Atoms, primitive_indices=None, factor=1.2):
+        """Fast bond calculation with ASE neighbour list
+
+        Parameters
+        ----------
+        atoms: Atoms
+            ase Atoms object
+        primitive_indices: list
+            index subset of atoms to build bonds for
+        factor: float, default = 1.2
+
+        Returns
+        -------
+        bonds: np.ndarray
+
+        """
+        # covalent radii
+        covalent_radii = [
+            ElementData.from_atomic_number(int(z)).covalent_radius * factor
+            for z in atoms.get_atomic_numbers()
+        ]
+
+        # radius 0.0 for atoms not in primitive_indices if given
+        if primitive_indices is not None:
+            for i in range(len(atoms)):
+                if i not in primitive_indices:
+                    covalent_radii[i] = 0.0
+        else:
+            # use this later for neighbour loop
+            primitive_indices = range(len(atoms))
+
+        # neighbour list calculation, linearly scaling, PBC included with mic.
+        nl = NeighborList(covalent_radii, self_interaction=False, bothways=False)
+        nl.update(atoms)
+
+        # find the bonds
+        bonds = []
+        for idx in primitive_indices:
+            neighbours, _ = nl.get_neighbors(idx)
+
+            if len(neighbours) == 0:
+                continue
+
+            for neighbour_index in neighbours:
+                if idx < neighbour_index:
+                    bonds.append((idx, neighbour_index))
+                else:
+                    bonds.append((neighbour_index, idx))
+
+        return bonds
+
+    @staticmethod
     def build_bonds(xyz, atoms, primitive_indices, prim_idx_start_stop=None, **kwargs):
         """ Build the bond connectivity graph. """
 
